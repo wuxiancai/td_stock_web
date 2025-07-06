@@ -345,6 +345,27 @@ EOF
 setup_systemd() {
     log_info "创建systemd服务..."
     
+    # 验证项目目录和关键文件
+    if [[ ! -d "$PROJECT_DIR" ]]; then
+        log_error "项目目录不存在: $PROJECT_DIR"
+        exit 1
+    fi
+    
+    if [[ ! -f "$PROJECT_DIR/app.py" ]]; then
+        log_error "app.py文件不存在: $PROJECT_DIR/app.py"
+        exit 1
+    fi
+    
+    if [[ ! -d "$PROJECT_DIR/venv" ]]; then
+        log_error "虚拟环境不存在: $PROJECT_DIR/venv"
+        exit 1
+    fi
+    
+    if [[ ! -x "$PROJECT_DIR/venv/bin/python" ]]; then
+        log_error "Python虚拟环境不可执行: $PROJECT_DIR/venv/bin/python"
+        exit 1
+    fi
+    
     # 确保日志目录存在且权限正确
     sudo mkdir -p /var/log/td_stock
     sudo chown $USER:$USER /var/log/td_stock
@@ -368,11 +389,11 @@ Environment=PATH=$PROJECT_DIR/venv/bin:/usr/local/bin:/usr/bin:/bin
 Environment=PYTHONPATH=$PROJECT_DIR
 Environment=PYTHONUNBUFFERED=1
 EnvironmentFile=-$PROJECT_DIR/.env
-# 启动前检查
-ExecStartPre=/bin/test -f $PROJECT_DIR/app.py
-ExecStartPre=/bin/test -f $PROJECT_DIR/.env
-ExecStartPre=$PROJECT_DIR/venv/bin/python -c "import flask, tushare, pandas, numpy, schedule"
-ExecStart=$PROJECT_DIR/venv/bin/python app.py
+# 启动前检查 - 使用绝对路径和更安全的检查方式
+ExecStartPre=/bin/bash -c 'cd $PROJECT_DIR && test -f app.py'
+ExecStartPre=/bin/bash -c 'cd $PROJECT_DIR && test -f .env'
+ExecStartPre=/bin/bash -c 'cd $PROJECT_DIR && source venv/bin/activate && python -c "import flask, tushare, pandas, numpy, schedule"'
+ExecStart=/bin/bash -c 'cd $PROJECT_DIR && source venv/bin/activate && python app.py'
 ExecReload=/bin/kill -HUP \$MAINPID
 ExecStop=/bin/kill -TERM \$MAINPID
 TimeoutStartSec=120
@@ -393,7 +414,9 @@ PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
 ReadWritePaths=/var/log/td_stock $PROJECT_DIR
-ReadOnlyPaths=/etc
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
 
 # 资源限制
 LimitNOFILE=65536
@@ -570,6 +593,51 @@ EOF
     rm -f test_import.py
 }
 
+# 验证部署结果
+validate_deployment() {
+    log_info "验证部署结果..."
+    
+    # 检查服务状态
+    if ! systemctl is-active --quiet td-stock.service; then
+        log_error "服务未正常运行"
+        log_info "服务状态详情:"
+        sudo systemctl status td-stock.service --no-pager
+        log_info "最近的服务日志:"
+        sudo journalctl -u td-stock.service --no-pager -n 20
+        return 1
+    fi
+    
+    # 检查日志文件
+    if [[ ! -f "/var/log/td_stock/app.log" ]]; then
+        log_error "应用日志文件不存在"
+        return 1
+    fi
+    
+    # 检查HTTP响应（带重试）
+    local retry_count=0
+    local max_retries=5
+    
+    while [[ $retry_count -lt $max_retries ]]; do
+        if curl -f http://localhost:8080 >/dev/null 2>&1; then
+            log_success "HTTP服务响应正常"
+            break
+        fi
+        
+        if [[ $retry_count -eq $((max_retries - 1)) ]]; then
+            log_warning "HTTP服务无响应，但服务进程正在运行"
+            log_info "这可能是正常的，应用可能仍在初始化中"
+            break
+        fi
+        
+        log_info "等待HTTP服务响应... ($((retry_count + 1))/$max_retries)"
+        sleep 3
+        ((retry_count++))
+    done
+    
+    log_success "部署验证完成"
+    return 0
+}
+
 # 启动服务
 start_service() {
     log_info "启动服务..."
@@ -577,45 +645,56 @@ start_service() {
     # 验证配置
     validate_config
     
+    # 重新加载systemd配置
+    sudo systemctl daemon-reload
+    
     # 启动应用服务
+    log_info "正在启动td-stock服务..."
     if ! sudo systemctl start td-stock.service; then
         log_error "服务启动命令执行失败"
+        log_info "查看详细错误信息:"
+        sudo systemctl status td-stock.service --no-pager
+        log_info "查看启动日志:"
+        sudo journalctl -u td-stock.service --no-pager -n 50
+        
+        # 尝试手动诊断问题
+        log_info "正在进行问题诊断..."
+        
+        # 检查工作目录
+        if [[ ! -d "$PROJECT_DIR" ]]; then
+            log_error "工作目录不存在: $PROJECT_DIR"
+        fi
+        
+        # 检查Python环境
+        if [[ -f "$PROJECT_DIR/venv/bin/python" ]]; then
+            log_info "测试Python环境..."
+            cd "$PROJECT_DIR"
+            if source venv/bin/activate && python -c "import flask, tushare, pandas, numpy, schedule"; then
+                log_info "Python依赖检查通过"
+            else
+                log_error "Python依赖检查失败"
+            fi
+        else
+            log_error "Python虚拟环境不存在"
+        fi
+        
         exit 1
     fi
     
     # 等待服务启动
     log_info "等待服务启动..."
-    sleep 5
+    sleep 8
     
-    # 检查服务状态
-    local retry_count=0
-    local max_retries=10
-    
-    while [[ $retry_count -lt $max_retries ]]; do
-        if sudo systemctl is-active --quiet td-stock.service; then
-            log_success "应用服务启动成功"
-            
-            # 测试HTTP连接
-            log_info "测试HTTP连接..."
-            sleep 2
-            if curl -f http://localhost:8080 >/dev/null 2>&1; then
-                log_success "HTTP服务响应正常"
-            else
-                log_warning "HTTP服务暂时无响应，可能仍在初始化中"
-            fi
-            return 0
-        fi
-        
-        log_info "服务启动中... ($((retry_count + 1))/$max_retries)"
-        sleep 2
-        ((retry_count++))
-    done
-    
-    log_error "应用服务启动失败"
-    log_info "查看服务状态: sudo systemctl status td-stock.service"
-    log_info "查看详细日志: sudo journalctl -u td-stock.service -f"
-    log_info "查看应用日志: tail -f /var/log/td_stock/app.log"
-    exit 1
+    # 验证部署
+    if validate_deployment; then
+        log_success "应用服务启动成功"
+    else
+        log_error "应用服务启动验证失败"
+        log_info "查看服务状态: sudo systemctl status td-stock.service"
+        log_info "查看详细日志: sudo journalctl -u td-stock.service -f"
+        log_info "查看应用日志: tail -f /var/log/td_stock/app.log"
+        exit 1
+    fi
 }
 
 # 显示部署信息
