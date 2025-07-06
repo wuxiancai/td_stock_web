@@ -217,12 +217,20 @@
                         <div class="info-value" id="turnoverRate"></div>
                     </div>
                     <div class="info-item">
+                        <div class="info-label">量比</div>
+                        <div class="info-value" id="volumeRatio"></div>
+                    </div>
+                    <div class="info-item">
                         <div class="info-label">市盈率(TTM)</div>
                         <div class="info-value" id="peTtm"></div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">量比</div>
-                        <div class="info-value" id="volumeRatio"></div>
+                        <div class="info-label">市净率(PB)</div>
+                        <div class="info-value" id="pbRatio"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">当天涨幅</div>
+                        <div class="info-value" id="changePercent"></div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">所属行业</div>
@@ -362,6 +370,16 @@
             document.getElementById('turnoverRate').textContent = data.turnover_rate.toFixed(2) + '%';
             document.getElementById('peTtm').textContent = (data.pe_ttm && data.pe_ttm > 0) ? data.pe_ttm.toFixed(2) : '-';
             document.getElementById('volumeRatio').textContent = data.volume_ratio.toFixed(2);
+            
+            // 显示市净率(PB)
+            document.getElementById('pbRatio').textContent = (data.pb && data.pb > 0) ? data.pb.toFixed(2) : '-';
+            
+            // 显示当天涨幅
+            const changePercent = data.pct_chg || 0;
+            const changeElement = document.getElementById('changePercent');
+            changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
+            changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#44aa44';
+            
             document.getElementById('industry').textContent = data.industry || '-';
             
             // 显示资金流向数据（如果可用）
