@@ -328,6 +328,7 @@
                         <th>量比</th>
                         <th>成交额(万元)</th>
                         <th>市值(亿元)</th>
+                        <th>九转买入</th>
                     </tr>
                 </thead>
                 <tbody id="stocksTableBody">
@@ -524,6 +525,16 @@
                 const row = document.createElement('tr');
                 const hasRealTimeData = stock.data_loaded !== false && stock.latest_price > 0;
                 
+                // 九转序列显示逻辑
+                let nineTurnDisplay = '-';
+                if (hasRealTimeData && (stock.nine_turn_up || stock.nine_turn_down)) {
+                    if (stock.nine_turn_up && stock.nine_turn_up > 0) {
+                        nineTurnDisplay = `<span style="color: red; font-weight: bold;">${stock.nine_turn_up}</span>`;
+                    } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
+                        nineTurnDisplay = `<span style="color: green; font-weight: bold;">${stock.nine_turn_down}</span>`;
+                    }
+                }
+                
                 row.innerHTML = `
                     <td><span class="stock-code" onclick="goToStock('${stock.ts_code}')">${stock.ts_code}</span></td>
                     <td>${stock.name}</td>
@@ -533,6 +544,7 @@
                     <td>${hasRealTimeData ? stock.volume_ratio.toFixed(2) : '-'}</td>
                     <td>${hasRealTimeData ? (stock.amount / 10000).toFixed(2) : '-'}</td>
                     <td>${hasRealTimeData ? (stock.market_cap / 10000).toFixed(2) : '-'}</td>
+                    <td>${nineTurnDisplay}</td>
                 `;
                 
                 // 如果数据正在加载，添加加载样式
@@ -550,6 +562,17 @@
             
             stocks.forEach(stock => {
                 const row = document.createElement('tr');
+                
+                // 九转序列显示逻辑
+                let nineTurnDisplay = '-';
+                if (stock.nine_turn_up || stock.nine_turn_down) {
+                    if (stock.nine_turn_up && stock.nine_turn_up > 0) {
+                        nineTurnDisplay = `<span style="color: red; font-weight: bold;">${stock.nine_turn_up}</span>`;
+                    } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
+                        nineTurnDisplay = `<span style="color: green; font-weight: bold;">${stock.nine_turn_down}</span>`;
+                    }
+                }
+                
                 row.innerHTML = `
                     <td><span class="stock-code" onclick="goToStock('${stock.ts_code}')">${stock.ts_code}</span></td>
                     <td>${stock.name}</td>
@@ -559,6 +582,7 @@
                     <td>${stock.volume_ratio.toFixed(2)}</td>
                     <td>${(stock.amount / 10000).toFixed(2)}</td>
                     <td>${(stock.market_cap / 10000).toFixed(2)}</td>
+                    <td>${nineTurnDisplay}</td>
                 `;
                 tbody.appendChild(row);
             });

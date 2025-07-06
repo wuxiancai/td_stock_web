@@ -125,6 +125,11 @@ def update_stock_data_progressive(market, stocks_list):
             latest_data = pro.daily(ts_code=stock_info['ts_code'], limit=1)
             daily_basic = pro.daily_basic(ts_code=stock_info['ts_code'], limit=1)
             
+            # 获取最近30天的K线数据用于计算九转序列
+            end_date = datetime.now().strftime('%Y%m%d')
+            start_date = (datetime.now() - timedelta(days=45)).strftime('%Y%m%d')
+            kline_data = pro.daily(ts_code=stock_info['ts_code'], start_date=start_date, end_date=end_date)
+            
             # 更新实时数据
             if not latest_data.empty:
                 stock_info['latest_price'] = safe_float(latest_data.iloc[0]['close'])
@@ -138,6 +143,19 @@ def update_stock_data_progressive(market, stocks_list):
                 if 'total_mv' in daily_basic.columns:
                     stock_info['market_cap'] = safe_float(daily_basic.iloc[0]['total_mv'])
             
+            # 计算九转序列
+            nine_turn_up = 0
+            nine_turn_down = 0
+            if not kline_data.empty and len(kline_data) >= 5:
+                kline_data = kline_data.sort_values('trade_date')
+                kline_with_nine_turn = calculate_nine_turn(kline_data)
+                # 获取最新一天的九转序列数据
+                latest_nine_turn = kline_with_nine_turn.iloc[-1]
+                nine_turn_up = int(latest_nine_turn['nine_turn_up']) if latest_nine_turn['nine_turn_up'] > 0 else 0
+                nine_turn_down = int(latest_nine_turn['nine_turn_down']) if latest_nine_turn['nine_turn_down'] > 0 else 0
+            
+            stock_info['nine_turn_up'] = nine_turn_up
+            stock_info['nine_turn_down'] = nine_turn_down
             stock_info['last_update'] = current_date
             stock_info['data_loaded'] = True  # 标记数据已加载
             
