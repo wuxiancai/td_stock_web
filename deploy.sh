@@ -145,6 +145,12 @@ setup_project() {
     log_info "检测到当前目录: $CURRENT_DIR"
     log_info "目标部署路径: $PROJECT_DIR"
     
+    # 如果当前目录就是目标目录，直接使用
+    if [[ "$CURRENT_DIR" == "$PROJECT_DIR" ]]; then
+        log_info "当前已在目标部署目录中，无需复制"
+        return 0
+    fi
+    
     # 如果项目目录已存在，询问是否覆盖
     if [[ -d "$PROJECT_DIR" ]]; then
         log_warning "项目目录 $PROJECT_DIR 已存在"
@@ -159,8 +165,17 @@ setup_project() {
         fi
     fi
     
-    # 复制项目文件
-    cp -r "$(pwd)" "$PROJECT_DIR"
+    # 创建目标目录
+    mkdir -p "$PROJECT_DIR"
+    
+    # 复制项目文件（复制目录内容而不是目录本身）
+    cp -r "$CURRENT_DIR"/* "$PROJECT_DIR"/
+    
+    # 复制隐藏文件（如果存在）
+    if ls "$CURRENT_DIR"/.[^.]* >/dev/null 2>&1; then
+        cp -r "$CURRENT_DIR"/.[^.]* "$PROJECT_DIR"/ 2>/dev/null || true
+    fi
+    
     cd "$PROJECT_DIR"
     
     log_success "项目目录设置完成: $PROJECT_DIR"
