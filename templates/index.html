@@ -327,7 +327,7 @@
                 <div class="market-buttons">
                     <button class="market-btn" onclick="loadMarketStocks('cyb')">创业板</button>
                     <button class="market-btn" onclick="loadMarketStocks('hu')">沪A</button>
-                    <button class="market-btn" onclick="loadMarketStocks('zxb')">中小板</button>
+                    <button class="market-btn" onclick="loadMarketStocks('zxb')">深A</button>
                     <button class="market-btn" onclick="loadMarketStocks('kcb')">科创板</button>
                     <button class="market-btn" onclick="loadMarketStocks('bj')">北交所</button>
                     <button class="market-btn" onclick="syncAllMarkets()" style="background: linear-gradient(45deg, #28a745, #20c997);">A股</button>
@@ -363,7 +363,7 @@
                     <button onclick="refreshSchedulerStatus()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新状态</button>
                 </div>
                 <div style="margin-top: 10px; font-size: 10px; color: #ccc;">
-                    💡 系统将在每个工作日下午5点自动同步所有A股数据，包括创业板、沪A、中小板、科创板和北交所
+                    💡 系统将在每个工作日下午5点自动同步所有A股数据，包括创业板、沪A、深A、科创板和北交所
                 </div>
             </div>
         </div>
@@ -509,7 +509,7 @@
             const marketNames = {
                 'cyb': '创业板',
                 'hu': '沪A股',
-                'zxb': '中小板',
+                'zxb': '深A股',
                 'kcb': '科创板',
                 'bj': '北交所'
             };
@@ -716,7 +716,7 @@
             const marketNames = {
                 'cyb': '创业板',
                 'hu': '沪A股',
-                'zxb': '中小板',
+                'zxb': '深A',
                 'kcb': '科创板',
                 'bj': '北交所'
             };
@@ -746,7 +746,7 @@
                 const marketNames = {
                     'cyb': '创业板',
                     'hu': '沪A股',
-                    'zxb': '中小板',
+                    'zxb': '深A',
                     'kcb': '科创板',
                     'bj': '北交所'
                 };
@@ -898,7 +898,7 @@
             const marketNames = {
                 'cyb': '创业板',
                 'hu': '沪A股',
-                'zxb': '中小板',
+                'zxb': '深A',
                 'kcb': '科创板',
                 'bj': '北交所'
             };
@@ -931,7 +931,7 @@
              const marketNames = {
                  'cyb': '创业板',
                  'hu': '沪A股',
-                 'zxb': '中小板',
+                 'zxb': '深A',
                  'kcb': '科创板',
                  'bj': '北交所'
              };

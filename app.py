@@ -740,7 +740,7 @@ def get_stocks_by_market(market):
                 stocks = safe_tushare_call(pro.stock_basic, market='创业板')
             elif market == 'hu':  # 沪A
                 stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SSE')
-            elif market == 'zxb':  # 中小板（已并入深市主板）
+            elif market == 'zxb':  # 深A（原中小板，已并入深市主板）
                 stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SZSE')
             elif market == 'kcb':  # 科创板
                 # 科创板股票代码以688开头，需要单独获取
@@ -887,7 +887,7 @@ def force_refresh_market(market):
             stocks = safe_tushare_call(pro.stock_basic, market='创业板')
         elif market == 'hu':  # 沪A
             stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SSE')
-        elif market == 'zxb':  # 中小板（已并入深市主板）
+        elif market == 'zxb':  # 深A（原中小板，已并入深市主板）
             stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SZSE')
         elif market == 'kcb':  # 科创板
             stocks = safe_tushare_call(pro.stock_basic, market='科创板', exchange='SSE')
@@ -960,7 +960,7 @@ def auto_sync_all_markets():
         market_names = {
             'cyb': '创业板',
             'hu': '沪A股',
-            'zxb': '中小板',
+            'zxb': '深A',
             'kcb': '科创板',
             'bj': '北交所'
         }
