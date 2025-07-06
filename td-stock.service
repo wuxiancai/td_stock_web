@@ -3,19 +3,30 @@ Description=九转序列选股系统
 Documentation=https://github.com/your-repo/td_stock
 After=network.target network-online.target
 Wants=network-online.target
+Requires=network.target
 
 [Service]
 Type=simple
-User=stock
-Group=stock
-WorkingDirectory=/home/stock/td_stock
-Environment=PATH=/home/stock/td_stock/venv/bin
-EnvironmentFile=/home/stock/td_stock/.env
-ExecStart=/home/stock/td_stock/venv/bin/python app.py
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/td_stock_web
+Environment=PATH=/home/ubuntu/td_stock_web/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/home/ubuntu/td_stock_web
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/home/ubuntu/td_stock_web/.env
+# 启动前检查
+ExecStartPre=/bin/test -f /home/ubuntu/td_stock_web/app.py
+ExecStartPre=/bin/test -f /home/ubuntu/td_stock_web/.env
+ExecStartPre=/home/ubuntu/td_stock_web/venv/bin/python -c "import flask, tushare, pandas, numpy, schedule"
+ExecStart=/home/ubuntu/td_stock_web/venv/bin/python app.py
 ExecReload=/bin/kill -HUP $MAINPID
-Restart=always
-RestartSec=10
+ExecStop=/bin/kill -TERM $MAINPID
+TimeoutStartSec=120
 TimeoutStopSec=30
+Restart=always
+RestartSec=15
+StartLimitInterval=300
+StartLimitBurst=3
 
 # 日志配置
 StandardOutput=append:/var/log/td_stock/app.log
@@ -27,7 +38,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/log/td_stock /home/stock/td_stock
+ReadWritePaths=/var/log/td_stock /home/ubuntu/td_stock_web
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true

@@ -138,8 +138,12 @@ install_dependencies() {
 setup_project() {
     log_info "设置项目目录..."
     
-    # 项目部署路径
-    PROJECT_DIR="/home/$USER/td_stock"
+    # 动态获取当前工作目录作为项目部署路径
+    CURRENT_DIR=$(pwd)
+    PROJECT_DIR="/home/$USER/$(basename "$CURRENT_DIR")"
+    
+    log_info "检测到当前目录: $CURRENT_DIR"
+    log_info "目标部署路径: $PROJECT_DIR"
     
     # 如果项目目录已存在，询问是否覆盖
     if [[ -d "$PROJECT_DIR" ]]; then
