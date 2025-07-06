@@ -9,6 +9,7 @@ import os
 import json
 import threading
 import time
+import schedule
 
 app = Flask(__name__)
 CORS(app)
@@ -775,7 +776,267 @@ def get_stocks_by_market(market):
         print(f"获取{market}市场数据失败: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/force_refresh/<market>', methods=['POST'])
+def force_refresh_market(market):
+    """强制刷新指定市场的数据"""
+    try:
+        # 验证市场类型
+        valid_markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        if market not in valid_markets:
+            return jsonify({'error': '无效的市场类型'}), 400
+        
+        # 取消正在运行的更新线程
+        if market in update_status and update_status[market].get('status') == 'updating':
+            update_status[market]['status'] = 'cancelled'
+            print(f"取消{market}市场正在运行的更新线程")
+            time.sleep(1)  # 等待线程停止
+        
+        # 清除缓存文件
+        cache_file = get_cache_file_path(market)
+        if os.path.exists(cache_file):
+            os.remove(cache_file)
+            print(f"已清除{market}市场缓存文件")
+        
+        # 重置更新状态
+        if market in update_status:
+            del update_status[market]
+        
+        current_date = datetime.now().strftime('%Y%m%d')
+        
+        # 获取股票列表
+        if market == 'cyb':  # 创业板
+            stocks = pro.stock_basic(market='创业板')
+        elif market == 'hu':  # 沪A
+            stocks = pro.stock_basic(market='主板', exchange='SSE')
+        elif market == 'zxb':  # 中小板
+            stocks = pro.stock_basic(market='中小板')
+        elif market == 'kcb':  # 科创板
+            stocks = pro.stock_basic(market='科创板', exchange='SSE')
+        elif market == 'bj':  # 北交所
+            stocks = pro.stock_basic(exchange='BSE')
+        
+        if stocks.empty:
+            return jsonify({'success': True, 'message': f'{market}市场暂无股票数据'})
+        
+        print(f"开始强制刷新{len(stocks)}只{market}股票的数据...")
+        
+        # 创建基本信息
+        all_stocks_data = []
+        for _, stock in stocks.iterrows():
+            stock_info = {
+                'ts_code': stock['ts_code'],
+                'name': stock['name'],
+                'industry': stock['industry'],
+                'latest_price': 0,
+                'turnover_rate': 0,
+                'volume_ratio': 0,
+                'amount': 0,
+                'market_cap': 0,
+                'pe_ttm': 0,
+                'last_update': current_date
+            }
+            all_stocks_data.append(stock_info)
+        
+        # 保存基本信息到缓存
+        cache_data = {
+            'stocks': all_stocks_data,
+            'last_update_date': current_date,
+            'total': len(all_stocks_data),
+            'data_status': 'basic_only'
+        }
+        save_cache_data(market, cache_data)
+        
+        # 启动后台线程进行渐进式数据更新
+        update_thread = threading.Thread(
+            target=update_stock_data_progressive, 
+            args=(market, all_stocks_data),
+            daemon=True
+        )
+        update_thread.start()
+        print(f"已启动后台线程更新{market}市场实时数据")
+        
+        return jsonify({
+            'success': True, 
+            'message': f'{market}市场数据刷新已启动',
+            'total_stocks': len(all_stocks_data)
+        })
+        
+    except Exception as e:
+        print(f"强制刷新{market}市场数据失败: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# 定时任务功能
+def auto_sync_all_markets():
+    """自动同步所有A股市场数据"""
+    try:
+        # 检查是否为工作日
+        now = datetime.now()
+        if now.weekday() >= 5:  # 周六(5)和周日(6)不执行
+            print(f"今天是{['周一', '周二', '周三', '周四', '周五', '周六', '周日'][now.weekday()]}，跳过自动同步")
+            return
+        
+        print(f"开始自动同步所有A股市场数据 - {now.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        market_names = {
+            'cyb': '创业板',
+            'hu': '沪A股',
+            'zxb': '中小板',
+            'kcb': '科创板',
+            'bj': '北交所'
+        }
+        
+        for market in markets:
+            try:
+                print(f"正在同步{market_names[market]}数据...")
+                
+                # 取消正在运行的更新线程
+                if market in update_status and update_status[market].get('status') == 'updating':
+                    update_status[market]['status'] = 'cancelled'
+                    print(f"取消{market}市场正在运行的更新线程")
+                    time.sleep(1)
+                
+                # 清除缓存文件
+                cache_file = get_cache_file_path(market)
+                if os.path.exists(cache_file):
+                    os.remove(cache_file)
+                    print(f"已清除{market}市场缓存文件")
+                
+                # 重置更新状态
+                if market in update_status:
+                    del update_status[market]
+                
+                current_date = datetime.now().strftime('%Y%m%d')
+                
+                # 获取股票列表
+                if market == 'cyb':
+                    stocks = pro.stock_basic(market='创业板')
+                elif market == 'hu':
+                    stocks = pro.stock_basic(market='主板', exchange='SSE')
+                elif market == 'zxb':
+                    stocks = pro.stock_basic(market='中小板')
+                elif market == 'kcb':
+                    stocks = pro.stock_basic(market='科创板', exchange='SSE')
+                elif market == 'bj':
+                    stocks = pro.stock_basic(exchange='BSE')
+                
+                if stocks.empty:
+                    print(f"{market_names[market]}暂无股票数据")
+                    continue
+                
+                print(f"开始刷新{len(stocks)}只{market_names[market]}股票的数据...")
+                
+                # 创建基本信息
+                all_stocks_data = []
+                for _, stock in stocks.iterrows():
+                    stock_info = {
+                        'ts_code': stock['ts_code'],
+                        'name': stock['name'],
+                        'industry': stock['industry'],
+                        'latest_price': 0,
+                        'turnover_rate': 0,
+                        'volume_ratio': 0,
+                        'amount': 0,
+                        'market_cap': 0,
+                        'pe_ttm': 0,
+                        'last_update': current_date
+                    }
+                    all_stocks_data.append(stock_info)
+                
+                # 保存基本信息到缓存
+                cache_data = {
+                    'stocks': all_stocks_data,
+                    'last_update_date': current_date,
+                    'total': len(all_stocks_data),
+                    'data_status': 'basic_only'
+                }
+                save_cache_data(market, cache_data)
+                
+                # 启动后台线程进行渐进式数据更新
+                update_thread = threading.Thread(
+                    target=update_stock_data_progressive,
+                    args=(market, all_stocks_data),
+                    daemon=True
+                )
+                update_thread.start()
+                print(f"已启动{market_names[market]}后台更新线程")
+                
+                # 等待一段时间再处理下一个市场，避免API频率限制
+                time.sleep(2)
+                
+            except Exception as e:
+                print(f"同步{market_names[market]}数据失败: {e}")
+                continue
+        
+        print(f"所有A股市场数据同步任务已启动 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+    except Exception as e:
+        print(f"自动同步任务执行失败: {e}")
+
+def start_scheduler():
+    """启动定时调度器"""
+    # 设置定时任务：工作日下午5点执行
+    schedule.every().monday.at("17:00").do(auto_sync_all_markets)
+    schedule.every().tuesday.at("17:00").do(auto_sync_all_markets)
+    schedule.every().wednesday.at("17:00").do(auto_sync_all_markets)
+    schedule.every().thursday.at("17:00").do(auto_sync_all_markets)
+    schedule.every().friday.at("17:00").do(auto_sync_all_markets)
+    
+    print("定时任务已设置：工作日下午5点自动同步所有A股数据")
+    
+    # 在后台线程中运行调度器
+    def run_scheduler():
+        while True:
+            schedule.run_pending()
+            time.sleep(60)  # 每分钟检查一次
+    
+    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+    scheduler_thread.start()
+    print("定时调度器已启动")
+
+@app.route('/api/scheduler/status')
+def get_scheduler_status():
+    """获取定时任务状态"""
+    try:
+        jobs = schedule.jobs
+        next_run_time = None
+        
+        # 找到最近的下次运行时间
+        if jobs:
+            next_runs = [job.next_run for job in jobs if job.next_run]
+            if next_runs:
+                next_run_time = min(next_runs).strftime('%Y-%m-%d %H:%M:%S')
+        
+        return jsonify({
+            'status': 'running' if jobs else 'stopped',
+            'next_run': next_run_time,
+            'total_jobs': len(jobs)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/scheduler/trigger', methods=['POST'])
+def trigger_auto_sync():
+    """手动触发自动同步任务"""
+    try:
+        # 在后台线程中执行同步任务
+        sync_thread = threading.Thread(target=auto_sync_all_markets, daemon=True)
+        sync_thread.start()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '手动同步任务已启动'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 if __name__ == '__main__':
+    # 启动定时调度器
+    start_scheduler()
+    
     port = find_available_port()
     if port:
         print(f"服务器启动在端口: {port}")

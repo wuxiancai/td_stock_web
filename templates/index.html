@@ -308,11 +308,36 @@
                 <button class="market-btn" onclick="loadMarketStocks('zxb')">中小板</button>
                 <button class="market-btn" onclick="loadMarketStocks('kcb')">科创板</button>
                 <button class="market-btn" onclick="loadMarketStocks('bj')">北交所</button>
+                <button class="market-btn" onclick="syncAllMarkets()" style="background: linear-gradient(45deg, #28a745, #20c997);">A股</button>
             </div>
             
             <div class="refresh-section" id="refreshSection" style="display: none;">
                 <button class="refresh-btn" onclick="forceRefreshMarket()">🔄 强制刷新数据</button>
                 <span class="refresh-tip">如果数据显示异常，可点击强制刷新重新获取最新数据</span>
+            </div>
+            
+            <!-- 定时任务状态面板 -->
+            <div class="scheduler-section" style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                <h4 style="margin: 0 0 10px 0; color: #fff; font-size: 14px;">📅 定时同步任务</h4>
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <span style="font-size: 10px; color: #ccc;">任务状态</span>
+                        <span id="schedulerStatus" style="font-size: 12px; color: #28a745;">🟢 运行中</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <span style="font-size: 10px; color: #ccc;">下次执行</span>
+                        <span id="nextRunTime" style="font-size: 12px; color: #fff;">加载中...</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <span style="font-size: 10px; color: #ccc;">执行时间</span>
+                        <span style="font-size: 12px; color: #fff;">工作日 17:00</span>
+                    </div>
+                    <button onclick="triggerAutoSync()" style="padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🚀 立即同步</button>
+                    <button onclick="refreshSchedulerStatus()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新状态</button>
+                </div>
+                <div style="margin-top: 10px; font-size: 10px; color: #ccc;">
+                    💡 系统将在每个工作日下午5点自动同步所有A股数据，包括创业板、沪A、中小板、科创板和北交所
+                </div>
             </div>
         </div>
         
@@ -1047,6 +1072,168 @@
                  }
              });
          }
-    </script>
+         
+         // A股一键同步所有市场数据
+         function syncAllMarkets() {
+             // 清除之前的进度监控
+             if (progressInterval) {
+                 clearInterval(progressInterval);
+                 progressInterval = null;
+             }
+             
+             // 更新按钮状态
+             document.querySelectorAll('.market-btn').forEach(btn => {
+                 btn.classList.remove('active');
+             });
+             event.target.classList.add('active');
+             
+             // 显示同步状态
+             document.getElementById('stocksSection').style.display = 'block';
+             document.getElementById('loadingDiv').style.display = 'block';
+             document.getElementById('progressDiv').style.display = 'none';
+             document.getElementById('errorDiv').style.display = 'none';
+             document.getElementById('stocksTable').style.display = 'none';
+             document.getElementById('filterSection').style.display = 'none';
+             document.getElementById('refreshSection').style.display = 'block';
+             
+             document.getElementById('sectionTitle').textContent = 'A股数据同步中...';
+             document.getElementById('loadingDiv').innerHTML = '<div style="text-align: center; padding: 40px; font-size: 16px; color: #666;">正在同步所有A股市场数据，请稍候...</div>';
+             
+             // 定义所有需要同步的市场
+             const markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj'];
+             let completedMarkets = 0;
+             let totalMarkets = markets.length;
+             
+             // 更新同步进度显示
+             function updateSyncProgress() {
+                 const progress = Math.round((completedMarkets / totalMarkets) * 100);
+                 document.getElementById('loadingDiv').innerHTML = 
+                     `<div style="text-align: center; padding: 40px; font-size: 16px; color: #666;">
+                         正在同步所有A股市场数据...<br>
+                         <div style="margin-top: 15px; font-size: 14px;">进度: ${completedMarkets}/${totalMarkets} (${progress}%)</div>
+                         <div style="width: 300px; height: 10px; background: #f0f0f0; border-radius: 5px; margin: 10px auto; overflow: hidden;">
+                             <div style="height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); width: ${progress}%; transition: width 0.3s ease;"></div>
+                         </div>
+                     </div>`;
+             }
+             
+             // 逐个同步市场数据
+             function syncNextMarket(index) {
+                 if (index >= markets.length) {
+                     // 所有市场同步完成
+                     document.getElementById('loadingDiv').innerHTML = 
+                         '<div style="text-align: center; padding: 40px; font-size: 16px; color: #28a745;">✅ 所有A股市场数据同步完成！</div>';
+                     
+                     setTimeout(() => {
+                         document.getElementById('loadingDiv').style.display = 'none';
+                         document.getElementById('sectionTitle').textContent = 'A股数据同步完成';
+                         
+                         // 显示完成提示
+                         const completionMsg = document.createElement('div');
+                         completionMsg.style.cssText = 'text-align: center; padding: 20px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 8px; margin: 20px 0;';
+                         completionMsg.innerHTML = '🎉 所有A股市场数据已成功同步！您可以点击任意市场按钮查看最新数据。';
+                         document.getElementById('stocksSection').appendChild(completionMsg);
+                         
+                         // 3秒后自动移除提示
+                         setTimeout(() => {
+                             if (completionMsg.parentNode) {
+                                 completionMsg.parentNode.removeChild(completionMsg);
+                             }
+                         }, 3000);
+                     }, 1000);
+                     return;
+                 }
+                 
+                 const market = markets[index];
+                 
+                 // 强制刷新当前市场数据
+                 fetch(`/api/force_refresh/${market}`, { method: 'POST' })
+                     .then(response => response.json())
+                     .then(data => {
+                         completedMarkets++;
+                         updateSyncProgress();
+                         
+                         // 继续同步下一个市场
+                         setTimeout(() => syncNextMarket(index + 1), 500);
+                     })
+                     .catch(error => {
+                         console.error(`同步${market}市场失败:`, error);
+                         completedMarkets++;
+                         updateSyncProgress();
+                         
+                         // 即使失败也继续同步下一个市场
+                         setTimeout(() => syncNextMarket(index + 1), 500);
+                     });
+             }
+             
+             // 开始同步
+         updateSyncProgress();
+         syncNextMarket(0);
+     }
+     
+     // 定时任务相关函数
+     function refreshSchedulerStatus() {
+         fetch('/api/scheduler/status')
+             .then(response => response.json())
+             .then(data => {
+                 const statusElement = document.getElementById('schedulerStatus');
+                 const nextRunElement = document.getElementById('nextRunTime');
+                 
+                 if (data.status === 'running') {
+                     statusElement.textContent = '运行中';
+                     statusElement.className = 'status-running';
+                 } else {
+                     statusElement.textContent = '已停止';
+                     statusElement.className = 'status-stopped';
+                 }
+                 
+                 if (data.next_run) {
+                     nextRunElement.textContent = data.next_run;
+                 } else {
+                     nextRunElement.textContent = '无';
+                 }
+             })
+             .catch(error => {
+                 console.error('获取定时任务状态失败:', error);
+                 document.getElementById('schedulerStatus').textContent = '获取失败';
+                 document.getElementById('schedulerStatus').className = 'status-error';
+             });
+     }
+     
+     function triggerAutoSync() {
+         const triggerBtn = document.querySelector('#schedulerPanel button:last-child');
+         const originalText = triggerBtn.textContent;
+         
+         triggerBtn.textContent = '触发中...';
+         triggerBtn.disabled = true;
+         
+         fetch('/api/scheduler/trigger', { method: 'POST' })
+             .then(response => response.json())
+             .then(data => {
+                 if (data.status === 'success') {
+                     alert('手动触发成功！定时同步任务已开始执行。');
+                 } else {
+                     alert('触发失败：' + (data.message || '未知错误'));
+                 }
+             })
+             .catch(error => {
+                 console.error('手动触发失败:', error);
+                 alert('触发失败：网络错误');
+             })
+             .finally(() => {
+                 triggerBtn.textContent = originalText;
+                 triggerBtn.disabled = false;
+                 // 刷新状态
+                 setTimeout(refreshSchedulerStatus, 1000);
+             });
+     }
+     
+     // 页面加载完成后初始化定时任务状态
+     document.addEventListener('DOMContentLoaded', function() {
+         refreshSchedulerStatus();
+         // 每30秒自动刷新一次状态
+         setInterval(refreshSchedulerStatus, 30000);
+     });
+</script>
 </body>
 </html>
