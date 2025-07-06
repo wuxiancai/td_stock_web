@@ -10,13 +10,95 @@ import json
 import threading
 import time
 import schedule
+from collections import deque
 
 app = Flask(__name__)
 CORS(app)
 
+# Tushare API频率限制器
+class TushareRateLimiter:
+    """Tushare API频率限制器，确保每分钟不超过199次请求"""
+    
+    def __init__(self, max_requests_per_minute=199):
+        self.max_requests = max_requests_per_minute
+        self.requests = deque()  # 存储请求时间戳
+        self.lock = threading.Lock()  # 线程锁，确保线程安全
+        
+    def wait_if_needed(self):
+        """如果需要，等待直到可以发送请求"""
+        with self.lock:
+            now = time.time()
+            
+            # 清理60秒前的请求记录
+            while self.requests and now - self.requests[0] >= 60:
+                self.requests.popleft()
+            
+            # 如果当前分钟内请求数已达上限，等待
+            if len(self.requests) >= self.max_requests:
+                # 计算需要等待的时间（到最早请求的60秒后）
+                wait_time = 60 - (now - self.requests[0]) + 0.1  # 额外等待0.1秒确保安全
+                if wait_time > 0:
+                    print(f"API频率限制：已达到每分钟{self.max_requests}次限制，等待{wait_time:.1f}秒...")
+                    time.sleep(wait_time)
+                    # 重新清理过期请求
+                    now = time.time()
+                    while self.requests and now - self.requests[0] >= 60:
+                        self.requests.popleft()
+            
+            # 记录当前请求时间
+            self.requests.append(now)
+            
+    def get_remaining_requests(self):
+        """获取当前分钟内剩余可用请求数"""
+        with self.lock:
+            now = time.time()
+            # 清理60秒前的请求记录
+            while self.requests and now - self.requests[0] >= 60:
+                self.requests.popleft()
+            return self.max_requests - len(self.requests)
+    
+    def get_status(self):
+        """获取限制器状态信息"""
+        with self.lock:
+            now = time.time()
+            # 清理60秒前的请求记录
+            while self.requests and now - self.requests[0] >= 60:
+                self.requests.popleft()
+            
+            remaining = self.max_requests - len(self.requests)
+            next_reset_time = None
+            if self.requests:
+                next_reset_time = self.requests[0] + 60
+            
+            return {
+                'used_requests': len(self.requests),
+                'remaining_requests': remaining,
+                'max_requests_per_minute': self.max_requests,
+                'next_reset_time': next_reset_time,
+                'current_time': now
+            }
+
+# 创建全局频率限制器实例
+rate_limiter = TushareRateLimiter(max_requests_per_minute=199)
+
 # Tushare配置
 ts.set_token('68a7f380e45182b216eb63a9666c277ee96e68e3754476976adc5019')
 pro = ts.pro_api()
+
+# 包装tushare API调用的函数
+def safe_tushare_call(func, *args, **kwargs):
+    """安全的tushare API调用，自动处理频率限制"""
+    rate_limiter.wait_if_needed()
+    try:
+        result = func(*args, **kwargs)
+        return result
+    except Exception as e:
+        print(f"Tushare API调用失败: {e}")
+        # 如果是频率限制错误，额外等待
+        if "频率" in str(e) or "limit" in str(e).lower():
+            print("检测到频率限制错误，额外等待30秒...")
+            time.sleep(30)
+        raise e
 
 def find_available_port(start_port=8080):
     """查找可用端口"""
@@ -122,14 +204,14 @@ def update_stock_data_progressive(market, stocks_list):
                 
             print(f"正在更新 {stock_info['ts_code']} ({i+1}/{len(working_stocks_list)})")
             
-            # 获取最新价格和基本面数据
-            latest_data = pro.daily(ts_code=stock_info['ts_code'], limit=1)
-            daily_basic = pro.daily_basic(ts_code=stock_info['ts_code'], limit=1)
+            # 获取最新价格和基本面数据（使用频率限制）
+            latest_data = safe_tushare_call(pro.daily, ts_code=stock_info['ts_code'], limit=1)
+            daily_basic = safe_tushare_call(pro.daily_basic, ts_code=stock_info['ts_code'], limit=1)
             
-            # 获取最近30天的K线数据用于计算九转序列
+            # 获取最近30天的K线数据用于计算九转序列（使用频率限制）
             end_date = datetime.now().strftime('%Y%m%d')
             start_date = (datetime.now() - timedelta(days=45)).strftime('%Y%m%d')
-            kline_data = pro.daily(ts_code=stock_info['ts_code'], start_date=start_date, end_date=end_date)
+            kline_data = safe_tushare_call(pro.daily, ts_code=stock_info['ts_code'], start_date=start_date, end_date=end_date)
             
             # 更新实时数据
             if not latest_data.empty:
@@ -197,9 +279,6 @@ def update_stock_data_progressive(market, stocks_list):
             stock_info['data_loaded'] = False
             stock_info['last_update'] = current_date
             continue
-        
-        # 避免API频率限制
-        time.sleep(0.5)
     
     # 检查更新是否被取消
     if market in update_status and update_status[market].get('status') == 'cancelled':
@@ -436,27 +515,27 @@ def get_stock_data(stock_code):
             # 如果已经包含后缀，直接使用
             ts_code = stock_code
         
-        # 获取基本信息
-        basic_info = pro.stock_basic(ts_code=ts_code)
+        # 获取基本信息（使用频率限制）
+        basic_info = safe_tushare_call(pro.stock_basic, ts_code=ts_code)
         if basic_info.empty:
             return jsonify({'error': '股票代码不存在'}), 404
         
-        # 获取最近90天的日K线数据
+        # 获取最近90天的日K线数据（使用频率限制）
         end_date = datetime.now().strftime('%Y%m%d')
         start_date = (datetime.now() - timedelta(days=120)).strftime('%Y%m%d')
         
-        daily_data = pro.daily(ts_code=ts_code, start_date=start_date, end_date=end_date)
+        daily_data = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
         if daily_data.empty:
             return jsonify({'error': '无法获取股票数据'}), 404
         
         daily_data = daily_data.sort_values('trade_date').tail(90)
         
-        # 获取最新的财务数据，尝试多个交易日
+        # 获取最新的财务数据，尝试多个交易日（使用频率限制）
         daily_basic = pd.DataFrame()
         for i in range(10):  # 尝试最近10个交易日
             try:
                 check_date = (datetime.now() - timedelta(days=i)).strftime('%Y%m%d')
-                daily_basic = pro.daily_basic(ts_code=ts_code, trade_date=check_date)
+                daily_basic = safe_tushare_call(pro.daily_basic, ts_code=ts_code, trade_date=check_date)
                 if not daily_basic.empty:
                     break
             except:
@@ -511,14 +590,14 @@ def get_stock_data(stock_code):
         # 使用fillna确保所有NaN都被替换为None
         daily_data = daily_data.where(pd.notna(daily_data), None)
         
-        # 获取资金流向数据（尝试两个接口）
+        # 获取资金流向数据（尝试两个接口，使用频率限制）
         moneyflow_data = None
         try:
             # 优先尝试moneyflow_dc接口（需要5000积分，数据更详细）
-            moneyflow_data = pro.moneyflow_dc(ts_code=ts_code, limit=1)
+            moneyflow_data = safe_tushare_call(pro.moneyflow_dc, ts_code=ts_code, limit=1)
             if moneyflow_data.empty:
                 # 如果moneyflow_dc没有数据，尝试moneyflow接口（需要2000积分）
-                moneyflow_data = pro.moneyflow(ts_code=ts_code, limit=1)
+                moneyflow_data = safe_tushare_call(pro.moneyflow, ts_code=ts_code, limit=1)
         except Exception as e:
             print(f"获取资金流向数据失败: {e}")
             # 如果积分不足或其他错误，继续执行但不包含资金流向数据
@@ -656,19 +735,19 @@ def get_stocks_by_market(market):
             print(f"{market}市场数据已是最新，使用缓存")
         
         if need_full_update:
-            # 全量更新：获取股票列表
+            # 全量更新：获取股票列表（使用频率限制）
             if market == 'cyb':  # 创业板
-                stocks = pro.stock_basic(market='创业板')
+                stocks = safe_tushare_call(pro.stock_basic, market='创业板')
             elif market == 'hu':  # 沪A
-                stocks = pro.stock_basic(market='主板', exchange='SSE')
+                stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SSE')
             elif market == 'zxb':  # 中小板
-                stocks = pro.stock_basic(market='中小板')
+                stocks = safe_tushare_call(pro.stock_basic, market='中小板')
             elif market == 'kcb':  # 科创板
                 # 科创板股票代码以688开头，需要单独获取
-                stocks = pro.stock_basic(market='科创板', exchange='SSE')
+                stocks = safe_tushare_call(pro.stock_basic, market='科创板', exchange='SSE')
                 print(f"获取到{len(stocks)}只科创板股票")
             elif market == 'bj':  # 北交所
-                stocks = pro.stock_basic(exchange='BSE')
+                stocks = safe_tushare_call(pro.stock_basic, exchange='BSE')
             else:
                 return jsonify({'error': '无效的市场类型'}), 400
             
@@ -726,9 +805,9 @@ def get_stocks_by_market(market):
             # 批量更新股票的最新数据
             for stock_info in all_stocks_data:
                 try:
-                    # 获取最新价格和基本面数据
-                    latest_data = pro.daily(ts_code=stock_info['ts_code'], limit=1)
-                    daily_basic = pro.daily_basic(ts_code=stock_info['ts_code'], limit=1)
+                    # 获取最新价格和基本面数据（使用频率限制）
+                    latest_data = safe_tushare_call(pro.daily, ts_code=stock_info['ts_code'], limit=1)
+                    daily_basic = safe_tushare_call(pro.daily_basic, ts_code=stock_info['ts_code'], limit=1)
                     
                     # 更新实时数据
                     stock_info['latest_price'] = safe_float(latest_data.iloc[0]['close']) if not latest_data.empty else stock_info.get('latest_price', 0)
@@ -803,17 +882,17 @@ def force_refresh_market(market):
         
         current_date = datetime.now().strftime('%Y%m%d')
         
-        # 获取股票列表
+        # 获取股票列表（使用频率限制）
         if market == 'cyb':  # 创业板
-            stocks = pro.stock_basic(market='创业板')
+            stocks = safe_tushare_call(pro.stock_basic, market='创业板')
         elif market == 'hu':  # 沪A
-            stocks = pro.stock_basic(market='主板', exchange='SSE')
+            stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SSE')
         elif market == 'zxb':  # 中小板
-            stocks = pro.stock_basic(market='中小板')
+            stocks = safe_tushare_call(pro.stock_basic, market='中小板')
         elif market == 'kcb':  # 科创板
-            stocks = pro.stock_basic(market='科创板', exchange='SSE')
+            stocks = safe_tushare_call(pro.stock_basic, market='科创板', exchange='SSE')
         elif market == 'bj':  # 北交所
-            stocks = pro.stock_basic(exchange='BSE')
+            stocks = safe_tushare_call(pro.stock_basic, exchange='BSE')
         
         if stocks.empty:
             return jsonify({'success': True, 'message': f'{market}市场暂无股票数据'})
@@ -908,17 +987,17 @@ def auto_sync_all_markets():
                 
                 current_date = datetime.now().strftime('%Y%m%d')
                 
-                # 获取股票列表
+                # 获取股票列表（使用频率限制）
                 if market == 'cyb':
-                    stocks = pro.stock_basic(market='创业板')
+                    stocks = safe_tushare_call(pro.stock_basic, market='创业板')
                 elif market == 'hu':
-                    stocks = pro.stock_basic(market='主板', exchange='SSE')
+                    stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SSE')
                 elif market == 'zxb':
-                    stocks = pro.stock_basic(market='中小板')
+                    stocks = safe_tushare_call(pro.stock_basic, market='中小板')
                 elif market == 'kcb':
-                    stocks = pro.stock_basic(market='科创板', exchange='SSE')
+                    stocks = safe_tushare_call(pro.stock_basic, market='科创板', exchange='SSE')
                 elif market == 'bj':
-                    stocks = pro.stock_basic(exchange='BSE')
+                    stocks = safe_tushare_call(pro.stock_basic, exchange='BSE')
                 
                 if stocks.empty:
                     print(f"{market_names[market]}暂无股票数据")
@@ -1033,6 +1112,34 @@ def trigger_auto_sync():
             'message': str(e)
         }), 500
 
+@app.route('/api/rate_limiter/status')
+def get_rate_limiter_status():
+    """获取Tushare API频率限制器状态"""
+    try:
+        status = rate_limiter.get_status()
+        
+        # 格式化时间显示
+        if status['next_reset_time']:
+            next_reset = datetime.fromtimestamp(status['next_reset_time'])
+            status['next_reset_time_formatted'] = next_reset.strftime('%Y-%m-%d %H:%M:%S')
+            status['seconds_until_reset'] = max(0, int(status['next_reset_time'] - status['current_time']))
+        else:
+            status['next_reset_time_formatted'] = None
+            status['seconds_until_reset'] = 0
+        
+        current_time = datetime.fromtimestamp(status['current_time'])
+        status['current_time_formatted'] = current_time.strftime('%Y-%m-%d %H:%M:%S')
+        
+        return jsonify({
+            'status': 'success',
+            'data': status
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 if __name__ == '__main__':
     # 启动定时调度器
     start_scheduler()
@@ -1043,6 +1150,8 @@ if __name__ == '__main__':
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
     print(f"服务器启动配置: host={host}, port={port}, debug={debug_mode}")
+    print(f"Tushare API频率限制器已启用: 每分钟最多{rate_limiter.max_requests}次请求")
+    print("可通过 /api/rate_limiter/status 查看API使用状态")
     
     try:
         app.run(debug=debug_mode, host=host, port=port)

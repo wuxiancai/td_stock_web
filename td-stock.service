@@ -14,11 +14,11 @@ Environment=PATH=/home/ubuntu/td_stock_web/venv/bin:/usr/local/bin:/usr/bin:/bin
 Environment=PYTHONPATH=/home/ubuntu/td_stock_web
 Environment=PYTHONUNBUFFERED=1
 EnvironmentFile=-/home/ubuntu/td_stock_web/.env
-# 启动前检查 - 使用绝对路径和更安全的检查方式
-ExecStartPre=/bin/bash -c 'cd /home/ubuntu/td_stock_web && test -f app.py'
-ExecStartPre=/bin/bash -c 'cd /home/ubuntu/td_stock_web && test -f .env'
-ExecStartPre=/bin/bash -c 'cd /home/ubuntu/td_stock_web && source venv/bin/activate && python -c "import flask, tushare, pandas, numpy, schedule"'
-ExecStart=/bin/bash -c 'cd /home/ubuntu/td_stock_web && source venv/bin/activate && python app.py'
+# 启动前检查
+ExecStartPre=/bin/test -f /home/ubuntu/td_stock_web/app.py
+ExecStartPre=/bin/test -f /home/ubuntu/td_stock_web/.env
+ExecStartPre=/home/ubuntu/td_stock_web/venv/bin/python -c "import flask, tushare, pandas, numpy, schedule"
+ExecStart=/home/ubuntu/td_stock_web/venv/bin/python app.py
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
 TimeoutStartSec=120
