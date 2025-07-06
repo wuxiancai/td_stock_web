@@ -136,6 +136,16 @@
             font-weight: bold;
         }
         
+        .stocks-table th.sortable:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a4190);
+        }
+        
+        .stocks-table th span {
+            font-size: 12px;
+            margin-left: 5px;
+            opacity: 0.7;
+        }
+        
         .stocks-table tr:hover {
             background-color: #f8f9fa;
         }
@@ -366,12 +376,12 @@
                         <th>股票代码</th>
                         <th>股票名称</th>
                         <th>所属行业</th>
-                        <th>最新价格</th>
-                        <th>换手率(%)</th>
-                        <th>量比</th>
-                        <th>成交额(万元)</th>
-                        <th>市值(亿元)</th>
-                        <th>九转买入</th>
+                        <th class="sortable" onclick="sortTable('latest_price')" style="cursor: pointer;">最新价格 <span id="sort-latest_price">↕</span></th>
+                        <th class="sortable" onclick="sortTable('turnover_rate')" style="cursor: pointer;">换手率(%) <span id="sort-turnover_rate">↕</span></th>
+                        <th class="sortable" onclick="sortTable('volume_ratio')" style="cursor: pointer;">量比 <span id="sort-volume_ratio">↕</span></th>
+                        <th class="sortable" onclick="sortTable('amount')" style="cursor: pointer;">成交额(万元) <span id="sort-amount">↕</span></th>
+                        <th class="sortable" onclick="sortTable('market_cap')" style="cursor: pointer;">市值(亿元) <span id="sort-market_cap">↕</span></th>
+                        <th class="sortable" onclick="sortTable('nine_turn')" style="cursor: pointer;">九转买入 <span id="sort-nine_turn">↕</span></th>
                     </tr>
                 </thead>
                 <tbody id="stocksTableBody">
@@ -935,6 +945,98 @@
                  }
                  
                  return true;
+             });
+         }
+         
+         // 排序功能
+         let currentSortField = '';
+         let currentSortOrder = 'asc'; // 'asc' 或 'desc'
+         
+         function sortTable(field) {
+             // 如果点击的是同一个字段，切换排序顺序
+             if (currentSortField === field) {
+                 currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+             } else {
+                 // 如果是新字段，默认升序
+                 currentSortField = field;
+                 currentSortOrder = 'asc';
+             }
+             
+             // 更新排序图标
+             updateSortIcons(field, currentSortOrder);
+             
+             // 执行排序
+             filteredStocks.sort((a, b) => {
+                 let valueA, valueB;
+                 
+                 switch (field) {
+                     case 'latest_price':
+                         valueA = a.latest_price || 0;
+                         valueB = b.latest_price || 0;
+                         break;
+                     case 'turnover_rate':
+                         valueA = a.turnover_rate || 0;
+                         valueB = b.turnover_rate || 0;
+                         break;
+                     case 'volume_ratio':
+                         valueA = a.volume_ratio || 0;
+                         valueB = b.volume_ratio || 0;
+                         break;
+                     case 'amount':
+                         valueA = a.amount || 0;
+                         valueB = b.amount || 0;
+                         break;
+                     case 'market_cap':
+                         valueA = a.market_cap || 0;
+                         valueB = b.market_cap || 0;
+                         break;
+                     case 'nine_turn':
+                         // 九转序列排序：优先显示有信号的，然后按数值大小排序
+                         valueA = Math.max(a.nine_turn_up || 0, a.nine_turn_down || 0);
+                         valueB = Math.max(b.nine_turn_up || 0, b.nine_turn_down || 0);
+                         break;
+                     default:
+                         return 0;
+                 }
+                 
+                 // 处理数据未加载的情况，将其排到最后
+                 const hasDataA = a.data_loaded !== false && a.latest_price > 0;
+                 const hasDataB = b.data_loaded !== false && b.latest_price > 0;
+                 
+                 if (!hasDataA && hasDataB) return 1;
+                 if (hasDataA && !hasDataB) return -1;
+                 if (!hasDataA && !hasDataB) return 0;
+                 
+                 // 正常排序
+                 if (currentSortOrder === 'asc') {
+                     return valueA - valueB;
+                 } else {
+                     return valueB - valueA;
+                 }
+             });
+             
+             // 重新显示排序后的数据
+             if (progressInterval) {
+                 displayStocksProgressive(filteredStocks);
+             } else {
+                 displayStocks(filteredStocks);
+             }
+         }
+         
+         function updateSortIcons(activeField, order) {
+             // 重置所有排序图标
+             const sortFields = ['latest_price', 'turnover_rate', 'volume_ratio', 'amount', 'market_cap', 'nine_turn'];
+             sortFields.forEach(field => {
+                 const icon = document.getElementById(`sort-${field}`);
+                 if (icon) {
+                     if (field === activeField) {
+                         icon.textContent = order === 'asc' ? '↑' : '↓';
+                         icon.style.opacity = '1';
+                     } else {
+                         icon.textContent = '↕';
+                         icon.style.opacity = '0.7';
+                     }
+                 }
              });
          }
     </script>
