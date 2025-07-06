@@ -1,0 +1,40 @@
+[Unit]
+Description=九转序列选股系统
+Documentation=https://github.com/your-repo/td_stock
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=stock
+Group=stock
+WorkingDirectory=/home/stock/td_stock
+Environment=PATH=/home/stock/td_stock/venv/bin
+EnvironmentFile=/home/stock/td_stock/.env
+ExecStart=/home/stock/td_stock/venv/bin/python app.py
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+TimeoutStopSec=30
+
+# 日志配置
+StandardOutput=append:/var/log/td_stock/app.log
+StandardError=append:/var/log/td_stock/error.log
+SyslogIdentifier=td-stock
+
+# 安全配置
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/td_stock /home/stock/td_stock
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+# 资源限制
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target

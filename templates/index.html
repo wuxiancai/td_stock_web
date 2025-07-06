@@ -338,13 +338,20 @@
                         </div>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 5px;">
-                        <label style="font-size: 12px; color: #6c757d;">九转买入</label>
-                        <select id="nineTurnFilter" style="width: 120px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;">
-                            <option value="">全部</option>
-                            <option value="up">仅红色(上涨)</option>
-                            <option value="down">仅绿色(下跌)</option>
-                            <option value="any">有信号</option>
-                        </select>
+                        <label style="font-size: 12px; color: #6c757d;">九转买入 - 红色(上涨)</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="nineTurnUpMin" placeholder="最小" style="width: 60px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;" min="1" max="9" step="1">
+                            <span style="color: #6c757d;">-</span>
+                            <input type="number" id="nineTurnUpMax" placeholder="最大" style="width: 60px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;" min="1" max="9" step="1">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 12px; color: #6c757d;">九转买入 - 绿色(下跌)</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="nineTurnDownMin" placeholder="最小" style="width: 60px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;" min="1" max="9" step="1">
+                            <span style="color: #6c757d;">-</span>
+                            <input type="number" id="nineTurnDownMax" placeholder="最大" style="width: 60px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;" min="1" max="9" step="1">
+                        </div>
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="applyFilters()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">应用筛选</button>
@@ -763,7 +770,10 @@
             const turnoverMax = parseFloat(document.getElementById('turnoverMax').value) || Infinity;
             const volumeRatioMin = parseFloat(document.getElementById('volumeRatioMin').value) || 0;
             const volumeRatioMax = parseFloat(document.getElementById('volumeRatioMax').value) || Infinity;
-            const nineTurnFilter = document.getElementById('nineTurnFilter').value;
+            const nineTurnUpMin = parseInt(document.getElementById('nineTurnUpMin').value) || 0;
+            const nineTurnUpMax = parseInt(document.getElementById('nineTurnUpMax').value) || 9;
+            const nineTurnDownMin = parseInt(document.getElementById('nineTurnDownMin').value) || 0;
+            const nineTurnDownMax = parseInt(document.getElementById('nineTurnDownMax').value) || 9;
             
             filteredStocks = allStocks.filter(stock => {
                 // 只对有实时数据的股票进行筛选
@@ -781,20 +791,30 @@
                 }
                 
                 // 九转序列筛选
-                if (nineTurnFilter) {
-                    const hasUpSignal = stock.nine_turn_up && stock.nine_turn_up > 0;
-                    const hasDownSignal = stock.nine_turn_down && stock.nine_turn_down > 0;
+                const hasNineTurnFilter = nineTurnUpMin > 0 || nineTurnUpMax < 9 || nineTurnDownMin > 0 || nineTurnDownMax < 9;
+                if (hasNineTurnFilter) {
+                    const upValue = stock.nine_turn_up || 0;
+                    const downValue = stock.nine_turn_down || 0;
                     
-                    switch (nineTurnFilter) {
-                        case 'up':
-                            if (!hasUpSignal) return false;
-                            break;
-                        case 'down':
-                            if (!hasDownSignal) return false;
-                            break;
-                        case 'any':
-                            if (!hasUpSignal && !hasDownSignal) return false;
-                            break;
+                    // 检查是否满足红色(上涨)筛选条件
+                    const upInRange = (nineTurnUpMin === 0 && nineTurnUpMax === 9) || 
+                                     (upValue >= nineTurnUpMin && upValue <= nineTurnUpMax && upValue > 0);
+                    
+                    // 检查是否满足绿色(下跌)筛选条件
+                    const downInRange = (nineTurnDownMin === 0 && nineTurnDownMax === 9) || 
+                                       (downValue >= nineTurnDownMin && downValue <= nineTurnDownMax && downValue > 0);
+                    
+                    // 如果设置了红色筛选条件但没有设置绿色筛选条件
+                    if ((nineTurnUpMin > 0 || nineTurnUpMax < 9) && nineTurnDownMin === 0 && nineTurnDownMax === 9) {
+                        if (!upInRange) return false;
+                    }
+                    // 如果设置了绿色筛选条件但没有设置红色筛选条件
+                    else if ((nineTurnDownMin > 0 || nineTurnDownMax < 9) && nineTurnUpMin === 0 && nineTurnUpMax === 9) {
+                        if (!downInRange) return false;
+                    }
+                    // 如果同时设置了红色和绿色筛选条件，满足任一即可
+                    else if ((nineTurnUpMin > 0 || nineTurnUpMax < 9) && (nineTurnDownMin > 0 || nineTurnDownMax < 9)) {
+                        if (!upInRange && !downInRange) return false;
                     }
                 }
                 
@@ -826,7 +846,10 @@
              document.getElementById('turnoverMax').value = '';
              document.getElementById('volumeRatioMin').value = '';
              document.getElementById('volumeRatioMax').value = '';
-             document.getElementById('nineTurnFilter').value = '';
+             document.getElementById('nineTurnUpMin').value = '';
+             document.getElementById('nineTurnUpMax').value = '';
+             document.getElementById('nineTurnDownMin').value = '';
+             document.getElementById('nineTurnDownMax').value = '';
              
              // 重置筛选结果
              filteredStocks = [...allStocks];
@@ -855,12 +878,16 @@
              const turnoverMax = parseFloat(document.getElementById('turnoverMax').value) || Infinity;
              const volumeRatioMin = parseFloat(document.getElementById('volumeRatioMin').value) || 0;
              const volumeRatioMax = parseFloat(document.getElementById('volumeRatioMax').value) || Infinity;
-             const nineTurnFilter = document.getElementById('nineTurnFilter').value;
+             const nineTurnUpMin = parseInt(document.getElementById('nineTurnUpMin').value) || 0;
+             const nineTurnUpMax = parseInt(document.getElementById('nineTurnUpMax').value) || 9;
+             const nineTurnDownMin = parseInt(document.getElementById('nineTurnDownMin').value) || 0;
+             const nineTurnDownMax = parseInt(document.getElementById('nineTurnDownMax').value) || 9;
              
              // 如果没有设置任何筛选条件，直接返回所有数据
+             const hasNineTurnFilter = nineTurnUpMin > 0 || nineTurnUpMax < 9 || nineTurnDownMin > 0 || nineTurnDownMax < 9;
              if (turnoverMin === 0 && turnoverMax === Infinity && 
                  volumeRatioMin === 0 && volumeRatioMax === Infinity && 
-                 !nineTurnFilter) {
+                 !hasNineTurnFilter) {
                  filteredStocks = [...allStocks];
                  return;
              }
@@ -881,20 +908,29 @@
                  }
                  
                  // 九转序列筛选
-                 if (nineTurnFilter) {
-                     const hasUpSignal = stock.nine_turn_up && stock.nine_turn_up > 0;
-                     const hasDownSignal = stock.nine_turn_down && stock.nine_turn_down > 0;
+                 if (hasNineTurnFilter) {
+                     const upValue = stock.nine_turn_up || 0;
+                     const downValue = stock.nine_turn_down || 0;
                      
-                     switch (nineTurnFilter) {
-                         case 'up':
-                             if (!hasUpSignal) return false;
-                             break;
-                         case 'down':
-                             if (!hasDownSignal) return false;
-                             break;
-                         case 'any':
-                             if (!hasUpSignal && !hasDownSignal) return false;
-                             break;
+                     // 检查是否满足红色(上涨)筛选条件
+                     const upInRange = (nineTurnUpMin === 0 && nineTurnUpMax === 9) || 
+                                      (upValue >= nineTurnUpMin && upValue <= nineTurnUpMax && upValue > 0);
+                     
+                     // 检查是否满足绿色(下跌)筛选条件
+                     const downInRange = (nineTurnDownMin === 0 && nineTurnDownMax === 9) || 
+                                        (downValue >= nineTurnDownMin && downValue <= nineTurnDownMax && downValue > 0);
+                     
+                     // 如果设置了红色筛选条件但没有设置绿色筛选条件
+                     if ((nineTurnUpMin > 0 || nineTurnUpMax < 9) && nineTurnDownMin === 0 && nineTurnDownMax === 9) {
+                         if (!upInRange) return false;
+                     }
+                     // 如果设置了绿色筛选条件但没有设置红色筛选条件
+                     else if ((nineTurnDownMin > 0 || nineTurnDownMax < 9) && nineTurnUpMin === 0 && nineTurnUpMax === 9) {
+                         if (!downInRange) return false;
+                     }
+                     // 如果同时设置了红色和绿色筛选条件，满足任一即可
+                     else if ((nineTurnUpMin > 0 || nineTurnUpMax < 9) && (nineTurnDownMin > 0 || nineTurnDownMax < 9)) {
+                         if (!upInRange && !downInRange) return false;
                      }
                  }
                  
