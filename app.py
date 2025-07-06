@@ -142,6 +142,8 @@ def update_stock_data_progressive(market, stocks_list):
                     stock_info['volume_ratio'] = safe_float(daily_basic.iloc[0]['volume_ratio'])
                 if 'total_mv' in daily_basic.columns:
                     stock_info['market_cap'] = safe_float(daily_basic.iloc[0]['total_mv'])
+                if 'pe_ttm' in daily_basic.columns:
+                    stock_info['pe_ttm'] = safe_float(daily_basic.iloc[0]['pe_ttm'])
             
             # 计算九转序列
             nine_turn_up = 0
@@ -553,6 +555,7 @@ def get_stocks_by_market(market):
                     'volume_ratio': 0,
                     'amount': 0,
                     'market_cap': 0,
+                    'pe_ttm': 0,
                     'last_update': current_date
                 }
                 all_stocks_data.append(stock_info)
@@ -598,6 +601,7 @@ def get_stocks_by_market(market):
                     stock_info['volume_ratio'] = safe_float(daily_basic.iloc[0]['volume_ratio']) if not daily_basic.empty and 'volume_ratio' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['volume_ratio']) else stock_info.get('volume_ratio', 0)
                     stock_info['amount'] = safe_float(latest_data.iloc[0]['amount']) if not latest_data.empty else stock_info.get('amount', 0)
                     stock_info['market_cap'] = safe_float(daily_basic.iloc[0]['total_mv']) if not daily_basic.empty and 'total_mv' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['total_mv']) else stock_info.get('market_cap', 0)
+                    stock_info['pe_ttm'] = safe_float(daily_basic.iloc[0]['pe_ttm']) if not daily_basic.empty and 'pe_ttm' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['pe_ttm']) else stock_info.get('pe_ttm', 0)
                     stock_info['last_update'] = current_date
                     
                 except Exception as e:

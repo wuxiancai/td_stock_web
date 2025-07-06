@@ -379,6 +379,7 @@
                         <th class="sortable" onclick="sortTable('latest_price')" style="cursor: pointer;">最新价格 <span id="sort-latest_price">↕</span></th>
                         <th class="sortable" onclick="sortTable('turnover_rate')" style="cursor: pointer;">换手率(%) <span id="sort-turnover_rate">↕</span></th>
                         <th class="sortable" onclick="sortTable('volume_ratio')" style="cursor: pointer;">量比 <span id="sort-volume_ratio">↕</span></th>
+                        <th class="sortable" onclick="sortTable('pe_ratio')" style="cursor: pointer;">市盈率(PE) <span id="sort-pe_ratio">↕</span></th>
                         <th class="sortable" onclick="sortTable('amount')" style="cursor: pointer;">成交额(万元) <span id="sort-amount">↕</span></th>
                         <th class="sortable" onclick="sortTable('market_cap')" style="cursor: pointer;">市值(亿元) <span id="sort-market_cap">↕</span></th>
                         <th class="sortable" onclick="sortTable('nine_turn')" style="cursor: pointer;">九转买入 <span id="sort-nine_turn">↕</span></th>
@@ -608,6 +609,7 @@
                     <td>${hasRealTimeData ? '¥' + stock.latest_price.toFixed(2) : '加载中...'}</td>
                     <td>${hasRealTimeData ? stock.turnover_rate.toFixed(2) : '-'}</td>
                     <td>${hasRealTimeData ? stock.volume_ratio.toFixed(2) : '-'}</td>
+                    <td>${hasRealTimeData ? ((stock.pe_ttm && stock.pe_ttm > 0) ? stock.pe_ttm.toFixed(2) : '-') : '-'}</td>
                     <td>${hasRealTimeData ? (stock.amount / 10000).toFixed(2) : '-'}</td>
                     <td>${hasRealTimeData ? (stock.market_cap / 10000).toFixed(2) : '-'}</td>
                     <td>${nineTurnDisplay}</td>
@@ -646,6 +648,7 @@
                     <td>¥${stock.latest_price.toFixed(2)}</td>
                     <td>${stock.turnover_rate.toFixed(2)}</td>
                     <td>${stock.volume_ratio.toFixed(2)}</td>
+                    <td>${(stock.pe_ttm && stock.pe_ttm > 0) ? stock.pe_ttm.toFixed(2) : '-'}</td>
                     <td>${(stock.amount / 10000).toFixed(2)}</td>
                     <td>${(stock.market_cap / 10000).toFixed(2)}</td>
                     <td>${nineTurnDisplay}</td>
@@ -982,6 +985,10 @@
                          valueA = a.volume_ratio || 0;
                          valueB = b.volume_ratio || 0;
                          break;
+                     case 'pe_ratio':
+                         valueA = a.pe_ttm || 0;
+                         valueB = b.pe_ttm || 0;
+                         break;
                      case 'amount':
                          valueA = a.amount || 0;
                          valueB = b.amount || 0;
@@ -1025,7 +1032,7 @@
          
          function updateSortIcons(activeField, order) {
              // 重置所有排序图标
-             const sortFields = ['latest_price', 'turnover_rate', 'volume_ratio', 'amount', 'market_cap', 'nine_turn'];
+             const sortFields = ['latest_price', 'turnover_rate', 'volume_ratio', 'pe_ratio', 'amount', 'market_cap', 'nine_turn'];
              sortFields.forEach(field => {
                  const icon = document.getElementById(`sort-${field}`);
                  if (icon) {
