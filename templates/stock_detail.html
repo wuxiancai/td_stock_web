@@ -322,6 +322,9 @@
             document.getElementById('stockInfo').style.display = 'block';
             document.getElementById('chartSection').style.display = 'block';
             
+            // 动态设置页面标题为股票名称
+            document.title = data.name + ' - 九转序列选股系统';
+            
             document.getElementById('stockName').textContent = data.name;
             document.getElementById('stockCode').textContent = data.ts_code;
             document.getElementById('stockPrice').textContent = '¥' + data.latest_price.toFixed(2);
