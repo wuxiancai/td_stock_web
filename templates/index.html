@@ -676,7 +676,7 @@
         
         function goToStock(tsCode) {
             const stockCode = tsCode.split('.')[0];
-            window.location.href = `/stock/${stockCode}`;
+            window.open(`/stock/${stockCode}`, '_blank');
         }
         
         function showError(message) {
