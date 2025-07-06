@@ -317,6 +317,42 @@
             </div>
             <div id="errorDiv" class="error" style="display: none;"></div>
             
+            <!-- 筛选控件 -->
+            <div class="filter-section" id="filterSection" style="display: none; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                <h4 style="margin: 0 0 15px 0; color: #495057;">筛选条件</h4>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 12px; color: #6c757d;">换手率(%)</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="turnoverMin" placeholder="最小" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;" step="0.1">
+                            <span style="color: #6c757d;">-</span>
+                            <input type="number" id="turnoverMax" placeholder="最大" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;" step="0.1">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 12px; color: #6c757d;">量比</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="volumeRatioMin" placeholder="最小" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;" step="0.1">
+                            <span style="color: #6c757d;">-</span>
+                            <input type="number" id="volumeRatioMax" placeholder="最大" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;" step="0.1">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 12px; color: #6c757d;">九转买入</label>
+                        <select id="nineTurnFilter" style="width: 120px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;">
+                            <option value="">全部</option>
+                            <option value="up">仅红色(上涨)</option>
+                            <option value="down">仅绿色(下跌)</option>
+                            <option value="any">有信号</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="applyFilters()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">应用筛选</button>
+                        <button onclick="clearFilters()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">清除筛选</button>
+                    </div>
+                </div>
+            </div>
+            
             <table class="stocks-table" id="stocksTable" style="display: none;">
                 <thead>
                     <tr>
@@ -342,6 +378,8 @@
     <script>
         let currentMarket = '';
         let currentPage = 1;
+        let allStocks = []; // 存储所有股票数据用于筛选
+        let filteredStocks = []; // 存储筛选后的股票数据
         
         // 股票代码输入限制和自动跳转
         document.getElementById('stockInput').addEventListener('input', function(e) {
@@ -416,12 +454,19 @@
                         return;
                     }
                     
+                    // 存储所有股票数据
+                    allStocks = data.stocks || [];
+                    filteredStocks = [...allStocks];
+                    
+                    // 显示筛选控件
+                    document.getElementById('filterSection').style.display = 'block';
+                    
                     // 如果数据状态是updating，启动或继续渐进式加载
                     if (data.data_status === 'updating' || data.data_status === 'basic_only') {
                         // 如果已经在监控同一个市场的进度，不要重新启动
                         if (progressInterval && currentMarket === market) {
                             // 只更新显示的数据，继续使用现有的进度监控
-                            displayStocksProgressive(data.stocks);
+                            displayStocksProgressive(filteredStocks);
                             if (data.pages > 1) {
                                 displayPagination(data.current_page, data.pages);
                             }
@@ -429,11 +474,11 @@
                             document.getElementById('stocksTable').style.display = 'table';
                         } else {
                             // 启动新的渐进式加载
-                            startProgressiveLoading(market, data.stocks);
+                            startProgressiveLoading(market, filteredStocks);
                         }
                     } else {
                         // 直接显示完整数据
-                        displayStocks(data.stocks);
+                        displayStocks(filteredStocks);
                         displayPagination(data.current_page, data.pages);
                     }
                 })
@@ -485,7 +530,11 @@
                             .then(response => response.json())
                             .then(updateData => {
                                 if (updateData.stocks) {
-                                    displayStocksProgressive(updateData.stocks);
+                                    // 更新所有股票数据
+                                    allStocks = updateData.stocks;
+                                    // 重新应用筛选条件
+                                    applyCurrentFilters();
+                                    displayStocksProgressive(filteredStocks);
                                     // 更新分页信息
                                     if (updateData.pages > 1) {
                                         displayPagination(updateData.current_page, updateData.pages);
@@ -707,6 +756,151 @@
             document.getElementById('errorDiv').textContent = message;
             document.getElementById('errorDiv').style.display = 'block';
         }
+        
+        // 筛选功能
+        function applyFilters() {
+            const turnoverMin = parseFloat(document.getElementById('turnoverMin').value) || 0;
+            const turnoverMax = parseFloat(document.getElementById('turnoverMax').value) || Infinity;
+            const volumeRatioMin = parseFloat(document.getElementById('volumeRatioMin').value) || 0;
+            const volumeRatioMax = parseFloat(document.getElementById('volumeRatioMax').value) || Infinity;
+            const nineTurnFilter = document.getElementById('nineTurnFilter').value;
+            
+            filteredStocks = allStocks.filter(stock => {
+                // 只对有实时数据的股票进行筛选
+                const hasRealTimeData = stock.data_loaded !== false && stock.latest_price > 0;
+                if (!hasRealTimeData) return true; // 保留加载中的股票
+                
+                // 换手率筛选
+                if (stock.turnover_rate < turnoverMin || stock.turnover_rate > turnoverMax) {
+                    return false;
+                }
+                
+                // 量比筛选
+                if (stock.volume_ratio < volumeRatioMin || stock.volume_ratio > volumeRatioMax) {
+                    return false;
+                }
+                
+                // 九转序列筛选
+                if (nineTurnFilter) {
+                    const hasUpSignal = stock.nine_turn_up && stock.nine_turn_up > 0;
+                    const hasDownSignal = stock.nine_turn_down && stock.nine_turn_down > 0;
+                    
+                    switch (nineTurnFilter) {
+                        case 'up':
+                            if (!hasUpSignal) return false;
+                            break;
+                        case 'down':
+                            if (!hasDownSignal) return false;
+                            break;
+                        case 'any':
+                            if (!hasUpSignal && !hasDownSignal) return false;
+                            break;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // 重新显示筛选后的数据
+            if (progressInterval) {
+                displayStocksProgressive(filteredStocks);
+            } else {
+                displayStocks(filteredStocks);
+            }
+            
+            // 更新标题显示筛选结果数量
+            const marketNames = {
+                'cyb': '创业板',
+                'hu': '沪A股',
+                'zxb': '中小板',
+                'kcb': '科创板',
+                'bj': '北交所'
+            };
+            document.getElementById('sectionTitle').textContent = 
+                `${marketNames[currentMarket]}股票列表 (筛选结果: ${filteredStocks.length}/${allStocks.length})`;
+        }
+        
+        function clearFilters() {
+             // 清空筛选条件
+             document.getElementById('turnoverMin').value = '';
+             document.getElementById('turnoverMax').value = '';
+             document.getElementById('volumeRatioMin').value = '';
+             document.getElementById('volumeRatioMax').value = '';
+             document.getElementById('nineTurnFilter').value = '';
+             
+             // 重置筛选结果
+             filteredStocks = [...allStocks];
+             
+             // 重新显示所有数据
+             if (progressInterval) {
+                 displayStocksProgressive(filteredStocks);
+             } else {
+                 displayStocks(filteredStocks);
+             }
+             
+             // 恢复原始标题
+             const marketNames = {
+                 'cyb': '创业板',
+                 'hu': '沪A股',
+                 'zxb': '中小板',
+                 'kcb': '科创板',
+                 'bj': '北交所'
+             };
+             document.getElementById('sectionTitle').textContent = marketNames[currentMarket] + '股票列表';
+         }
+         
+         // 重新应用当前筛选条件（用于数据更新时）
+         function applyCurrentFilters() {
+             const turnoverMin = parseFloat(document.getElementById('turnoverMin').value) || 0;
+             const turnoverMax = parseFloat(document.getElementById('turnoverMax').value) || Infinity;
+             const volumeRatioMin = parseFloat(document.getElementById('volumeRatioMin').value) || 0;
+             const volumeRatioMax = parseFloat(document.getElementById('volumeRatioMax').value) || Infinity;
+             const nineTurnFilter = document.getElementById('nineTurnFilter').value;
+             
+             // 如果没有设置任何筛选条件，直接返回所有数据
+             if (turnoverMin === 0 && turnoverMax === Infinity && 
+                 volumeRatioMin === 0 && volumeRatioMax === Infinity && 
+                 !nineTurnFilter) {
+                 filteredStocks = [...allStocks];
+                 return;
+             }
+             
+             filteredStocks = allStocks.filter(stock => {
+                 // 只对有实时数据的股票进行筛选
+                 const hasRealTimeData = stock.data_loaded !== false && stock.latest_price > 0;
+                 if (!hasRealTimeData) return true; // 保留加载中的股票
+                 
+                 // 换手率筛选
+                 if (stock.turnover_rate < turnoverMin || stock.turnover_rate > turnoverMax) {
+                     return false;
+                 }
+                 
+                 // 量比筛选
+                 if (stock.volume_ratio < volumeRatioMin || stock.volume_ratio > volumeRatioMax) {
+                     return false;
+                 }
+                 
+                 // 九转序列筛选
+                 if (nineTurnFilter) {
+                     const hasUpSignal = stock.nine_turn_up && stock.nine_turn_up > 0;
+                     const hasDownSignal = stock.nine_turn_down && stock.nine_turn_down > 0;
+                     
+                     switch (nineTurnFilter) {
+                         case 'up':
+                             if (!hasUpSignal) return false;
+                             break;
+                         case 'down':
+                             if (!hasDownSignal) return false;
+                             break;
+                         case 'any':
+                             if (!hasUpSignal && !hasDownSignal) return false;
+                             break;
+                     }
+                 }
+                 
+                 return true;
+             });
+         }
     </script>
 </body>
 </html>
