@@ -57,7 +57,7 @@
         }
         
         .stock-name {
-            font-size: 1.4em;
+            font-size: 0.9em;
             font-weight: bold;
             color: #333;
         }
@@ -110,7 +110,7 @@
         }
         
         .chart-title {
-            font-size: 1.2em;
+            font-size: 0.9em;
             font-weight: bold;
             margin-bottom: 20px;
             color: #333;
@@ -184,8 +184,6 @@
 <body>
     <div class="container">
         <div class="header">
-            <button class="back-btn" onclick="goBack()">← 返回首页</button>
-            
             <div id="loadingDiv" class="loading">正在加载股票数据...</div>
             <div id="errorDiv" class="error" style="display: none;"></div>
             
@@ -195,12 +193,13 @@
                         <div class="stock-name" id="stockName"></div>
                         <div class="stock-code" id="stockCode"></div>
                     </div>
-                    <div class="stock-price" id="stockPrice"></div>
-                </div>
-                
-                <div class="price-info">
-                    <span class="price-high">90天最高: ¥<span id="highestPrice"></span> (<span id="highestDate"></span>)</span>
-                    <span class="price-low">90天最低: ¥<span id="lowestPrice"></span> (<span id="lowestDate"></span>)</span>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="stock-price" id="stockPrice"></div>
+                        <div class="price-info">
+                            <span class="price-high">90天最高: ¥<span id="highestPrice"></span> (<span id="highestDate"></span>)</span>
+                            <span class="price-low">90天最低: ¥<span id="lowestPrice"></span> (<span id="lowestDate"></span>)</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="stock-info">
@@ -296,9 +295,6 @@
         const stockCode = '{{ stock_code }}';
         let stockData = null;
         
-        function goBack() {
-            window.location.href = '/';
-        }
         
         function formatNumber(num, decimals = 2) {
             if (num === 0 || num === null || num === undefined) return '-';
