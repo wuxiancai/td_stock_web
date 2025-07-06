@@ -44,18 +44,34 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         
+        .datetime-display {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .search-and-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
         .search-box {
             display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
+            align-items: center;
+            gap: 8px;
         }
         
         .search-input {
-            width: 300px;
-            padding: 15px 20px;
-            font-size: 16px;
+            width: 200px;
+            padding: 8px 15px;
+            font-size: 14px;
             border: 2px solid #ddd;
-            border-radius: 25px;
+            border-radius: 20px;
             outline: none;
             transition: all 0.3s ease;
         }
@@ -66,13 +82,12 @@
         }
         
         .search-btn {
-            padding: 15px 30px;
-            margin-left: 10px;
+            padding: 8px 20px;
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 25px;
-            font-size: 14px;
+            border-radius: 20px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -84,21 +99,20 @@
         
         .market-buttons {
             display: flex;
-            justify-content: center;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         
         .market-btn {
-            padding: 12px 25px;
+            padding: 8px 18px;
             background: linear-gradient(45deg, #ff6b6b, #ee5a24);
             color: white;
             border: none;
-            border-radius: 20px;
-            font-size: 14px;
+            border-radius: 15px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            min-width: 120px;
+            min-width: 84px;
         }
         
         .market-btn:hover {
@@ -269,18 +283,23 @@
                 padding: 10px;
             }
             
-            .search-box {
+            .search-and-controls {
                 flex-direction: column;
-                align-items: center;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .search-box {
+                width: 100%;
             }
             
             .search-input {
-                width: 100%;
-                margin-bottom: 10px;
+                width: 150px;
             }
             
-            .search-btn {
-                margin-left: 0;
+            .market-buttons {
+                width: 100%;
+                justify-content: flex-start;
             }
             
             .stocks-table {
@@ -297,18 +316,22 @@
         </div>
         
         <div class="search-section">
-            <div class="search-box">
-                <input type="text" class="search-input" id="stockInput" placeholder="请输入6位股票代码" maxlength="6">
-                <button class="search-btn" onclick="searchStock()">查询股票</button>
-            </div>
+            <div class="datetime-display" id="currentDateTime">2025年1月17日 19:29:30</div>
             
-            <div class="market-buttons">
-                <button class="market-btn" onclick="loadMarketStocks('cyb')">创业板</button>
-                <button class="market-btn" onclick="loadMarketStocks('hu')">沪A</button>
-                <button class="market-btn" onclick="loadMarketStocks('zxb')">中小板</button>
-                <button class="market-btn" onclick="loadMarketStocks('kcb')">科创板</button>
-                <button class="market-btn" onclick="loadMarketStocks('bj')">北交所</button>
-                <button class="market-btn" onclick="syncAllMarkets()" style="background: linear-gradient(45deg, #28a745, #20c997);">A股</button>
+            <div class="search-and-controls">
+                <div class="search-box">
+                    <input type="text" class="search-input" id="stockInput" placeholder="请输入6位股票代码" maxlength="6">
+                    <button class="search-btn" onclick="searchStock()">查询股票</button>
+                </div>
+                
+                <div class="market-buttons">
+                    <button class="market-btn" onclick="loadMarketStocks('cyb')">创业板</button>
+                    <button class="market-btn" onclick="loadMarketStocks('hu')">沪A</button>
+                    <button class="market-btn" onclick="loadMarketStocks('zxb')">中小板</button>
+                    <button class="market-btn" onclick="loadMarketStocks('kcb')">科创板</button>
+                    <button class="market-btn" onclick="loadMarketStocks('bj')">北交所</button>
+                    <button class="market-btn" onclick="syncAllMarkets()" style="background: linear-gradient(45deg, #28a745, #20c997);">A股</button>
+                </div>
             </div>
             
             <div class="refresh-section" id="refreshSection" style="display: none;">
@@ -327,6 +350,10 @@
                     <div style="display: flex; flex-direction: column; gap: 5px;">
                         <span style="font-size: 10px; color: #ccc;">下次执行</span>
                         <span id="nextRunTime" style="font-size: 12px; color: #fff;">加载中...</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <span style="font-size: 10px; color: #ccc;">倒计时</span>
+                        <span id="countdown" style="font-size: 12px; color: #ffc107;">--:--:--</span>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 5px;">
                         <span style="font-size: 10px; color: #ccc;">执行时间</span>
@@ -1228,8 +1255,61 @@
              });
      }
      
-     // 页面加载完成后初始化定时任务状态
+     // 实时时间显示和倒计时功能
+     function updateDateTime() {
+         const now = new Date();
+         const year = now.getFullYear();
+         const month = now.getMonth() + 1;
+         const day = now.getDate();
+         const hours = String(now.getHours()).padStart(2, '0');
+         const minutes = String(now.getMinutes()).padStart(2, '0');
+         const seconds = String(now.getSeconds()).padStart(2, '0');
+         
+         const dateTimeStr = `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
+         document.getElementById('currentDateTime').textContent = dateTimeStr;
+     }
+     
+     function updateCountdown() {
+         const now = new Date();
+         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+         
+         // 计算下一个工作日17:00的时间
+         let nextRunDate = new Date(today);
+         nextRunDate.setHours(17, 0, 0, 0);
+         
+         // 如果今天已经过了17:00或者是周末，找下一个工作日
+         if (now >= nextRunDate || now.getDay() === 0 || now.getDay() === 6) {
+             do {
+                 nextRunDate.setDate(nextRunDate.getDate() + 1);
+             } while (nextRunDate.getDay() === 0 || nextRunDate.getDay() === 6); // 跳过周末
+             nextRunDate.setHours(17, 0, 0, 0);
+         }
+         
+         const timeDiff = nextRunDate - now;
+         
+         if (timeDiff > 0) {
+             const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+             const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+             const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+             
+             const countdownStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+             document.getElementById('countdown').textContent = countdownStr;
+         } else {
+             document.getElementById('countdown').textContent = '00:00:00';
+         }
+     }
+     
+     // 页面加载完成后初始化
      document.addEventListener('DOMContentLoaded', function() {
+         // 初始化时间显示
+         updateDateTime();
+         updateCountdown();
+         
+         // 每秒更新时间和倒计时
+         setInterval(updateDateTime, 1000);
+         setInterval(updateCountdown, 1000);
+         
+         // 初始化定时任务状态
          refreshSchedulerStatus();
          // 每30秒自动刷新一次状态
          setInterval(refreshSchedulerStatus, 30000);
