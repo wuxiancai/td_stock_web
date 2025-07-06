@@ -275,6 +275,11 @@
             <div class="chart-title">KDJ指标</div>
             <div id="kdjChart" class="macd-chart"></div>
         </div>
+        
+        <div class="chart-section" id="rsiSection" style="display: none;">
+            <div class="chart-title">RSI指标</div>
+            <div id="rsiChart" class="macd-chart"></div>
+        </div>
     </div>
     
     <script>
@@ -323,6 +328,7 @@
                     drawKlineChart(data);
                     drawMacdChart(data);
                     drawKdjChart(data);
+                    drawRsiChart(data);
                 })
                 .catch(error => {
                     showError('加载数据失败: ' + error.message);
@@ -335,6 +341,7 @@
             document.getElementById('chartSection').style.display = 'block';
             document.getElementById('macdSection').style.display = 'block';
             document.getElementById('kdjSection').style.display = 'block';
+            document.getElementById('rsiSection').style.display = 'block';
             
             // 动态设置页面标题为股票名称
             document.title = data.name + ' - 九转序列选股系统';
@@ -991,6 +998,152 @@
                         }
                     ]
                 }
+            };
+            
+            chart.setOption(option);
+            
+            window.addEventListener('resize', function() {
+                chart.resize();
+            });
+        }
+        
+        function drawRsiChart(data) {
+            const chart = echarts.init(document.getElementById('rsiChart'));
+            
+            const dates = data.kline_data.map(item => formatDate(item.trade_date));
+            
+            // 提取RSI数据
+            const rsiData = data.kline_data.map(item => item.rsi === null || item.rsi === undefined ? null : parseFloat(item.rsi));
+            
+            const option = {
+                animation: false,
+                legend: {
+                    bottom: 10,
+                    left: 'center',
+                    data: ['RSI']
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                    formatter: function(params) {
+                        if (params && params.length > 0) {
+                            const value = params[0].value;
+                            return params[0].name + '<br/>RSI: ' + (value !== null ? value.toFixed(2) : '-');
+                        }
+                        return '';
+                    }
+                },
+                grid: {
+                    left: '10%',
+                    right: '8%',
+                    top: '10%',
+                    bottom: '15%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: dates,
+                    boundaryGap: false
+                },
+                yAxis: {
+                    scale: true,
+                    min: 0,
+                    max: 100,
+                    splitArea: {
+                        show: true
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ccc'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: ['#30', '#70'],
+                            type: 'dashed'
+                        }
+                    }
+                },
+                dataZoom: [
+                    {
+                        type: 'inside',
+                        start: 0,
+                        end: 100
+                    },
+                    {
+                        show: true,
+                        type: 'slider',
+                        bottom: '5%',
+                        start: 0,
+                        end: 100
+                    }
+                ],
+                series: [
+                    {
+                        name: 'RSI',
+                        type: 'line',
+                        data: rsiData,
+                        lineStyle: {
+                            color: '#9C27B0',
+                            width: 2
+                        },
+                        symbol: 'none',
+                        smooth: true,
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0,
+                                y: 0,
+                                x2: 0,
+                                y2: 1,
+                                colorStops: [
+                                    {
+                                        offset: 0,
+                                        color: 'rgba(156, 39, 176, 0.3)'
+                                    },
+                                    {
+                                        offset: 1,
+                                        color: 'rgba(156, 39, 176, 0.1)'
+                                    }
+                                ]
+                            }
+                        },
+                        markLine: {
+                             silent: true,
+                             data: [
+                                 {
+                                     yAxis: 30,
+                                     lineStyle: {
+                                         color: '#27ae60',
+                                         type: 'dashed',
+                                         width: 2
+                                     },
+                                     label: {
+                                         formatter: '超卖区 30',
+                                         position: 'insideEndTop',
+                                         color: '#27ae60',
+                                         fontWeight: 'bold'
+                                     }
+                                 },
+                                 {
+                                     yAxis: 70,
+                                     lineStyle: {
+                                         color: '#e74c3c',
+                                         type: 'dashed',
+                                         width: 2
+                                     },
+                                     label: {
+                                         formatter: '超买区 70',
+                                         position: 'insideEndBottom',
+                                         color: '#e74c3c',
+                                         fontWeight: 'bold'
+                                     }
+                                 }
+                             ]
+                         }
+                    }
+                ]
             };
             
             chart.setOption(option);

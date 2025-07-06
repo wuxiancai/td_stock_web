@@ -473,6 +473,9 @@ def get_stock_data(stock_code):
         # 计算KDJ指标
         daily_data = calculate_kdj(daily_data)
         
+        # 计算RSI指标
+        daily_data = calculate_rsi(daily_data)
+        
         # 确保所有数值字段不为None（除了BOLL指标）
         numeric_columns = ['open', 'high', 'low', 'close', 'vol', 'amount', 'nine_turn_up', 'nine_turn_down']
         for col in numeric_columns:
