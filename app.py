@@ -326,6 +326,92 @@ def calculate_boll(df, period=20, std_dev=2):
     return df
 
 
+def calculate_macd(df, fast_period=12, slow_period=26, signal_period=9):
+    """
+    计算MACD指标
+    参数:
+    - fast_period: 快速EMA周期，默认12天
+    - slow_period: 慢速EMA周期，默认26天
+    - signal_period: 信号线EMA周期，默认9天
+    """
+    df = df.copy()
+    
+    # 计算快速和慢速EMA
+    df['ema_fast'] = df['close'].ewm(span=fast_period, min_periods=1).mean()
+    df['ema_slow'] = df['close'].ewm(span=slow_period, min_periods=1).mean()
+    
+    # 计算MACD线（DIF）
+    df['macd_dif'] = df['ema_fast'] - df['ema_slow']
+    
+    # 计算信号线（DEA）
+    df['macd_dea'] = df['macd_dif'].ewm(span=signal_period, min_periods=1).mean()
+    
+    # 计算MACD柱状图（MACD）
+    df['macd_histogram'] = (df['macd_dif'] - df['macd_dea']) * 2
+    
+    return df
+
+
+def calculate_kdj(df, k_period=9, d_period=3, j_period=3):
+    """
+    计算KDJ指标
+    参数:
+    - k_period: K值计算周期，默认9天
+    - d_period: D值平滑周期，默认3天
+    - j_period: J值计算周期，默认3天
+    """
+    df = df.copy()
+    
+    # 计算最高价和最低价的滚动窗口
+    df['highest_high'] = df['high'].rolling(window=k_period, min_periods=1).max()
+    df['lowest_low'] = df['low'].rolling(window=k_period, min_periods=1).min()
+    
+    # 计算RSV（未成熟随机值）
+    df['rsv'] = ((df['close'] - df['lowest_low']) / (df['highest_high'] - df['lowest_low']) * 100).fillna(50)
+    
+    # 计算K值（使用简单移动平均代替指数移动平均以简化计算）
+    df['kdj_k'] = df['rsv'].rolling(window=d_period, min_periods=1).mean()
+    
+    # 计算D值
+    df['kdj_d'] = df['kdj_k'].rolling(window=d_period, min_periods=1).mean()
+    
+    # 计算J值
+    df['kdj_j'] = 3 * df['kdj_k'] - 2 * df['kdj_d']
+    
+    return df
+
+
+def calculate_rsi(df, period=14):
+    """
+    计算RSI指标（相对强弱指数）
+    参数:
+    - period: RSI计算周期，默认14天
+    """
+    df = df.copy()
+    
+    # 计算价格变化
+    df['price_change'] = df['close'].diff()
+    
+    # 分离上涨和下跌
+    df['gain'] = df['price_change'].where(df['price_change'] > 0, 0)
+    df['loss'] = -df['price_change'].where(df['price_change'] < 0, 0)
+    
+    # 计算平均收益和平均损失（使用简单移动平均）
+    df['avg_gain'] = df['gain'].rolling(window=period, min_periods=1).mean()
+    df['avg_loss'] = df['loss'].rolling(window=period, min_periods=1).mean()
+    
+    # 计算相对强度RS
+    df['rs'] = df['avg_gain'] / (df['avg_loss'] + 1e-10)  # 避免除零
+    
+    # 计算RSI
+    df['rsi'] = 100 - (100 / (1 + df['rs']))
+    
+    # 处理第一行的NaN值
+    df['rsi'] = df['rsi'].fillna(50)
+    
+    return df
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -380,6 +466,12 @@ def get_stock_data(stock_code):
         
         # 计算BOLL指标
         daily_data = calculate_boll(daily_data)
+        
+        # 计算MACD指标
+        daily_data = calculate_macd(daily_data)
+        
+        # 计算KDJ指标
+        daily_data = calculate_kdj(daily_data)
         
         # 确保所有数值字段不为None（除了BOLL指标）
         numeric_columns = ['open', 'high', 'low', 'close', 'vol', 'amount', 'nine_turn_up', 'nine_turn_down']

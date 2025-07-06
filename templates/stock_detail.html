@@ -265,6 +265,16 @@
             <div class="chart-title">日K线图 (最近90天) - 九转序列</div>
             <div id="klineChart" class="kline-chart"></div>
         </div>
+        
+        <div class="chart-section" id="macdSection" style="display: none;">
+            <div class="chart-title">MACD指标</div>
+            <div id="macdChart" class="macd-chart"></div>
+        </div>
+        
+        <div class="chart-section" id="kdjSection" style="display: none;">
+            <div class="chart-title">KDJ指标</div>
+            <div id="kdjChart" class="macd-chart"></div>
+        </div>
     </div>
     
     <script>
@@ -311,6 +321,8 @@
                     stockData = data;
                     displayStockInfo(data);
                     drawKlineChart(data);
+                    drawMacdChart(data);
+                    drawKdjChart(data);
                 })
                 .catch(error => {
                     showError('加载数据失败: ' + error.message);
@@ -321,6 +333,8 @@
             document.getElementById('loadingDiv').style.display = 'none';
             document.getElementById('stockInfo').style.display = 'block';
             document.getElementById('chartSection').style.display = 'block';
+            document.getElementById('macdSection').style.display = 'block';
+            document.getElementById('kdjSection').style.display = 'block';
             
             // 动态设置页面标题为股票名称
             document.title = data.name + ' - 九转序列选股系统';
@@ -753,7 +767,238 @@
             });
         }
         
-
+        function drawMacdChart(data) {
+            const chart = echarts.init(document.getElementById('macdChart'));
+            
+            const dates = data.kline_data.map(item => formatDate(item.trade_date));
+            
+            // 提取MACD数据
+            const macdDif = data.kline_data.map(item => item.macd_dif === null || item.macd_dif === undefined ? null : parseFloat(item.macd_dif));
+            const macdDea = data.kline_data.map(item => item.macd_dea === null || item.macd_dea === undefined ? null : parseFloat(item.macd_dea));
+            const macdHistogram = data.kline_data.map(item => item.macd_histogram === null || item.macd_histogram === undefined ? null : parseFloat(item.macd_histogram));
+            
+            const option = {
+                animation: false,
+                legend: {
+                    bottom: 10,
+                    left: 'center',
+                    data: ['DIF', 'DEA', 'MACD']
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                grid: {
+                    left: '10%',
+                    right: '8%',
+                    top: '10%',
+                    bottom: '15%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: dates,
+                    boundaryGap: false
+                },
+                yAxis: {
+                    scale: true,
+                    splitArea: {
+                        show: true
+                    }
+                },
+                dataZoom: [
+                    {
+                        type: 'inside',
+                        start: 0,
+                        end: 100
+                    },
+                    {
+                        show: true,
+                        type: 'slider',
+                        bottom: '5%',
+                        start: 0,
+                        end: 100
+                    }
+                ],
+                series: [
+                    {
+                        name: 'DIF',
+                        type: 'line',
+                        data: macdDif,
+                        lineStyle: {
+                            color: '#FF6B6B',
+                            width: 2
+                        },
+                        symbol: 'none',
+                        smooth: true
+                    },
+                    {
+                        name: 'DEA',
+                        type: 'line',
+                        data: macdDea,
+                        lineStyle: {
+                            color: '#4ECDC4',
+                            width: 2
+                        },
+                        symbol: 'none',
+                        smooth: true
+                    },
+                    {
+                        name: 'MACD',
+                        type: 'bar',
+                        data: macdHistogram,
+                        itemStyle: {
+                            color: function(params) {
+                                return params.value >= 0 ? '#FF6B6B' : '#4ECDC4';
+                            }
+                        }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+            
+            window.addEventListener('resize', function() {
+                chart.resize();
+            });
+        }
+        
+        function drawKdjChart(data) {
+            const chart = echarts.init(document.getElementById('kdjChart'));
+            
+            const dates = data.kline_data.map(item => formatDate(item.trade_date));
+            
+            // 提取KDJ数据
+            const kdjK = data.kline_data.map(item => item.kdj_k === null || item.kdj_k === undefined ? null : parseFloat(item.kdj_k));
+            const kdjD = data.kline_data.map(item => item.kdj_d === null || item.kdj_d === undefined ? null : parseFloat(item.kdj_d));
+            const kdjJ = data.kline_data.map(item => item.kdj_j === null || item.kdj_j === undefined ? null : parseFloat(item.kdj_j));
+            
+            const option = {
+                animation: false,
+                legend: {
+                    bottom: 10,
+                    left: 'center',
+                    data: ['K', 'D', 'J']
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                grid: {
+                    left: '10%',
+                    right: '8%',
+                    top: '10%',
+                    bottom: '15%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: dates,
+                    boundaryGap: false
+                },
+                yAxis: {
+                    scale: true,
+                    min: 0,
+                    max: 100,
+                    splitArea: {
+                        show: true
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ccc'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: ['#20', '#80'],
+                            type: 'dashed'
+                        }
+                    }
+                },
+                dataZoom: [
+                    {
+                        type: 'inside',
+                        start: 0,
+                        end: 100
+                    },
+                    {
+                        show: true,
+                        type: 'slider',
+                        bottom: '5%',
+                        start: 0,
+                        end: 100
+                    }
+                ],
+                series: [
+                    {
+                        name: 'K',
+                        type: 'line',
+                        data: kdjK,
+                        lineStyle: {
+                            color: '#FF6B6B',
+                            width: 2
+                        },
+                        symbol: 'none',
+                        smooth: true
+                    },
+                    {
+                        name: 'D',
+                        type: 'line',
+                        data: kdjD,
+                        lineStyle: {
+                            color: '#4ECDC4',
+                            width: 2
+                        },
+                        symbol: 'none',
+                        smooth: true
+                    },
+                    {
+                        name: 'J',
+                        type: 'line',
+                        data: kdjJ,
+                        lineStyle: {
+                            color: '#45B7D1',
+                            width: 2
+                        },
+                        symbol: 'none',
+                        smooth: true
+                    }
+                ],
+                // 添加超买超卖区域标识
+                markLine: {
+                    silent: true,
+                    lineStyle: {
+                        color: '#999',
+                        type: 'dashed',
+                        width: 1
+                    },
+                    data: [
+                        {
+                            yAxis: 20,
+                            label: {
+                                formatter: '超卖区 20',
+                                position: 'insideEndTop'
+                            }
+                        },
+                        {
+                            yAxis: 80,
+                            label: {
+                                formatter: '超买区 80',
+                                position: 'insideEndBottom'
+                            }
+                        }
+                    ]
+                }
+            };
+            
+            chart.setOption(option);
+            
+            window.addEventListener('resize', function() {
+                chart.resize();
+            });
+        }
         
         function showError(message) {
             document.getElementById('loadingDiv').style.display = 'none';
