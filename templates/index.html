@@ -264,9 +264,14 @@
         let currentMarket = '';
         let currentPage = 1;
         
-        // 股票代码输入限制
+        // 股票代码输入限制和自动跳转
         document.getElementById('stockInput').addEventListener('input', function(e) {
             e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            
+            // 当输入6位数字时自动在新标签页打开详情页
+            if (e.target.value.length === 6) {
+                window.open(`/stock/${e.target.value}`, '_blank');
+            }
         });
         
         // 回车键搜索
