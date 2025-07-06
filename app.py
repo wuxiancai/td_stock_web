@@ -90,9 +90,18 @@ def update_stock_data_progressive(market, stocks_list):
     print(f"开始渐进式更新{market}市场{len(stocks_list)}只股票的实时数据...")
     current_date = datetime.now().strftime('%Y%m%d')
     
+    # 检查是否已有更新线程在运行
+    if market in update_status and update_status[market].get('status') == 'updating':
+        print(f"{market}市场已有更新线程在运行，跳过重复更新")
+        return
+    
+    # 创建股票列表的深拷贝，避免并发修改问题
+    import copy
+    working_stocks_list = copy.deepcopy(stocks_list)
+    
     # 初始化更新状态
     update_status[market] = {
-        'total': len(stocks_list),
+        'total': len(working_stocks_list),
         'completed': 0,
         'status': 'updating',
         'start_time': time.time()
@@ -100,12 +109,17 @@ def update_stock_data_progressive(market, stocks_list):
     
     # 按股票代码排序（创业板从300001开始）
     if market == 'cyb':
-        stocks_list.sort(key=lambda x: x['ts_code'])
+        working_stocks_list.sort(key=lambda x: x['ts_code'])
     
     # 逐个处理股票
-    for i, stock_info in enumerate(stocks_list):
+    for i, stock_info in enumerate(working_stocks_list):
         try:
-            print(f"正在更新 {stock_info['ts_code']} ({i+1}/{len(stocks_list)})")
+            # 检查是否需要停止更新（比如用户强制刷新）
+            if market in update_status and update_status[market].get('status') == 'cancelled':
+                print(f"{market}市场更新被取消")
+                break
+                
+            print(f"正在更新 {stock_info['ts_code']} ({i+1}/{len(working_stocks_list)})")
             
             # 获取最新价格和基本面数据
             latest_data = pro.daily(ts_code=stock_info['ts_code'], limit=1)
@@ -127,24 +141,34 @@ def update_stock_data_progressive(market, stocks_list):
             stock_info['last_update'] = current_date
             stock_info['data_loaded'] = True  # 标记数据已加载
             
-            # 立即保存单个股票的更新
-            cache_data = {
-                'stocks': stocks_list,
-                'last_update_date': current_date,
-                'total': len(stocks_list),
-                'data_status': 'updating',
-                'progress': {
-                    'completed': i + 1,
-                    'total': len(stocks_list),
-                    'current_stock': stock_info['ts_code']
+            # 直接在工作列表中更新股票信息，避免频繁读写缓存文件
+            # 在工作列表中找到对应股票并更新
+            for working_stock in working_stocks_list:
+                if working_stock['ts_code'] == stock_info['ts_code']:
+                    working_stock.update(stock_info)
+                    break
+            
+            # 每10只股票保存一次缓存，减少文件IO操作
+            if (i + 1) % 10 == 0 or i == len(working_stocks_list) - 1:
+                # 构建缓存数据
+                cache_data = {
+                    'stocks': working_stocks_list,
+                    'last_update_date': current_date,
+                    'total': len(working_stocks_list),
+                    'progress': {
+                        'completed': i + 1,
+                        'total': len(working_stocks_list),
+                        'current_stock': stock_info['ts_code']
+                    },
+                    'data_status': 'updating'
                 }
-            }
-            save_cache_data(market, cache_data)
+                save_cache_data(market, cache_data)
+                print(f"已保存缓存，当前进度: {i+1}/{len(working_stocks_list)}")
             
             # 更新全局状态
             update_status[market]['completed'] = i + 1
             
-            print(f"已完成 {stock_info['ts_code']} 数据更新 ({i+1}/{len(stocks_list)})")
+            print(f"已完成 {stock_info['ts_code']} 数据更新 ({i+1}/{len(working_stocks_list)})")
             
         except Exception as e:
             print(f"更新股票{stock_info['ts_code']}数据失败: {e}")
@@ -156,24 +180,29 @@ def update_stock_data_progressive(market, stocks_list):
         # 避免API频率限制
         time.sleep(0.5)
     
-    # 更新完成，标记状态
-    cache_data = {
-        'stocks': stocks_list,
+    # 检查更新是否被取消
+    if market in update_status and update_status[market].get('status') == 'cancelled':
+        print(f"{market}市场更新被取消，不保存最终状态")
+        return
+    
+    # 更新完成，保存最终状态
+    final_cache_data = {
+        'stocks': working_stocks_list,
         'last_update_date': current_date,
-        'total': len(stocks_list),
-        'data_status': 'complete',
+        'total': len(working_stocks_list),
         'progress': {
-            'completed': len(stocks_list),
-            'total': len(stocks_list),
+            'completed': len(working_stocks_list),
+            'total': len(working_stocks_list),
             'current_stock': 'all_completed'
-        }
+        },
+        'data_status': 'complete'
     }
-    save_cache_data(market, cache_data)
+    save_cache_data(market, final_cache_data)
     
     # 更新全局状态
     update_status[market] = {
-        'total': len(stocks_list),
-        'completed': len(stocks_list),
+        'total': len(working_stocks_list),
+        'completed': len(working_stocks_list),
         'status': 'complete',
         'end_time': time.time()
     }
@@ -428,7 +457,7 @@ def get_update_progress(market):
 def get_stocks_by_market(market):
     try:
         page = int(request.args.get('page', 1))
-        per_page = 50
+        per_page = 100  # 每页显示100行数据
         force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
         current_date = datetime.now().strftime('%Y%m%d')
         
@@ -450,7 +479,13 @@ def get_stocks_by_market(market):
         need_incremental_update = False
         
         if force_refresh:
-            # 强制刷新，清除缓存并进行全量更新
+            # 强制刷新，先取消正在运行的更新线程
+            if market in update_status and update_status[market].get('status') == 'updating':
+                update_status[market]['status'] = 'cancelled'
+                print(f"取消{market}市场正在运行的更新线程")
+                time.sleep(1)  # 等待线程停止
+            
+            # 清除缓存并进行全量更新
             need_full_update = True
             print(f"强制刷新{market}市场数据，进行全量更新")
         elif cache_data is None or latest_cache_date is None:

@@ -413,9 +413,21 @@
                         return;
                     }
                     
-                    // 如果数据状态是updating，启动渐进式加载
+                    // 如果数据状态是updating，启动或继续渐进式加载
                     if (data.data_status === 'updating' || data.data_status === 'basic_only') {
-                        startProgressiveLoading(market, data.stocks);
+                        // 如果已经在监控同一个市场的进度，不要重新启动
+                        if (progressInterval && currentMarket === market) {
+                            // 只更新显示的数据，继续使用现有的进度监控
+                            displayStocksProgressive(data.stocks);
+                            if (data.pages > 1) {
+                                displayPagination(data.current_page, data.pages);
+                            }
+                            document.getElementById('progressDiv').style.display = 'block';
+                            document.getElementById('stocksTable').style.display = 'table';
+                        } else {
+                            // 启动新的渐进式加载
+                            startProgressiveLoading(market, data.stocks);
+                        }
                     } else {
                         // 直接显示完整数据
                         displayStocks(data.stocks);
@@ -471,6 +483,10 @@
                             .then(updateData => {
                                 if (updateData.stocks) {
                                     displayStocksProgressive(updateData.stocks);
+                                    // 更新分页信息
+                                    if (updateData.pages > 1) {
+                                        displayPagination(updateData.current_page, updateData.pages);
+                                    }
                                 }
                             });
                     }
