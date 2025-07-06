@@ -1185,11 +1185,27 @@
                 return;
             }
             
+            // 获取最新的九转序列数据
+            let nineTurnUp = 0;
+            let nineTurnDown = 0;
+            if (stockData.kline_data && stockData.kline_data.length > 0) {
+                const latestData = stockData.kline_data[stockData.kline_data.length - 1];
+                nineTurnUp = latestData.nine_turn_up || 0;
+                nineTurnDown = latestData.nine_turn_down || 0;
+            }
+            
             const watchlistData = {
                 ts_code: stockData.ts_code,
                 name: stockData.name,
                 latest_price: stockData.latest_price,
                 pct_chg: stockData.pct_chg || 0,
+                industry: stockData.industry || '-',
+                 volume_ratio: stockData.volume_ratio || 0,
+                 pe: stockData.pe || 0,
+                 amount: stockData.amount || 0,
+                 total_mv: stockData.total_mv || 0,
+                 nine_turn_up: nineTurnUp,
+                 nine_turn_down: nineTurnDown,
                 add_time: new Date().toISOString()
             };
             

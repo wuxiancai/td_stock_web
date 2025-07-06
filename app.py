@@ -1215,6 +1215,13 @@ def add_to_watchlist():
             'name': data.get('name', ''),
             'latest_price': data.get('latest_price', 0),
             'pct_chg': data.get('pct_chg', 0),
+            'industry': data.get('industry', '-'),
+            'volume_ratio': data.get('volume_ratio', 0),
+            'pe': data.get('pe', 0),
+            'amount': data.get('amount', 0),
+            'total_mv': data.get('total_mv', 0),
+            'nine_turn_up': data.get('nine_turn_up', 0),
+            'nine_turn_down': data.get('nine_turn_down', 0),
             'add_time': data.get('add_time', datetime.now().isoformat())
         }
         

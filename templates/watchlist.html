@@ -90,6 +90,7 @@
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #eee;
+            font-size: 12px;
         }
         
         .stock-table th {
@@ -161,10 +162,6 @@
             .controls {
                 flex-direction: column;
                 gap: 10px;
-            }
-            
-            .stock-table {
-                font-size: 0.9em;
             }
             
             .stock-table th,
@@ -273,22 +270,29 @@
                         ¥${(stock.latest_price || 0).toFixed(2)}
                     </td>
                     <td>
-                        ${(stock.turnover_rate || 0).toFixed(2)}%
+                        ${(stock.pct_chg || 0).toFixed(2)}%
                     </td>
                     <td>
                         ${(stock.volume_ratio || 0).toFixed(2)}
                     </td>
                     <td>
-                        ${(stock.pe_ratio || 0).toFixed(2)}
+                        ${(stock.pe || 0).toFixed(2)}
                     </td>
                     <td>
                         ${((stock.amount || 0) / 10000).toFixed(2)}
                     </td>
                     <td>
-                        ${((stock.market_cap || 0) / 100000000).toFixed(2)}
+                        ${((stock.total_mv || 0) / 100000000).toFixed(2)}
                     </td>
                     <td>
-                        ${stock.nine_turn || '-'}
+                        ${(() => {
+                            if (stock.nine_turn_up && stock.nine_turn_up > 0) {
+                                return `<span style="color: red; font-weight: bold;">${stock.nine_turn_up}</span>`;
+                            } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
+                                return `<span style="color: green; font-weight: bold;">${stock.nine_turn_down}</span>`;
+                            }
+                            return '-';
+                        })()}
                     </td>
                     <td>
                         <button class="remove-btn" onclick="removeFromWatchlist('${stock.ts_code}')">移除</button>
