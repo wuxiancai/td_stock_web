@@ -450,6 +450,11 @@
                 ] : null;
             }).filter(item => item !== null);
             
+            // 提取BOLL数据，保留null值让ECharts正确处理
+            const bollUpper = data.kline_data.map(item => item.boll_upper === null || item.boll_upper === undefined ? null : parseFloat(item.boll_upper));
+            const bollMid = data.kline_data.map(item => item.boll_mid === null || item.boll_mid === undefined ? null : parseFloat(item.boll_mid));
+            const bollLower = data.kline_data.map(item => item.boll_lower === null || item.boll_lower === undefined ? null : parseFloat(item.boll_lower));
+            
             // 找到最高价和最低价的位置
             let highestIndex = -1;
             let lowestIndex = -1;
@@ -704,6 +709,39 @@
                                 return param.data[2]; // 数组的第三个元素是数值
                             }
                         }
+                    },
+                    {
+                        name: 'BOLL上轨',
+                        type: 'line',
+                        data: bollUpper,
+                        lineStyle: {
+                            color: '#1E90FF',
+                            width: 1
+                        },
+                        symbol: 'none',
+                        smooth: true
+                    },
+                    {
+                        name: 'BOLL中轨',
+                        type: 'line',
+                        data: bollMid,
+                        lineStyle: {
+                            color: '#1E90FF',
+                            width: 1
+                        },
+                        symbol: 'none',
+                        smooth: true
+                    },
+                    {
+                        name: 'BOLL下轨',
+                        type: 'line',
+                        data: bollLower,
+                        lineStyle: {
+                            color: '#1E90FF',
+                            width: 1
+                        },
+                        symbol: 'none',
+                        smooth: true
                     }
                 ]
             };

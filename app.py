@@ -301,6 +301,29 @@ def calculate_nine_turn(df):
     
     return df
 
+def calculate_boll(df, period=20, std_dev=2):
+    """
+    计算布林带(BOLL)指标
+    参数:
+    - period: 移动平均周期，默认20天
+    - std_dev: 标准差倍数，默认2倍
+    """
+    df = df.copy()
+    
+    # 计算中轨（移动平均线）- 从第一根K线开始显示
+    df['boll_mid'] = df['close'].rolling(window=period, min_periods=1).mean()
+    
+    # 计算标准差 - 从第一根K线开始显示
+    df['boll_std'] = df['close'].rolling(window=period, min_periods=1).std()
+    
+    # 计算上轨和下轨
+    df['boll_upper'] = df['boll_mid'] + (df['boll_std'] * std_dev)
+    df['boll_lower'] = df['boll_mid'] - (df['boll_std'] * std_dev)
+    
+    # 对于前期数据不足的情况，保持为NaN，后续会被前端正确处理
+    # 不填充NaN值，让前端图表自动处理空值
+    
+    return df
 
 
 @app.route('/')
@@ -355,11 +378,21 @@ def get_stock_data(stock_code):
         # 计算九转序列
         daily_data = calculate_nine_turn(daily_data)
         
-        # 确保所有数值字段不为None
+        # 计算BOLL指标
+        daily_data = calculate_boll(daily_data)
+        
+        # 确保所有数值字段不为None（除了BOLL指标）
         numeric_columns = ['open', 'high', 'low', 'close', 'vol', 'amount', 'nine_turn_up', 'nine_turn_down']
         for col in numeric_columns:
             if col in daily_data.columns:
                 daily_data[col] = daily_data[col].fillna(0)
+        
+        # BOLL指标保留NaN值，让前端图表正确处理
+        # 将NaN转换为None，这样在JSON序列化时会变成null
+        boll_columns = ['boll_upper', 'boll_mid', 'boll_lower', 'boll_std']
+        for col in boll_columns:
+            if col in daily_data.columns:
+                daily_data[col] = daily_data[col].where(pd.notna(daily_data[col]), None)
         
         # 计算最高价和最低价
         highest_price = daily_data['high'].max()
@@ -375,6 +408,12 @@ def get_stock_data(stock_code):
                 return float(value)
             except (ValueError, TypeError):
                 return default
+        
+        # 确保DataFrame中所有NaN值都被正确处理，避免JSON序列化问题
+        import numpy as np
+        daily_data = daily_data.replace({np.nan: None})
+        # 使用fillna确保所有NaN都被替换为None
+        daily_data = daily_data.where(pd.notna(daily_data), None)
         
         # 获取资金流向数据（尝试两个接口）
         moneyflow_data = None
