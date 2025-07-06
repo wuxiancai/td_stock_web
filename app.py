@@ -1037,9 +1037,24 @@ if __name__ == '__main__':
     # 启动定时调度器
     start_scheduler()
     
-    port = find_available_port()
-    if port:
-        print(f"服务器启动在端口: {port}")
-        app.run(debug=True, host='0.0.0.0', port=port)
-    else:
-        print("无法找到可用端口")
+    # 从环境变量获取配置，支持生产环境部署
+    host = os.environ.get('HOST', '0.0.0.0')
+    port = int(os.environ.get('PORT', 8080))
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    print(f"服务器启动配置: host={host}, port={port}, debug={debug_mode}")
+    
+    try:
+        app.run(debug=debug_mode, host=host, port=port)
+    except Exception as e:
+        print(f"服务器启动失败: {e}")
+        # 如果指定端口失败，尝试查找可用端口（仅在开发模式下）
+        if debug_mode:
+            available_port = find_available_port()
+            if available_port:
+                print(f"尝试使用可用端口: {available_port}")
+                app.run(debug=debug_mode, host=host, port=available_port)
+            else:
+                print("无法找到可用端口")
+        else:
+            raise

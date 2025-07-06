@@ -347,17 +347,21 @@ Group=$USER
 WorkingDirectory=$PROJECT_DIR
 Environment=PATH=$PROJECT_DIR/venv/bin:/usr/local/bin:/usr/bin:/bin
 Environment=PYTHONPATH=$PROJECT_DIR
+Environment=PYTHONUNBUFFERED=1
 EnvironmentFile=-$PROJECT_DIR/.env
-ExecStartPre=/bin/sleep 10
+# 启动前检查
+ExecStartPre=/bin/bash -c 'test -f $PROJECT_DIR/app.py || (echo "app.py not found" && exit 1)'
+ExecStartPre=/bin/bash -c 'test -f $PROJECT_DIR/.env || (echo ".env not found" && exit 1)'
+ExecStartPre=/bin/bash -c '$PROJECT_DIR/venv/bin/python -c "import flask, tushare, pandas, numpy" || (echo "Dependencies check failed" && exit 1)'
 ExecStart=$PROJECT_DIR/venv/bin/python app.py
 ExecReload=/bin/kill -HUP \$MAINPID
 ExecStop=/bin/kill -TERM \$MAINPID
-TimeoutStartSec=60
+TimeoutStartSec=120
 TimeoutStopSec=30
 Restart=always
-RestartSec=10
+RestartSec=15
 StartLimitInterval=300
-StartLimitBurst=5
+StartLimitBurst=3
 
 # 日志配置
 StandardOutput=append:/var/log/td_stock/app.log
