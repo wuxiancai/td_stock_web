@@ -204,12 +204,12 @@ setup_venv() {
         if ! pip install -r requirements.txt --timeout 120; then
             log_warning "默认源安装失败，尝试使用国内镜像源..."
             if ! pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ --timeout 120; then
-                log_error "依赖安装失败，请检查网络连接和requirements.txt文件"
+                log_error "依赖安装失败,请检查网络连接和requirements.txt文件"
                 exit 1
             fi
         fi
     else
-        log_warning "未找到requirements.txt，手动安装核心依赖"
+        log_warning "未找到requirements.txt,手动安装核心依赖"
         local core_packages=("flask" "tushare" "pandas" "numpy")
         for package in "${core_packages[@]}"; do
             log_info "安装 $package..."
