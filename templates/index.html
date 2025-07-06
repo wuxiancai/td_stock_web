@@ -188,6 +188,71 @@
             margin: 20px 0;
         }
         
+        .progress-container {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .progress-text {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .refresh-section {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .refresh-tip {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -232,11 +297,23 @@
                 <button class="market-btn" onclick="loadMarketStocks('zxb')">中小板</button>
                 <button class="market-btn" onclick="loadMarketStocks('bj')">北交所</button>
             </div>
+            
+            <div class="refresh-section" id="refreshSection" style="display: none;">
+                <button class="refresh-btn" onclick="forceRefreshMarket()">🔄 强制刷新数据</button>
+                <span class="refresh-tip">如果数据显示异常，可点击强制刷新重新获取最新数据</span>
+            </div>
         </div>
         
         <div class="stocks-section" id="stocksSection" style="display: none;">
             <h2 id="sectionTitle">股票列表</h2>
             <div id="loadingDiv" class="loading" style="display: none;">正在加载数据...</div>
+            <div id="progressDiv" class="progress-container" style="display: none;">
+                <div class="progress-text" id="progressText">正在更新数据...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-info" id="progressInfo">0/0 (0%)</div>
+            </div>
             <div id="errorDiv" class="error" style="display: none;"></div>
             
             <table class="stocks-table" id="stocksTable" style="display: none;">
@@ -290,9 +367,19 @@
             window.location.href = `/stock/${stockCode}`;
         }
         
+        let progressInterval = null;
+        let currentStocks = [];
+        
         function loadMarketStocks(market, page = 1) {
             currentMarket = market;
             currentPage = page;
+            currentStocks = [];
+            
+            // 清除之前的进度监控
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
             
             // 更新按钮状态
             document.querySelectorAll('.market-btn').forEach(btn => {
@@ -303,8 +390,10 @@
             // 显示加载状态
             document.getElementById('stocksSection').style.display = 'block';
             document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('progressDiv').style.display = 'none';
             document.getElementById('errorDiv').style.display = 'none';
             document.getElementById('stocksTable').style.display = 'none';
+            document.getElementById('refreshSection').style.display = 'block';
             
             const marketNames = {
                 'cyb': '创业板',
@@ -324,13 +413,117 @@
                         return;
                     }
                     
-                    displayStocks(data.stocks);
-                    displayPagination(data.current_page, data.pages);
+                    // 如果数据状态是updating，启动渐进式加载
+                    if (data.data_status === 'updating' || data.data_status === 'basic_only') {
+                        startProgressiveLoading(market, data.stocks);
+                    } else {
+                        // 直接显示完整数据
+                        displayStocks(data.stocks);
+                        displayPagination(data.current_page, data.pages);
+                    }
                 })
                 .catch(error => {
                     document.getElementById('loadingDiv').style.display = 'none';
                     showError('加载数据失败: ' + error.message);
                 });
+        }
+        
+        function startProgressiveLoading(market, initialStocks) {
+            currentStocks = initialStocks || [];
+            
+            // 显示进度条和初始数据
+            document.getElementById('progressDiv').style.display = 'block';
+            document.getElementById('stocksTable').style.display = 'table';
+            
+            // 显示初始基础数据
+            displayStocksProgressive(currentStocks);
+            
+            // 开始监控进度
+            progressInterval = setInterval(() => {
+                checkUpdateProgress(market);
+            }, 2000); // 每2秒检查一次进度
+        }
+        
+        function checkUpdateProgress(market) {
+            fetch(`/api/update_progress/${market}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateProgressDisplay(data);
+                    
+                    // 如果更新完成，停止监控并显示完成提示
+                    if (data.status === 'complete') {
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+                        document.getElementById('progressDiv').style.display = 'none';
+                        
+                        // 获取最终数据
+                        fetch(`/api/stocks/${market}?page=${currentPage}`)
+                            .then(response => response.json())
+                            .then(finalData => {
+                                displayStocks(finalData.stocks);
+                                displayPagination(finalData.current_page, finalData.pages);
+                                showCompletionNotification(market);
+                            });
+                    } else if (data.status === 'updating') {
+                        // 获取当前更新的数据
+                        fetch(`/api/stocks/${market}?page=${currentPage}`)
+                            .then(response => response.json())
+                            .then(updateData => {
+                                if (updateData.stocks) {
+                                    displayStocksProgressive(updateData.stocks);
+                                }
+                            });
+                    }
+                })
+                .catch(error => {
+                    console.error('检查进度失败:', error);
+                });
+        }
+        
+        function updateProgressDisplay(progressData) {
+            const progressFill = document.getElementById('progressFill');
+            const progressInfo = document.getElementById('progressInfo');
+            const progressText = document.getElementById('progressText');
+            
+            const percent = progressData.progress_percent || 0;
+            progressFill.style.width = percent + '%';
+            progressInfo.textContent = `${progressData.completed}/${progressData.total} (${percent.toFixed(1)}%)`;
+            
+            if (progressData.current_stock && progressData.current_stock !== 'all_completed') {
+                progressText.textContent = `正在更新: ${progressData.current_stock}`;
+            } else if (progressData.status === 'complete') {
+                progressText.textContent = '数据更新完成！';
+            } else {
+                progressText.textContent = '正在更新数据...';
+            }
+        }
+        
+        function displayStocksProgressive(stocks) {
+            const tbody = document.getElementById('stocksTableBody');
+            tbody.innerHTML = '';
+            
+            stocks.forEach(stock => {
+                const row = document.createElement('tr');
+                const hasRealTimeData = stock.data_loaded !== false && stock.latest_price > 0;
+                
+                row.innerHTML = `
+                    <td><span class="stock-code" onclick="goToStock('${stock.ts_code}')">${stock.ts_code}</span></td>
+                    <td>${stock.name}</td>
+                    <td>${stock.industry || '-'}</td>
+                    <td>${hasRealTimeData ? '¥' + stock.latest_price.toFixed(2) : '加载中...'}</td>
+                    <td>${hasRealTimeData ? stock.turnover_rate.toFixed(2) : '-'}</td>
+                    <td>${hasRealTimeData ? stock.volume_ratio.toFixed(2) : '-'}</td>
+                    <td>${hasRealTimeData ? (stock.amount / 10000).toFixed(2) : '-'}</td>
+                    <td>${hasRealTimeData ? (stock.market_cap / 10000).toFixed(2) : '-'}</td>
+                `;
+                
+                // 如果数据正在加载，添加加载样式
+                if (!hasRealTimeData) {
+                    row.style.opacity = '0.6';
+                }
+                
+                tbody.appendChild(row);
+            });
         }
         
         function displayStocks(stocks) {
@@ -353,6 +546,74 @@
             });
             
             document.getElementById('stocksTable').style.display = 'table';
+        }
+        
+        function showCompletionNotification(market) {
+            const marketNames = {
+                'cyb': '创业板',
+                'hu': '沪A股',
+                'zxb': '中小板',
+                'bj': '北交所'
+            };
+            
+            alert(`${marketNames[market]}数据更新完成！`);
+        }
+        
+        function forceRefreshMarket() {
+            if (!currentMarket) {
+                alert('请先选择一个市场');
+                return;
+            }
+            
+            if (confirm('确定要强制刷新数据吗？这将清除本地缓存并重新获取所有数据，可能需要较长时间。')) {
+                // 清除之前的进度监控
+                if (progressInterval) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                }
+                
+                // 显示加载状态
+                document.getElementById('loadingDiv').style.display = 'block';
+                document.getElementById('progressDiv').style.display = 'none';
+                document.getElementById('errorDiv').style.display = 'none';
+                document.getElementById('stocksTable').style.display = 'none';
+                
+                const marketNames = {
+                    'cyb': '创业板',
+                    'hu': '沪A股',
+                    'zxb': '中小板',
+                    'bj': '北交所'
+                };
+                document.getElementById('sectionTitle').textContent = marketNames[currentMarket] + '股票列表 (强制刷新中...)';
+                
+                // 发起强制刷新请求
+                fetch(`/api/stocks/${currentMarket}?page=${currentPage}&force_refresh=true`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('loadingDiv').style.display = 'none';
+                        
+                        if (data.error) {
+                            showError(data.error);
+                            return;
+                        }
+                        
+                        // 更新标题
+                        document.getElementById('sectionTitle').textContent = marketNames[currentMarket] + '股票列表';
+                        
+                        // 如果数据状态是updating，启动渐进式加载
+                        if (data.data_status === 'updating' || data.data_status === 'basic_only') {
+                            startProgressiveLoading(currentMarket, data.stocks);
+                        } else {
+                            // 直接显示完整数据
+                            displayStocks(data.stocks);
+                            displayPagination(data.current_page, data.pages);
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('loadingDiv').style.display = 'none';
+                        showError('强制刷新失败: ' + error.message);
+                    });
+            }
         }
         
         function displayPagination(currentPage, totalPages) {
