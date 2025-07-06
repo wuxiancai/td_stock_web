@@ -69,19 +69,68 @@ update_system() {
     log_success "系统包更新完成"
 }
 
+# 检查端口占用
+check_ports() {
+    log_info "检查端口占用..."
+    
+    # 检查8080端口
+    if netstat -tuln | grep -q ":8080 "; then
+        log_error "端口8080已被占用，请先停止占用该端口的服务"
+        log_info "查看占用进程: sudo lsof -i :8080"
+        exit 1
+    fi
+    
+    # 检查80端口（如果要配置Nginx）
+    if netstat -tuln | grep -q ":80 "; then
+        log_warning "端口80已被占用，Nginx配置可能会失败"
+    fi
+    
+    log_success "端口检查完成"
+}
+
 # 安装必要的系统依赖
 install_dependencies() {
     log_info "安装系统依赖..."
-    sudo apt install -y \
-        python3 \
-        python3-pip \
-        python3-venv \
-        git \
-        curl \
-        wget \
-        unzip \
-        supervisor \
-        nginx
+    
+    # 更新包索引
+    sudo apt update
+    
+    # 安装基础依赖，添加错误处理
+    local packages=(
+        "python3"
+        "python3-pip"
+        "python3-venv"
+        "python3-dev"
+        "build-essential"
+        "git"
+        "curl"
+        "wget"
+        "unzip"
+        "nginx"
+        "net-tools"
+        "lsof"
+    )
+    
+    for package in "${packages[@]}"; do
+        log_info "安装 $package..."
+        if ! sudo apt install -y "$package"; then
+            log_error "安装 $package 失败"
+            exit 1
+        fi
+    done
+    
+    # 验证Python安装
+    if ! command -v python3 >/dev/null 2>&1; then
+        log_error "Python3安装失败"
+        exit 1
+    fi
+    
+    # 验证pip安装
+    if ! command -v pip3 >/dev/null 2>&1; then
+        log_error "pip3安装失败"
+        exit 1
+    fi
+    
     log_success "系统依赖安装完成"
 }
 
@@ -126,21 +175,60 @@ setup_venv() {
         exit 1
     fi
     
+    # 删除旧的虚拟环境（如果存在）
+    if [[ -d "venv" ]]; then
+        log_info "删除旧的虚拟环境..."
+        rm -rf venv
+    fi
+    
     # 创建虚拟环境
-    python3 -m venv venv
+    if ! python3 -m venv venv; then
+        log_error "创建虚拟环境失败"
+        exit 1
+    fi
+    
+    # 激活虚拟环境
     source venv/bin/activate
     
-    # 升级pip
-    pip install --upgrade pip
+    # 升级pip，添加超时和重试
+    log_info "升级pip..."
+    if ! pip install --upgrade pip --timeout 60; then
+        log_warning "pip升级失败，尝试使用国内镜像源..."
+        pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple/ --timeout 60
+    fi
     
     # 安装项目依赖
     if [[ -f "requirements.txt" ]]; then
         log_info "安装项目依赖..."
-        pip install -r requirements.txt
+        # 首先尝试默认源
+        if ! pip install -r requirements.txt --timeout 120; then
+            log_warning "默认源安装失败，尝试使用国内镜像源..."
+            if ! pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ --timeout 120; then
+                log_error "依赖安装失败，请检查网络连接和requirements.txt文件"
+                exit 1
+            fi
+        fi
     else
-        log_warning "未找到requirements.txt，手动安装依赖"
-        pip install flask tushare pandas numpy
+        log_warning "未找到requirements.txt，手动安装核心依赖"
+        local core_packages=("flask" "tushare" "pandas" "numpy")
+        for package in "${core_packages[@]}"; do
+            log_info "安装 $package..."
+            if ! pip install "$package" --timeout 60; then
+                log_warning "默认源安装 $package 失败，尝试国内镜像源..."
+                if ! pip install "$package" -i https://pypi.tuna.tsinghua.edu.cn/simple/ --timeout 60; then
+                    log_error "安装 $package 失败"
+                    exit 1
+                fi
+            fi
+        done
     fi
+    
+    # 验证关键包是否安装成功
+    log_info "验证依赖安装..."
+    python3 -c "import flask, tushare, pandas, numpy" 2>/dev/null || {
+        log_error "关键依赖验证失败"
+        exit 1
+    }
     
     log_success "Python虚拟环境创建完成"
 }
@@ -164,13 +252,18 @@ setup_env() {
         TUSHARE_TOKEN="your_tushare_token_here"
     fi
     
+    # 生成随机密钥
+    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+    
     # 创建环境配置文件
     cat > .env << EOF
 # 九转序列选股系统环境配置
+# 生成时间: $(date)
 
 # Flask配置
 FLASK_ENV=production
 FLASK_DEBUG=False
+SECRET_KEY=$SECRET_KEY
 
 # 服务器配置
 HOST=0.0.0.0
@@ -182,7 +275,15 @@ TUSHARE_TOKEN=$TUSHARE_TOKEN
 # 日志配置
 LOG_LEVEL=INFO
 LOG_FILE=/var/log/td_stock/app.log
+
+# 安全配置
+SESSION_COOKIE_SECURE=False
+SESSION_COOKIE_HTTPONLY=True
+SESSION_COOKIE_SAMESITE=Lax
 EOF
+    
+    # 设置环境文件权限
+    chmod 600 .env
     
     if [[ "$TUSHARE_TOKEN" != "your_tushare_token_here" ]]; then
         log_success "环境配置文件创建完成，已自动配置Tushare Token"
@@ -191,11 +292,37 @@ EOF
     fi
 }
 
-# 创建日志目录
+# 创建日志目录和配置日志轮转
 setup_logs() {
     log_info "创建日志目录..."
     sudo mkdir -p /var/log/td_stock
     sudo chown $USER:$USER /var/log/td_stock
+    sudo chmod 755 /var/log/td_stock
+    
+    # 创建日志轮转配置
+    log_info "配置日志轮转..."
+    sudo tee /etc/logrotate.d/td-stock > /dev/null << EOF
+/var/log/td_stock/*.log {
+    daily
+    missingok
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    create 644 $USER $USER
+    postrotate
+        systemctl reload td-stock.service > /dev/null 2>&1 || true
+    endscript
+}
+EOF
+    
+    # 测试日志轮转配置
+    if sudo logrotate -d /etc/logrotate.d/td-stock >/dev/null 2>&1; then
+        log_success "日志轮转配置完成"
+    else
+        log_warning "日志轮转配置可能有问题，但不影响部署"
+    fi
+    
     log_success "日志目录创建完成"
 }
 
@@ -203,43 +330,74 @@ setup_logs() {
 setup_systemd() {
     log_info "创建systemd服务..."
     
+    # 确保日志目录存在且权限正确
+    sudo mkdir -p /var/log/td_stock
+    sudo chown $USER:$USER /var/log/td_stock
+    sudo chmod 755 /var/log/td_stock
+    
     # 创建服务文件
     sudo tee /etc/systemd/system/td-stock.service > /dev/null << EOF
 [Unit]
 Description=九转序列选股系统
-After=network.target
+Documentation=https://github.com/your-repo/td_stock
+After=network.target network-online.target
+Wants=network-online.target
+Requires=network.target
 
 [Service]
 Type=simple
 User=$USER
 Group=$USER
 WorkingDirectory=$PROJECT_DIR
-Environment=PATH=$PROJECT_DIR/venv/bin
-EnvironmentFile=$PROJECT_DIR/.env
+Environment=PATH=$PROJECT_DIR/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=$PROJECT_DIR
+EnvironmentFile=-$PROJECT_DIR/.env
+ExecStartPre=/bin/sleep 10
 ExecStart=$PROJECT_DIR/venv/bin/python app.py
 ExecReload=/bin/kill -HUP \$MAINPID
+ExecStop=/bin/kill -TERM \$MAINPID
+TimeoutStartSec=60
+TimeoutStopSec=30
 Restart=always
 RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
 
 # 日志配置
 StandardOutput=append:/var/log/td_stock/app.log
 StandardError=append:/var/log/td_stock/error.log
+SyslogIdentifier=td-stock
 
 # 安全配置
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
+ProtectHome=true
 ReadWritePaths=/var/log/td_stock $PROJECT_DIR
+ReadOnlyPaths=/etc
+
+# 资源限制
+LimitNOFILE=65536
+LimitNPROC=4096
 
 [Install]
 WantedBy=multi-user.target
 EOF
     
+    # 验证服务文件语法
+    if ! sudo systemd-analyze verify /etc/systemd/system/td-stock.service; then
+        log_error "systemd服务文件语法错误"
+        exit 1
+    fi
+    
     # 重新加载systemd配置
     sudo systemctl daemon-reload
     
     # 启用服务
-    sudo systemctl enable td-stock.service
+    if ! sudo systemctl enable td-stock.service; then
+        log_error "启用systemd服务失败"
+        exit 1
+    fi
     
     log_success "systemd服务创建完成"
 }
@@ -316,38 +474,129 @@ setup_firewall() {
     
     # 检查ufw是否安装
     if command -v ufw >/dev/null 2>&1; then
-        sudo ufw --force enable
+        # 检查ufw状态
+        local ufw_status=$(sudo ufw status | head -1)
+        
+        if [[ "$ufw_status" == *"inactive"* ]]; then
+            log_info "启用ufw防火墙..."
+            sudo ufw --force enable
+        fi
+        
+        # 允许SSH（防止锁定）
         sudo ufw allow ssh
+        sudo ufw allow 22/tcp
+        
+        # 允许HTTP和HTTPS
         sudo ufw allow 80/tcp
         sudo ufw allow 443/tcp
         
         # 如果没有配置Nginx，开放8080端口
         if [[ ! -f /etc/nginx/sites-enabled/td-stock ]]; then
             sudo ufw allow 8080/tcp
+            log_info "已开放8080端口用于直接访问应用"
         fi
+        
+        # 显示防火墙状态
+        sudo ufw status numbered
         
         log_success "防火墙配置完成"
     else
-        log_warning "未检测到ufw防火墙，请手动配置防火墙规则"
+        log_warning "未检测到ufw防火墙"
+        log_info "建议安装ufw: sudo apt install ufw"
+        log_info "手动配置防火墙规则以保护服务器安全"
     fi
+}
+
+# 验证配置文件
+validate_config() {
+    log_info "验证配置文件..."
+    
+    # 检查app.py是否存在
+    if [[ ! -f "app.py" ]]; then
+        log_error "未找到app.py文件"
+        exit 1
+    fi
+    
+    # 检查.env文件
+    if [[ ! -f ".env" ]]; then
+        log_error "未找到.env配置文件"
+        exit 1
+    fi
+    
+    # 测试Python应用是否可以正常导入
+    log_info "测试应用导入..."
+    cd "$PROJECT_DIR"
+    source venv/bin/activate
+    
+    # 创建测试脚本
+    cat > test_import.py << 'EOF'
+import sys
+try:
+    import app
+    print("应用导入成功")
+    sys.exit(0)
+except Exception as e:
+    print(f"应用导入失败: {e}")
+    sys.exit(1)
+EOF
+    
+    if python3 test_import.py; then
+        log_success "应用配置验证通过"
+    else
+        log_error "应用配置验证失败"
+        rm -f test_import.py
+        exit 1
+    fi
+    
+    rm -f test_import.py
 }
 
 # 启动服务
 start_service() {
     log_info "启动服务..."
     
-    # 启动应用服务
-    sudo systemctl start td-stock.service
+    # 验证配置
+    validate_config
     
-    # 检查服务状态
-    sleep 3
-    if sudo systemctl is-active --quiet td-stock.service; then
-        log_success "应用服务启动成功"
-    else
-        log_error "应用服务启动失败"
-        log_info "查看日志: sudo journalctl -u td-stock.service -f"
+    # 启动应用服务
+    if ! sudo systemctl start td-stock.service; then
+        log_error "服务启动命令执行失败"
         exit 1
     fi
+    
+    # 等待服务启动
+    log_info "等待服务启动..."
+    sleep 5
+    
+    # 检查服务状态
+    local retry_count=0
+    local max_retries=10
+    
+    while [[ $retry_count -lt $max_retries ]]; do
+        if sudo systemctl is-active --quiet td-stock.service; then
+            log_success "应用服务启动成功"
+            
+            # 测试HTTP连接
+            log_info "测试HTTP连接..."
+            sleep 2
+            if curl -f http://localhost:8080 >/dev/null 2>&1; then
+                log_success "HTTP服务响应正常"
+            else
+                log_warning "HTTP服务暂时无响应，可能仍在初始化中"
+            fi
+            return 0
+        fi
+        
+        log_info "服务启动中... ($((retry_count + 1))/$max_retries)"
+        sleep 2
+        ((retry_count++))
+    done
+    
+    log_error "应用服务启动失败"
+    log_info "查看服务状态: sudo systemctl status td-stock.service"
+    log_info "查看详细日志: sudo journalctl -u td-stock.service -f"
+    log_info "查看应用日志: tail -f /var/log/td_stock/app.log"
+    exit 1
 }
 
 # 显示部署信息
@@ -383,19 +632,67 @@ show_info() {
         log_info "如需修改配置，请编辑 $PROJECT_DIR/.env 文件"
         log_info "修改配置后需要重启服务: sudo systemctl restart td-stock"
     fi
+    
+    echo
+    echo "=== 故障排除 ==="
+    echo "如果遇到问题，请按以下步骤排查："
+    echo "1. 检查服务状态: sudo systemctl status td-stock"
+    echo "2. 查看服务日志: sudo journalctl -u td-stock -f"
+    echo "3. 查看应用日志: tail -f /var/log/td_stock/app.log"
+    echo "4. 查看错误日志: tail -f /var/log/td_stock/error.log"
+    echo "5. 测试端口连通: curl -I http://localhost:8080"
+    echo "6. 检查防火墙: sudo ufw status"
+    echo "7. 重启服务: sudo systemctl restart td-stock"
+    echo
+    echo "=== 性能优化建议 ==="
+    echo "1. 定期清理日志: sudo logrotate -f /etc/logrotate.d/td-stock"
+    echo "2. 监控系统资源: htop 或 top"
+    echo "3. 备份配置文件: cp $PROJECT_DIR/.env $PROJECT_DIR/.env.backup"
+    echo "4. 更新依赖包: cd $PROJECT_DIR && source venv/bin/activate && pip list --outdated"
 }
+
+# 清理函数（在出错时调用）
+cleanup_on_error() {
+    log_error "部署过程中出现错误，正在清理..."
+    
+    # 停止服务（如果已启动）
+    if sudo systemctl is-active --quiet td-stock.service 2>/dev/null; then
+        sudo systemctl stop td-stock.service
+    fi
+    
+    # 禁用服务（如果已启用）
+    if sudo systemctl is-enabled --quiet td-stock.service 2>/dev/null; then
+        sudo systemctl disable td-stock.service
+    fi
+    
+    # 删除systemd服务文件
+    if [[ -f /etc/systemd/system/td-stock.service ]]; then
+        sudo rm -f /etc/systemd/system/td-stock.service
+        sudo systemctl daemon-reload
+    fi
+    
+    log_info "清理完成，您可以重新运行部署脚本"
+}
+
+# 设置错误处理
+trap cleanup_on_error ERR
 
 # 主函数
 main() {
     echo "=== 九转序列选股系统一键部署脚本 ==="
     echo "适用于 Ubuntu Server 22.04"
+    echo "版本: 2.0"
+    echo "更新时间: $(date '+%Y-%m-%d %H:%M:%S')"
     echo
     
+    # 预检查
     check_root
     check_system
+    check_ports
     
     log_info "开始部署..."
     
+    # 部署步骤
     update_system
     install_dependencies
     setup_project
@@ -408,7 +705,11 @@ main() {
     start_service
     show_info
     
+    # 取消错误处理陷阱
+    trap - ERR
+    
     log_success "部署完成！请按照上述信息配置和使用系统。"
+    log_info "建议重启系统以确保所有配置生效: sudo reboot"
 }
 
 # 执行主函数
