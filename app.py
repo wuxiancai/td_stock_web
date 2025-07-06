@@ -114,9 +114,12 @@ def get_stock_data(stock_code):
         if len(stock_code) == 6:
             if stock_code.startswith(('60', '68')):
                 ts_code = f"{stock_code}.SH"
+            elif stock_code.startswith(('43', '83', '87')):
+                ts_code = f"{stock_code}.BJ"
             else:
                 ts_code = f"{stock_code}.SZ"
         else:
+            # 如果已经包含后缀，直接使用
             ts_code = stock_code
         
         # 获取基本信息
