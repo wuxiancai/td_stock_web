@@ -166,14 +166,10 @@ setup_project() {
 setup_venv() {
     log_info "创建Python虚拟环境..."
     
-    # 检查Python版本
-    PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
+    # 显示Python版本信息
+    PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)
     log_info "检测到Python版本: $PYTHON_VERSION"
-    
-    if [[ "$PYTHON_VERSION" < "3.8" ]]; then
-        log_error "Python版本过低，需要3.8或更高版本"
-        exit 1
-    fi
+    log_info "使用系统Python版本创建虚拟环境"
     
     # 删除旧的虚拟环境（如果存在）
     if [[ -d "venv" ]]; then
