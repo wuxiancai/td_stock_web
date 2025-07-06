@@ -295,6 +295,7 @@
                 <button class="market-btn" onclick="loadMarketStocks('cyb')">创业板</button>
                 <button class="market-btn" onclick="loadMarketStocks('hu')">沪A</button>
                 <button class="market-btn" onclick="loadMarketStocks('zxb')">中小板</button>
+                <button class="market-btn" onclick="loadMarketStocks('kcb')">科创板</button>
                 <button class="market-btn" onclick="loadMarketStocks('bj')">北交所</button>
             </div>
             
@@ -399,6 +400,7 @@
                 'cyb': '创业板',
                 'hu': '沪A股',
                 'zxb': '中小板',
+                'kcb': '科创板',
                 'bj': '北交所'
             };
             document.getElementById('sectionTitle').textContent = marketNames[market] + '股票列表';
@@ -569,6 +571,7 @@
                 'cyb': '创业板',
                 'hu': '沪A股',
                 'zxb': '中小板',
+                'kcb': '科创板',
                 'bj': '北交所'
             };
             
@@ -598,6 +601,7 @@
                     'cyb': '创业板',
                     'hu': '沪A股',
                     'zxb': '中小板',
+                    'kcb': '科创板',
                     'bj': '北交所'
                 };
                 document.getElementById('sectionTitle').textContent = marketNames[currentMarket] + '股票列表 (强制刷新中...)';

@@ -508,6 +508,10 @@ def get_stocks_by_market(market):
                 stocks = pro.stock_basic(market='主板', exchange='SSE')
             elif market == 'zxb':  # 中小板
                 stocks = pro.stock_basic(market='中小板')
+            elif market == 'kcb':  # 科创板
+                # 科创板股票代码以688开头，需要单独获取
+                stocks = pro.stock_basic(market='科创板', exchange='SSE')
+                print(f"获取到{len(stocks)}只科创板股票")
             elif market == 'bj':  # 北交所
                 stocks = pro.stock_basic(exchange='BSE')
             else:
