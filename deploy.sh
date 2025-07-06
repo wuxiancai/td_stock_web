@@ -350,9 +350,9 @@ Environment=PYTHONPATH=$PROJECT_DIR
 Environment=PYTHONUNBUFFERED=1
 EnvironmentFile=-$PROJECT_DIR/.env
 # 启动前检查
-ExecStartPre=/bin/bash -c 'test -f $PROJECT_DIR/app.py || (echo "app.py not found" && exit 1)'
-ExecStartPre=/bin/bash -c 'test -f $PROJECT_DIR/.env || (echo ".env not found" && exit 1)'
-ExecStartPre=/bin/bash -c '$PROJECT_DIR/venv/bin/python -c "import flask, tushare, pandas, numpy" || (echo "Dependencies check failed" && exit 1)'
+ExecStartPre=/bin/test -f $PROJECT_DIR/app.py
+ExecStartPre=/bin/test -f $PROJECT_DIR/.env
+ExecStartPre=$PROJECT_DIR/venv/bin/python -c "import flask, tushare, pandas, numpy, schedule"
 ExecStart=$PROJECT_DIR/venv/bin/python app.py
 ExecReload=/bin/kill -HUP \$MAINPID
 ExecStop=/bin/kill -TERM \$MAINPID
