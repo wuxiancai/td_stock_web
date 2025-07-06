@@ -188,6 +188,10 @@
             <div id="errorDiv" class="error" style="display: none;"></div>
             
             <div id="stockInfo" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                    <button class="back-btn" onclick="history.back()">← 返回</button>
+                    <button class="back-btn" id="addToWatchlistBtn" onclick="addToWatchlist()" style="background: linear-gradient(45deg, #ffc107, #fd7e14);">⭐ 加入自选股</button>
+                </div>
                 <div class="stock-title">
                     <div>
                         <div class="stock-name" id="stockName"></div>
@@ -1173,6 +1177,44 @@
             document.getElementById('loadingDiv').style.display = 'none';
             document.getElementById('errorDiv').textContent = message;
             document.getElementById('errorDiv').style.display = 'block';
+        }
+        
+        function addToWatchlist() {
+            if (!stockData) {
+                alert('股票数据尚未加载完成，请稍后再试');
+                return;
+            }
+            
+            const watchlistData = {
+                ts_code: stockData.ts_code,
+                name: stockData.name,
+                latest_price: stockData.latest_price,
+                pct_chg: stockData.pct_chg || 0,
+                add_time: new Date().toISOString()
+            };
+            
+            fetch('/api/watchlist/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(watchlistData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('已成功加入自选股！');
+                    const btn = document.getElementById('addToWatchlistBtn');
+                    btn.textContent = '✓ 已加入自选股';
+                    btn.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
+                    btn.onclick = null;
+                } else {
+                    alert(data.message || '加入自选股失败');
+                }
+            })
+            .catch(error => {
+                alert('加入自选股失败: ' + error.message);
+            });
         }
         
         // 页面加载时获取股票数据

@@ -331,6 +331,7 @@
                     <button class="market-btn" onclick="loadMarketStocks('kcb')">科创板</button>
                     <button class="market-btn" onclick="loadMarketStocks('bj')">北交所</button>
                     <button class="market-btn" onclick="syncAllMarkets()" style="background: linear-gradient(45deg, #28a745, #20c997);">A股</button>
+                    <button class="market-btn" onclick="openWatchlist()" style="background: linear-gradient(45deg, #ffc107, #fd7e14);">⭐ 自选股</button>
                 </div>
             </div>
             
@@ -476,6 +477,10 @@
                 return;
             }
             window.location.href = `/stock/${stockCode}`;
+        }
+        
+        function openWatchlist() {
+            window.open('/watchlist', '_blank');
         }
         
         let progressInterval = null;

@@ -500,6 +500,10 @@ def index():
 def stock_detail(stock_code):
     return render_template('stock_detail.html', stock_code=stock_code)
 
+@app.route('/watchlist')
+def watchlist():
+    return render_template('watchlist.html')
+
 @app.route('/api/stock/<stock_code>')
 def get_stock_data(stock_code):
     try:
@@ -1137,6 +1141,160 @@ def get_rate_limiter_status():
     except Exception as e:
         return jsonify({
             'status': 'error',
+            'message': str(e)
+        }), 500
+
+# 自选股管理功能
+def get_watchlist_file_path():
+    """获取自选股文件路径"""
+    cache_dir = 'cache'
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+    return os.path.join(cache_dir, 'watchlist.json')
+
+def load_watchlist():
+    """加载自选股数据"""
+    watchlist_file = get_watchlist_file_path()
+    if os.path.exists(watchlist_file):
+        try:
+            with open(watchlist_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_watchlist(watchlist_data):
+    """保存自选股数据"""
+    watchlist_file = get_watchlist_file_path()
+    try:
+        with open(watchlist_file, 'w', encoding='utf-8') as f:
+            json.dump(watchlist_data, f, ensure_ascii=False, indent=2)
+        return True
+    except:
+        return False
+
+@app.route('/api/watchlist')
+def get_watchlist():
+    """获取自选股列表"""
+    try:
+        watchlist_data = load_watchlist()
+        return jsonify({
+            'success': True,
+            'data': watchlist_data
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/watchlist/add', methods=['POST'])
+def add_to_watchlist():
+    """添加股票到自选股"""
+    try:
+        data = request.get_json()
+        if not data or 'ts_code' not in data:
+            return jsonify({
+                'success': False,
+                'message': '缺少必要参数'
+            }), 400
+        
+        watchlist_data = load_watchlist()
+        
+        # 检查是否已存在
+        for stock in watchlist_data:
+            if stock['ts_code'] == data['ts_code']:
+                return jsonify({
+                    'success': False,
+                    'message': '该股票已在自选股中'
+                })
+        
+        # 添加新股票
+        new_stock = {
+            'ts_code': data['ts_code'],
+            'name': data.get('name', ''),
+            'latest_price': data.get('latest_price', 0),
+            'pct_chg': data.get('pct_chg', 0),
+            'add_time': data.get('add_time', datetime.now().isoformat())
+        }
+        
+        watchlist_data.append(new_stock)
+        
+        if save_watchlist(watchlist_data):
+            return jsonify({
+                'success': True,
+                'message': '添加成功'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '保存失败'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/watchlist/remove', methods=['POST'])
+def remove_from_watchlist():
+    """从自选股中移除股票"""
+    try:
+        data = request.get_json()
+        if not data or 'ts_code' not in data:
+            return jsonify({
+                'success': False,
+                'message': '缺少必要参数'
+            }), 400
+        
+        watchlist_data = load_watchlist()
+        original_length = len(watchlist_data)
+        
+        # 移除指定股票
+        watchlist_data = [stock for stock in watchlist_data if stock['ts_code'] != data['ts_code']]
+        
+        if len(watchlist_data) == original_length:
+            return jsonify({
+                'success': False,
+                'message': '股票不在自选股中'
+            })
+        
+        if save_watchlist(watchlist_data):
+            return jsonify({
+                'success': True,
+                'message': '移除成功'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '保存失败'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/watchlist/clear', methods=['POST'])
+def clear_watchlist():
+    """清空自选股"""
+    try:
+        if save_watchlist([]):
+            return jsonify({
+                'success': True,
+                'message': '清空成功'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '清空失败'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
             'message': str(e)
         }), 500
 

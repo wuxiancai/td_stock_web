@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自选股 - 九转序列选股系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+        
+        .watchlist-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .stock-table th,
+        .stock-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .stock-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stock-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .stock-name {
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+        }
+        
+        .stock-name:hover {
+            color: #667eea;
+        }
+        
+        .stock-code {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .price-positive {
+            color: #e74c3c;
+        }
+        
+        .price-negative {
+            color: #27ae60;
+        }
+        
+        .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        
+        .remove-btn:hover {
+            background: #c82333;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.1em;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .stock-table {
+                font-size: 0.9em;
+            }
+            
+            .stock-table th,
+            .stock-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">⭐ 我的自选股</div>
+            <div class="subtitle">实时跟踪您关注的股票</div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="refreshWatchlist()">🔄 刷新数据</button>
+            <button class="btn btn-danger" onclick="clearAllWatchlist()">🗑️ 清空自选股</button>
+        </div>
+        
+        <div class="watchlist-section">
+            <div id="loadingDiv" class="loading">正在加载自选股数据...</div>
+            
+            <div id="emptyDiv" class="empty-message" style="display: none;">
+                <p>您还没有添加任何自选股</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #999;">在股票详情页点击"加入自选股"按钮来添加股票</p>
+            </div>
+            
+            <div id="watchlistContent" style="display: none;">
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>股票代码</th>
+                            <th>股票名称</th>
+                            <th>所属行业</th>
+                            <th>最新价格</th>
+                            <th>换手率(%)</th>
+                            <th>量比</th>
+                            <th>市盈率(PE)</th>
+                            <th>成交额(万元)</th>
+                            <th>市值(亿元)</th>
+                            <th>九转买入</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="watchlistTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let watchlistData = [];
+        
+        function loadWatchlist() {
+            fetch('/api/watchlist')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        watchlistData = data.data || [];
+                        displayWatchlist();
+                    } else {
+                        showError('加载自选股失败: ' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    showError('加载自选股失败: ' + error.message);
+                });
+        }
+        
+        function displayWatchlist() {
+            document.getElementById('loadingDiv').style.display = 'none';
+            
+            if (watchlistData.length === 0) {
+                document.getElementById('emptyDiv').style.display = 'block';
+                document.getElementById('watchlistContent').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('emptyDiv').style.display = 'none';
+            document.getElementById('watchlistContent').style.display = 'block';
+            
+            const tbody = document.getElementById('watchlistTableBody');
+            tbody.innerHTML = '';
+            
+            watchlistData.forEach(stock => {
+                const row = document.createElement('tr');
+                
+                const changePercent = stock.pct_chg || 0;
+                const priceClass = changePercent >= 0 ? 'price-positive' : 'price-negative';
+                const changeSign = changePercent >= 0 ? '+' : '';
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="stock-code">${stock.ts_code}</div>
+                    </td>
+                    <td>
+                        <div class="stock-name" onclick="viewStock('${stock.ts_code}')">${stock.name}</div>
+                    </td>
+                    <td>
+                        ${stock.industry || '-'}
+                    </td>
+                    <td class="${priceClass}">
+                        ¥${(stock.latest_price || 0).toFixed(2)}
+                    </td>
+                    <td>
+                        ${(stock.turnover_rate || 0).toFixed(2)}%
+                    </td>
+                    <td>
+                        ${(stock.volume_ratio || 0).toFixed(2)}
+                    </td>
+                    <td>
+                        ${(stock.pe_ratio || 0).toFixed(2)}
+                    </td>
+                    <td>
+                        ${((stock.amount || 0) / 10000).toFixed(2)}
+                    </td>
+                    <td>
+                        ${((stock.market_cap || 0) / 100000000).toFixed(2)}
+                    </td>
+                    <td>
+                        ${stock.nine_turn || '-'}
+                    </td>
+                    <td>
+                        <button class="remove-btn" onclick="removeFromWatchlist('${stock.ts_code}')">移除</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        function viewStock(tsCode) {
+            const stockCode = tsCode.substring(0, 6);
+            window.open(`/stock/${stockCode}`, '_blank');
+        }
+        
+        function removeFromWatchlist(tsCode) {
+            if (!confirm('确定要从自选股中移除这只股票吗？')) {
+                return;
+            }
+            
+            fetch('/api/watchlist/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ts_code: tsCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadWatchlist(); // 重新加载列表
+                } else {
+                    alert('移除失败: ' + (data.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                alert('移除失败: ' + error.message);
+            });
+        }
+        
+        function refreshWatchlist() {
+            document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('emptyDiv').style.display = 'none';
+            document.getElementById('watchlistContent').style.display = 'none';
+            loadWatchlist();
+        }
+        
+        function clearAllWatchlist() {
+            if (!confirm('确定要清空所有自选股吗？此操作不可恢复！')) {
+                return;
+            }
+            
+            fetch('/api/watchlist/clear', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadWatchlist(); // 重新加载列表
+                } else {
+                    alert('清空失败: ' + (data.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                alert('清空失败: ' + error.message);
+            });
+        }
+        
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '-';
+            const date = new Date(dateTimeStr);
+            return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour12: false });
+        }
+        
+        function showError(message) {
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.getElementById('emptyDiv').innerHTML = `
+                <p style="color: #e74c3c;">${message}</p>
+                <button class="btn" onclick="loadWatchlist()" style="margin-top: 10px;">重试</button>
+            `;
+            document.getElementById('emptyDiv').style.display = 'block';
+        }
+        
+        // 页面加载时获取自选股数据
+        loadWatchlist();
+    </script>
+</body>
+</html>
