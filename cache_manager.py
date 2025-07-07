@@ -80,6 +80,11 @@ class FileLockManager:
         lock_file = f"{file_path}.lock"
         
         try:
+            # 确保锁文件目录存在
+            lock_dir = os.path.dirname(lock_file)
+            if lock_dir and not os.path.exists(lock_dir):
+                os.makedirs(lock_dir, exist_ok=True)
+            
             # 创建锁文件
             lock_fd = os.open(lock_file, os.O_CREAT | os.O_WRONLY | os.O_TRUNC)
             
