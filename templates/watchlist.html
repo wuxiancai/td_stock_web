@@ -97,6 +97,30 @@
             background: #f8f9fa;
             font-weight: bold;
             color: #333;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+        }
+        
+        .stock-table th:hover {
+            background: #e9ecef;
+        }
+        
+        .sort-indicator {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .sort-asc::after {
+            content: '▲';
+        }
+        
+        .sort-desc::after {
+            content: '▼';
         }
         
         .stock-table tr:hover {
@@ -234,6 +258,7 @@
     
     <script>
         let watchlistData = [];
+        let sortStates = {}; // 存储每个分组的排序状态
         
         function loadWatchlist() {
             fetch('/api/watchlist')
@@ -294,15 +319,31 @@
                             <th>股票代码</th>
                             <th>股票名称</th>
                             <th>所属行业</th>
-                            <th>当天涨幅(%)</th>
+                            <th onclick="sortTable('${dateKey}', 'pct_chg')" data-sort="pct_chg">
+                                当天涨幅(%)<span class="sort-indicator"></span>
+                            </th>
                             <th>最新价格</th>
-                            <th>换手率(%)</th>
-                            <th>量比</th>
-                            <th>市盈率(PE)</th>
-                            <th>成交额(万元)</th>
-                            <th>市值(亿元)</th>
-                            <th>九转买入</th>
-                            <th>优先级</th>
+                            <th onclick="sortTable('${dateKey}', 'turnover_rate')" data-sort="turnover_rate">
+                                换手率(%)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'volume_ratio')" data-sort="volume_ratio">
+                                量比<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'pe')" data-sort="pe">
+                                市盈率(PE)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'amount')" data-sort="amount">
+                                成交额(万元)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'total_mv')" data-sort="total_mv">
+                                市值(亿元)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'nine_turn')" data-sort="nine_turn">
+                                九转买入<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'priority')" data-sort="priority">
+                                优先级<span class="sort-indicator"></span>
+                            </th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -311,8 +352,11 @@
                 
                 const tbody = table.querySelector('tbody');
                 
+                // 应用排序
+                const sortedStocks = applySortToStocks(stocks, dateKey);
+                
                 // 填充该分组的股票数据
-                stocks.forEach(stock => {
+                sortedStocks.forEach(stock => {
                     const row = document.createElement('tr');
                     
                     const changePercent = stock.pct_chg || 0;
@@ -378,6 +422,9 @@
                 });
                 
                 contentDiv.appendChild(table);
+                
+                // 更新该表格的排序指示器
+                updateTableSortIndicators(table, dateKey);
             });
         }
         
@@ -504,6 +551,102 @@
                 <button class="btn" onclick="loadWatchlist()" style="margin-top: 10px;">重试</button>
             `;
             document.getElementById('emptyDiv').style.display = 'block';
+        }
+        
+        // 排序功能
+        function sortTable(dateKey, sortField) {
+            // 获取当前排序状态
+            const currentState = sortStates[dateKey] || {};
+            const currentSort = currentState[sortField] || 'none';
+            
+            // 切换排序状态：none -> asc -> desc -> none
+            let newSort;
+            if (currentSort === 'none') {
+                newSort = 'asc';
+            } else if (currentSort === 'asc') {
+                newSort = 'desc';
+            } else {
+                newSort = 'none';
+            }
+            
+            // 重置该分组的所有排序状态
+            sortStates[dateKey] = {};
+            if (newSort !== 'none') {
+                sortStates[dateKey][sortField] = newSort;
+            }
+            
+            // 重新显示数据
+            displayWatchlist();
+        }
+        
+        function getSortValue(stock, field) {
+            switch (field) {
+                case 'pct_chg':
+                    return parseFloat(stock.pct_chg || 0);
+                case 'turnover_rate':
+                    return parseFloat(stock.turnover_rate || 0);
+                case 'volume_ratio':
+                    return parseFloat(stock.volume_ratio || 0);
+                case 'pe':
+                    return parseFloat(stock.pe || 0);
+                case 'amount':
+                    return parseFloat(stock.amount || 0);
+                case 'total_mv':
+                    return parseFloat(stock.total_mv || 0);
+                case 'nine_turn':
+                    // 九转买入优先，然后是九转卖出
+                    if (stock.nine_turn_up && stock.nine_turn_up > 0) {
+                        return stock.nine_turn_up + 100; // 买入信号优先级更高
+                    } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
+                        return stock.nine_turn_down;
+                    }
+                    return 0;
+                case 'priority':
+                    // 优先级排序：purple > red > blue > green
+                    const priorityOrder = { 'purple': 4, 'red': 3, 'blue': 2, 'green': 1 };
+                    return priorityOrder[stock.priority || 'green'] || 1;
+                default:
+                    return 0;
+            }
+        }
+        
+        function applySortToStocks(stocks, dateKey) {
+            const sortState = sortStates[dateKey];
+            if (!sortState || Object.keys(sortState).length === 0) {
+                return stocks; // 无排序状态，返回原数组
+            }
+            
+            const sortField = Object.keys(sortState)[0];
+            const sortDirection = sortState[sortField];
+            
+            return [...stocks].sort((a, b) => {
+                const valueA = getSortValue(a, sortField);
+                const valueB = getSortValue(b, sortField);
+                
+                if (sortDirection === 'asc') {
+                    return valueA - valueB;
+                } else {
+                    return valueB - valueA;
+                }
+            });
+        }
+        
+        function updateTableSortIndicators(table, dateKey) {
+            const sortState = sortStates[dateKey] || {};
+            
+            const headers = table.querySelectorAll('th[data-sort]');
+            headers.forEach(header => {
+                const field = header.getAttribute('data-sort');
+                const indicator = header.querySelector('.sort-indicator');
+                
+                // 清除所有排序指示器
+                indicator.className = 'sort-indicator';
+                
+                // 设置当前排序指示器
+                if (sortState[field]) {
+                    indicator.className = `sort-indicator sort-${sortState[field]}`;
+                }
+            });
         }
         
         // 页面加载时获取自选股数据
