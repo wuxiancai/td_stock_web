@@ -642,6 +642,27 @@
             }
         }
         
+        // 获取市场名称的辅助函数
+        function getMarketName(tsCode) {
+            if (!tsCode) return '-';
+            const suffix = tsCode.split('.')[1];
+            switch(suffix) {
+                case 'SZ':
+                    const code = tsCode.split('.')[0];
+                    if (code.startsWith('300')) return '创业板';
+                    if (code.startsWith('000') || code.startsWith('001') || code.startsWith('002')) return '深A';
+                    return '深A';
+                case 'SH':
+                    const shCode = tsCode.split('.')[0];
+                    if (shCode.startsWith('688')) return '科创板';
+                    return '沪A';
+                case 'BJ':
+                    return '北交所';
+                default:
+                    return '-';
+            }
+        }
+        
         function displayStocksProgressive(stocks) {
             const tbody = document.getElementById('stocksTableBody');
             tbody.innerHTML = '';
@@ -1119,7 +1140,7 @@
              });
              event.target.classList.add('active');
              
-             // 显示同步状态
+             // 显示加载状态
              document.getElementById('stocksSection').style.display = 'block';
              document.getElementById('loadingDiv').style.display = 'block';
              document.getElementById('progressDiv').style.display = 'none';
@@ -1128,20 +1149,28 @@
              document.getElementById('filterSection').style.display = 'none';
              document.getElementById('refreshSection').style.display = 'block';
              
-             document.getElementById('sectionTitle').textContent = 'A股数据同步中...';
-             document.getElementById('loadingDiv').innerHTML = '<div style="text-align: center; padding: 40px; font-size: 16px; color: #666;">正在同步所有A股市场数据，请稍候...</div>';
+             document.getElementById('sectionTitle').textContent = 'A股数据加载中...';
+             document.getElementById('loadingDiv').innerHTML = '<div style="text-align: center; padding: 40px; font-size: 16px; color: #666;">正在加载所有A股市场数据，请稍候...</div>';
              
-             // 定义所有需要同步的市场
+             // 定义所有需要加载的市场
              const markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj'];
+             const marketNames = {
+                 'cyb': '创业板',
+                 'hu': '沪A股',
+                 'zxb': '深A股',
+                 'kcb': '科创板',
+                 'bj': '北交所'
+             };
              let completedMarkets = 0;
              let totalMarkets = markets.length;
+             let allStocksData = [];
              
-             // 更新同步进度显示
-             function updateSyncProgress() {
+             // 更新加载进度显示
+             function updateLoadProgress() {
                  const progress = Math.round((completedMarkets / totalMarkets) * 100);
                  document.getElementById('loadingDiv').innerHTML = 
                      `<div style="text-align: center; padding: 40px; font-size: 16px; color: #666;">
-                         正在同步所有A股市场数据...<br>
+                         正在加载所有A股市场数据...<br>
                          <div style="margin-top: 15px; font-size: 14px;">进度: ${completedMarkets}/${totalMarkets} (${progress}%)</div>
                          <div style="width: 300px; height: 10px; background: #f0f0f0; border-radius: 5px; margin: 10px auto; overflow: hidden;">
                              <div style="height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); width: ${progress}%; transition: width 0.3s ease;"></div>
@@ -1149,59 +1178,113 @@
                      </div>`;
              }
              
-             // 逐个同步市场数据
-             function syncNextMarket(index) {
+             // 逐个加载市场数据（智能使用缓存）
+             function loadNextMarket(index) {
                  if (index >= markets.length) {
-                     // 所有市场同步完成
-                     document.getElementById('loadingDiv').innerHTML = 
-                         '<div style="text-align: center; padding: 40px; font-size: 16px; color: #28a745;">✅ 所有A股市场数据同步完成！</div>';
+                     // 所有市场加载完成，合并显示数据
+                     document.getElementById('loadingDiv').style.display = 'none';
+                     document.getElementById('sectionTitle').textContent = 'A股市场数据';
                      
+                     // 存储合并后的数据
+                     allStocks = allStocksData;
+                     filteredStocks = [...allStocksData];
+                     
+                     // 显示筛选控件和数据
+                     document.getElementById('filterSection').style.display = 'block';
+                     document.getElementById('stocksTable').style.display = 'table';
+                     displayStocks(allStocksData);
+                     
+                     // 显示完成提示
+                     const completionMsg = document.createElement('div');
+                     completionMsg.style.cssText = 'text-align: center; padding: 15px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 8px; margin: 20px 0; font-size: 14px;';
+                     completionMsg.innerHTML = `🎉 已加载所有A股市场数据，共 ${allStocksData.length} 只股票！`;
+                     document.getElementById('stocksSection').appendChild(completionMsg);
+                     
+                     // 3秒后自动移除提示
                      setTimeout(() => {
-                         document.getElementById('loadingDiv').style.display = 'none';
-                         document.getElementById('sectionTitle').textContent = 'A股数据同步完成';
-                         
-                         // 显示完成提示
-                         const completionMsg = document.createElement('div');
-                         completionMsg.style.cssText = 'text-align: center; padding: 20px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 8px; margin: 20px 0;';
-                         completionMsg.innerHTML = '🎉 所有A股市场数据已成功同步！您可以点击任意市场按钮查看最新数据。';
-                         document.getElementById('stocksSection').appendChild(completionMsg);
-                         
-                         // 3秒后自动移除提示
-                         setTimeout(() => {
-                             if (completionMsg.parentNode) {
-                                 completionMsg.parentNode.removeChild(completionMsg);
-                             }
-                         }, 3000);
-                     }, 1000);
+                         if (completionMsg.parentNode) {
+                             completionMsg.parentNode.removeChild(completionMsg);
+                         }
+                     }, 3000);
                      return;
                  }
                  
                  const market = markets[index];
                  
-                 // 强制刷新当前市场数据
-                 fetch(`/api/force_refresh/${market}`, { method: 'POST' })
+                 // 智能加载市场数据（优先使用缓存）
+                 fetch(`/api/stocks/${market}?page=1`)
                      .then(response => response.json())
                      .then(data => {
-                         completedMarkets++;
-                         updateSyncProgress();
-                         
-                         // 继续同步下一个市场
-                         setTimeout(() => syncNextMarket(index + 1), 500);
+                         if (data.stocks && data.stocks.length > 0) {
+                             // 获取该市场的所有数据（如果有分页）
+                             if (data.pages > 1) {
+                                 // 如果有多页，获取所有页面的数据
+                                 const promises = [];
+                                 for (let page = 1; page <= data.pages; page++) {
+                                     promises.push(
+                                         fetch(`/api/stocks/${market}?page=${page}`)
+                                             .then(res => res.json())
+                                             .then(pageData => pageData.stocks || [])
+                                     );
+                                 }
+                                 
+                                 Promise.all(promises)
+                                     .then(allPages => {
+                                         const marketStocks = allPages.flat();
+                                         // 为每只股票添加市场标识
+                                         marketStocks.forEach(stock => {
+                                             stock.market = market;
+                                             stock.market_name = marketNames[market];
+                                         });
+                                         allStocksData = allStocksData.concat(marketStocks);
+                                         completedMarkets++;
+                                         updateLoadProgress();
+                                         
+                                         // 继续加载下一个市场
+                                         setTimeout(() => loadNextMarket(index + 1), 200);
+                                     })
+                                     .catch(error => {
+                                         console.error(`加载${marketNames[market]}数据失败:`, error);
+                                         completedMarkets++;
+                                         updateLoadProgress();
+                                         setTimeout(() => loadNextMarket(index + 1), 200);
+                                     });
+                             } else {
+                                 // 单页数据
+                                 const marketStocks = data.stocks;
+                                 // 为每只股票添加市场标识
+                                 marketStocks.forEach(stock => {
+                                     stock.market = market;
+                                     stock.market_name = marketNames[market];
+                                 });
+                                 allStocksData = allStocksData.concat(marketStocks);
+                                 completedMarkets++;
+                                 updateLoadProgress();
+                                 
+                                 // 继续加载下一个市场
+                                 setTimeout(() => loadNextMarket(index + 1), 200);
+                             }
+                         } else {
+                             console.warn(`${marketNames[market]}暂无数据`);
+                             completedMarkets++;
+                             updateLoadProgress();
+                             setTimeout(() => loadNextMarket(index + 1), 200);
+                         }
                      })
                      .catch(error => {
-                         console.error(`同步${market}市场失败:`, error);
+                         console.error(`加载${marketNames[market]}失败:`, error);
                          completedMarkets++;
-                         updateSyncProgress();
+                         updateLoadProgress();
                          
-                         // 即使失败也继续同步下一个市场
-                         setTimeout(() => syncNextMarket(index + 1), 500);
+                         // 即使失败也继续加载下一个市场
+                         setTimeout(() => loadNextMarket(index + 1), 200);
                      });
              }
              
-             // 开始同步
-         updateSyncProgress();
-         syncNextMarket(0);
-     }
+             // 开始加载
+             updateLoadProgress();
+             loadNextMarket(0);
+         }
      
      // 定时任务相关函数
      function refreshSchedulerStatus() {

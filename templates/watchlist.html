@@ -192,25 +192,7 @@
             </div>
             
             <div id="watchlistContent" style="display: none;">
-                <table class="stock-table">
-                    <thead>
-                        <tr>
-                            <th>股票代码</th>
-                            <th>股票名称</th>
-                            <th>所属行业</th>
-                            <th>最新价格</th>
-                            <th>换手率(%)</th>
-                            <th>量比</th>
-                            <th>市盈率(PE)</th>
-                            <th>成交额(万元)</th>
-                            <th>市值(亿元)</th>
-                            <th>九转买入</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="watchlistTableBody">
-                    </tbody>
-                </table>
+                <!-- 动态生成的分组表格将在这里显示 -->
             </div>
         </div>
     </div>
@@ -246,61 +228,134 @@
             document.getElementById('emptyDiv').style.display = 'none';
             document.getElementById('watchlistContent').style.display = 'block';
             
-            const tbody = document.getElementById('watchlistTableBody');
-            tbody.innerHTML = '';
+            // 按添加时间分组
+            const groupedStocks = groupStocksByAddTime(watchlistData);
             
-            watchlistData.forEach(stock => {
-                const row = document.createElement('tr');
+            // 清空内容区域
+            const contentDiv = document.getElementById('watchlistContent');
+            contentDiv.innerHTML = '';
+            
+            // 按时间倒序排列（最新的在前面）
+            const sortedDates = Object.keys(groupedStocks).sort((a, b) => new Date(b) - new Date(a));
+            
+            sortedDates.forEach(dateKey => {
+                const stocks = groupedStocks[dateKey];
                 
-                const changePercent = stock.pct_chg || 0;
-                const priceClass = changePercent >= 0 ? 'price-positive' : 'price-negative';
-                const changeSign = changePercent >= 0 ? '+' : '';
+                // 创建分组标题
+                const groupTitle = document.createElement('h3');
+                groupTitle.style.cssText = 'margin: 20px 0 10px 0; color: #333; font-size: 1.1em; border-bottom: 2px solid #667eea; padding-bottom: 5px;';
+                groupTitle.textContent = `${dateKey} 添加了 ${stocks.length} 只股票`;
+                contentDiv.appendChild(groupTitle);
                 
-                row.innerHTML = `
-                    <td>
-                        <div class="stock-code">${stock.ts_code}</div>
-                    </td>
-                    <td>
-                        <div class="stock-name" onclick="viewStock('${stock.ts_code}')">${stock.name}</div>
-                    </td>
-                    <td>
-                        ${stock.industry || '-'}
-                    </td>
-                    <td class="${priceClass}">
-                        ¥${(stock.latest_price || 0).toFixed(2)}
-                    </td>
-                    <td>
-                        ${(stock.pct_chg || 0).toFixed(2)}%
-                    </td>
-                    <td>
-                        ${(stock.volume_ratio || 0).toFixed(2)}
-                    </td>
-                    <td>
-                        ${(stock.pe || 0).toFixed(2)}
-                    </td>
-                    <td>
-                        ${((stock.amount || 0) / 10000).toFixed(2)}
-                    </td>
-                    <td>
-                        ${((stock.total_mv || 0) / 100000000).toFixed(2)}
-                    </td>
-                    <td>
-                        ${(() => {
-                            if (stock.nine_turn_up && stock.nine_turn_up > 0) {
-                                return `<span style="color: red; font-weight: bold;">${stock.nine_turn_up}</span>`;
-                            } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
-                                return `<span style="color: green; font-weight: bold;">${stock.nine_turn_down}</span>`;
-                            }
-                            return '-';
-                        })()}
-                    </td>
-                    <td>
-                        <button class="remove-btn" onclick="removeFromWatchlist('${stock.ts_code}')">移除</button>
-                    </td>
+                // 创建该分组的表格
+                const table = document.createElement('table');
+                table.className = 'stock-table';
+                table.style.marginBottom = '30px';
+                
+                // 表头
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>股票代码</th>
+                            <th>股票名称</th>
+                            <th>所属行业</th>
+                            <th>当天涨幅(%)</th>
+                            <th>最新价格</th>
+                            <th>换手率(%)</th>
+                            <th>量比</th>
+                            <th>市盈率(PE)</th>
+                            <th>成交额(万元)</th>
+                            <th>市值(亿元)</th>
+                            <th>九转买入</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
                 `;
                 
-                tbody.appendChild(row);
+                const tbody = table.querySelector('tbody');
+                
+                // 填充该分组的股票数据
+                stocks.forEach(stock => {
+                    const row = document.createElement('tr');
+                    
+                    const changePercent = stock.pct_chg || 0;
+                    const priceClass = changePercent >= 0 ? 'price-positive' : 'price-negative';
+                    const changeSign = changePercent >= 0 ? '+' : '';
+                    
+                    row.innerHTML = `
+                        <td>
+                            <div class="stock-code">${stock.ts_code}</div>
+                        </td>
+                        <td>
+                            <div class="stock-name" onclick="viewStock('${stock.ts_code}')">${stock.name}</div>
+                        </td>
+                        <td>
+                            ${stock.industry || '-'}
+                        </td>
+                        <td class="${priceClass}">
+                            ${changeSign}${(changePercent || 0).toFixed(2)}%
+                        </td>
+                        <td class="${priceClass}">
+                            ¥${(stock.latest_price || 0).toFixed(2)}
+                        </td>
+                        <td>
+                            ${(stock.turnover_rate || 0).toFixed(2)}
+                        </td>
+                        <td>
+                            ${(stock.volume_ratio || 0).toFixed(2)}
+                        </td>
+                        <td>
+                            ${(stock.pe || 0).toFixed(2)}
+                        </td>
+                        <td>
+                            ${((stock.amount || 0) / 10000).toFixed(2)}
+                        </td>
+                        <td>
+                            ${((stock.total_mv || 0) / 100000000).toFixed(2)}
+                        </td>
+                        <td>
+                            ${(() => {
+                                if (stock.nine_turn_up && stock.nine_turn_up > 0) {
+                                    return `<span style="color: red; font-weight: bold;">${stock.nine_turn_up}</span>`;
+                                } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
+                                    return `<span style="color: green; font-weight: bold;">${stock.nine_turn_down}</span>`;
+                                }
+                                return '-';
+                            })()} 
+                        </td>
+                        <td>
+                            <button class="remove-btn" onclick="removeFromWatchlist('${stock.ts_code}')">移除</button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+                
+                contentDiv.appendChild(table);
             });
+        }
+        
+        function groupStocksByAddTime(stocks) {
+            const groups = {};
+            
+            stocks.forEach(stock => {
+                // 获取添加时间，如果没有则使用当前时间
+                const addTime = stock.add_time || new Date().toISOString();
+                const date = new Date(addTime);
+                const dateKey = date.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                if (!groups[dateKey]) {
+                    groups[dateKey] = [];
+                }
+                groups[dateKey].push(stock);
+            });
+            
+            return groups;
         }
         
         function viewStock(tsCode) {

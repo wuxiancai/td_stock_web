@@ -91,13 +91,36 @@ def safe_tushare_call(func, *args, **kwargs):
     rate_limiter.wait_if_needed()
     try:
         result = func(*args, **kwargs)
+        
+        # 检查返回结果是否包含限制警告信息
+        if hasattr(result, 'empty') and not result.empty:
+            # 检查DataFrame中是否有错误信息列
+            if 'error' in result.columns and not result['error'].isna().all():
+                error_msg = str(result['error'].iloc[0])
+                if "频率" in error_msg or "limit" in error_msg.lower() or "rate" in error_msg.lower():
+                    print(f"检测到Tushare API限制警告: {error_msg}")
+                    print("立即停止同步，等待60秒后继续...")
+                    time.sleep(60)
+                    # 重新尝试调用
+                    return safe_tushare_call(func, *args, **kwargs)
+        
         return result
     except Exception as e:
-        print(f"Tushare API调用失败: {e}")
-        # 如果是频率限制错误，额外等待
-        if "频率" in str(e) or "limit" in str(e).lower():
-            print("检测到频率限制错误，额外等待30秒...")
-            time.sleep(30)
+        error_msg = str(e)
+        print(f"Tushare API调用失败: {error_msg}")
+        
+        # 检查是否为频率限制相关错误
+        if any(keyword in error_msg.lower() for keyword in ["频率", "limit", "rate", "too many", "exceeded"]):
+            print("检测到频率限制错误，立即停止同步，等待60秒后继续...")
+            time.sleep(60)
+            # 重新尝试调用
+            try:
+                return safe_tushare_call(func, *args, **kwargs)
+            except Exception as retry_e:
+                print(f"重试后仍然失败: {retry_e}")
+                raise retry_e
+        
+        # 其他类型的错误直接抛出
         raise e
 
 def find_available_port(start_port=8080):
@@ -274,7 +297,20 @@ def update_stock_data_progressive(market, stocks_list):
             print(f"已完成 {stock_info['ts_code']} 数据更新 ({i+1}/{len(working_stocks_list)})")
             
         except Exception as e:
-            print(f"更新股票{stock_info['ts_code']}数据失败: {e}")
+            error_msg = str(e)
+            print(f"更新股票{stock_info['ts_code']}数据失败: {error_msg}")
+            
+            # 如果是API限制错误，记录失败但不中断整个流程
+            if any(keyword in error_msg.lower() for keyword in ["频率", "limit", "rate", "too many", "exceeded"]):
+                print(f"股票{stock_info['ts_code']}遇到API限制，将在后续重试")
+                # 标记为需要重试的股票
+                stock_info['retry_needed'] = True
+                stock_info['retry_reason'] = 'api_limit'
+            else:
+                # 其他错误，标记为失败
+                stock_info['retry_needed'] = False
+                stock_info['retry_reason'] = 'other_error'
+            
             # 即使失败也标记为已处理
             stock_info['data_loaded'] = False
             stock_info['last_update'] = current_date
@@ -284,6 +320,72 @@ def update_stock_data_progressive(market, stocks_list):
     if market in update_status and update_status[market].get('status') == 'cancelled':
         print(f"{market}市场更新被取消，不保存最终状态")
         return
+    
+    # 检查是否有因API限制失败的股票需要重试
+    retry_stocks = [stock for stock in working_stocks_list if stock.get('retry_needed') and stock.get('retry_reason') == 'api_limit']
+    
+    if retry_stocks:
+        print(f"发现{len(retry_stocks)}只股票因API限制失败，等待60秒后开始重试...")
+        time.sleep(60)  # 等待60秒确保API限制解除
+        
+        for retry_stock in retry_stocks:
+            try:
+                # 检查是否需要停止更新
+                if market in update_status and update_status[market].get('status') == 'cancelled':
+                    print(f"{market}市场更新被取消")
+                    break
+                    
+                print(f"重试更新 {retry_stock['ts_code']}")
+                
+                # 重新获取数据
+                latest_data = safe_tushare_call(pro.daily, ts_code=retry_stock['ts_code'], limit=1)
+                daily_basic = safe_tushare_call(pro.daily_basic, ts_code=retry_stock['ts_code'], limit=1)
+                
+                end_date = datetime.now().strftime('%Y%m%d')
+                start_date = (datetime.now() - timedelta(days=45)).strftime('%Y%m%d')
+                kline_data = safe_tushare_call(pro.daily, ts_code=retry_stock['ts_code'], start_date=start_date, end_date=end_date)
+                
+                # 更新数据
+                if not latest_data.empty:
+                    retry_stock['latest_price'] = safe_float(latest_data.iloc[0]['close'])
+                    retry_stock['amount'] = safe_float(latest_data.iloc[0]['amount'])
+                
+                if not daily_basic.empty:
+                    if 'turnover_rate' in daily_basic.columns:
+                        retry_stock['turnover_rate'] = safe_float(daily_basic.iloc[0]['turnover_rate'])
+                    if 'volume_ratio' in daily_basic.columns:
+                        retry_stock['volume_ratio'] = safe_float(daily_basic.iloc[0]['volume_ratio'])
+                    if 'total_mv' in daily_basic.columns:
+                        retry_stock['market_cap'] = safe_float(daily_basic.iloc[0]['total_mv'])
+                    if 'pe_ttm' in daily_basic.columns:
+                        retry_stock['pe_ttm'] = safe_float(daily_basic.iloc[0]['pe_ttm'])
+                
+                # 计算九转序列
+                nine_turn_up = 0
+                nine_turn_down = 0
+                if not kline_data.empty and len(kline_data) >= 5:
+                    kline_data = kline_data.sort_values('trade_date')
+                    kline_with_nine_turn = calculate_nine_turn(kline_data)
+                    latest_nine_turn = kline_with_nine_turn.iloc[-1]
+                    nine_turn_up = int(latest_nine_turn['nine_turn_up']) if latest_nine_turn['nine_turn_up'] > 0 else 0
+                    nine_turn_down = int(latest_nine_turn['nine_turn_down']) if latest_nine_turn['nine_turn_down'] > 0 else 0
+                
+                retry_stock['nine_turn_up'] = nine_turn_up
+                retry_stock['nine_turn_down'] = nine_turn_down
+                retry_stock['data_loaded'] = True
+                retry_stock['retry_needed'] = False
+                retry_stock['retry_reason'] = None
+                
+                print(f"重试成功: {retry_stock['ts_code']}")
+                
+            except Exception as e:
+                print(f"重试失败 {retry_stock['ts_code']}: {e}")
+                retry_stock['data_loaded'] = False
+                retry_stock['retry_needed'] = False
+                retry_stock['retry_reason'] = 'retry_failed'
+                continue
+        
+        print(f"重试完成，成功重试{len([s for s in retry_stocks if s.get('data_loaded')])}只股票")
     
     # 更新完成，保存最终状态
     final_cache_data = {
@@ -299,15 +401,21 @@ def update_stock_data_progressive(market, stocks_list):
     }
     save_cache_data(market, final_cache_data)
     
+    # 统计成功和失败的数量
+    successful_count = len([s for s in working_stocks_list if s.get('data_loaded')])
+    failed_count = len(working_stocks_list) - successful_count
+    
     # 更新全局状态
     update_status[market] = {
         'total': len(working_stocks_list),
         'completed': len(working_stocks_list),
+        'successful': successful_count,
+        'failed': failed_count,
         'status': 'complete',
         'end_time': time.time()
     }
     
-    print(f"完成{market}市场所有股票数据的渐进式更新！")
+    print(f"完成{market}市场所有股票数据的渐进式更新！成功: {successful_count}, 失败: {failed_count}")
 
 def calculate_nine_turn(df):
     """
