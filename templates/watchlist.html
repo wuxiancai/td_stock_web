@@ -140,6 +140,41 @@
             background: #c82333;
         }
         
+        .priority-selector {
+            padding: 3px 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            background: white;
+        }
+        
+        .priority-purple {
+            background-color: #8e44ad !important;
+            color: white;
+        }
+        
+        .priority-red {
+            background-color: #e74c3c !important;
+            color: white;
+        }
+        
+        .priority-blue {
+            background-color: #3498db !important;
+            color: white;
+        }
+        
+        .priority-green {
+            background-color: #27ae60 !important;
+            color: white;
+        }
+        
+        .priority-cell {
+            text-align: center;
+            font-weight: bold;
+            padding: 8px;
+        }
+        
         .empty-message {
             text-align: center;
             padding: 40px;
@@ -175,7 +210,7 @@
     <div class="container">
         <div class="header">
             <div class="title">⭐ 我的自选股</div>
-            <div class="subtitle">实时跟踪您关注的股票</div>
+            <div class="subtitle">紫色:可立即买入; 红色:重点关注; 蓝色:观察2天; 绿色:观察3天</div>
         </div>
         
         <div class="controls">
@@ -267,6 +302,7 @@
                             <th>成交额(万元)</th>
                             <th>市值(亿元)</th>
                             <th>九转买入</th>
+                            <th>优先级</th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -282,6 +318,7 @@
                     const changePercent = stock.pct_chg || 0;
                     const priceClass = changePercent >= 0 ? 'price-positive' : 'price-negative';
                     const changeSign = changePercent >= 0 ? '+' : '';
+                    const priority = stock.priority || 'green';
                     
                     row.innerHTML = `
                         <td>
@@ -323,6 +360,14 @@
                                 }
                                 return '-';
                             })()} 
+                        </td>
+                        <td class="priority-cell">
+                            <select class="priority-selector priority-${priority}" onchange="updatePriority('${stock.ts_code}', this.value)">
+                                <option value="purple" ${priority === 'purple' ? 'selected' : ''}>可立即买入</option>
+                                <option value="red" ${priority === 'red' ? 'selected' : ''}>重点关注</option>
+                                <option value="blue" ${priority === 'blue' ? 'selected' : ''}>观察2天</option>
+                                <option value="green" ${priority === 'green' ? 'selected' : ''}>观察3天</option>
+                            </select>
                         </td>
                         <td>
                             <button class="remove-btn" onclick="removeFromWatchlist('${stock.ts_code}')">移除</button>
@@ -420,6 +465,36 @@
             if (!dateTimeStr) return '-';
             const date = new Date(dateTimeStr);
             return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour12: false });
+        }
+        
+        function updatePriority(tsCode, priority) {
+            // 更新选择器的样式
+            const selector = event.target;
+            selector.className = `priority-selector priority-${priority}`;
+            
+            fetch('/api/watchlist/update_priority', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    ts_code: tsCode, 
+                    priority: priority 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('更新优先级失败: ' + (data.message || '未知错误'));
+                    // 重新加载以恢复原状态
+                    loadWatchlist();
+                }
+            })
+            .catch(error => {
+                alert('更新优先级失败: ' + error.message);
+                // 重新加载以恢复原状态
+                loadWatchlist();
+            });
         }
         
         function showError(message) {

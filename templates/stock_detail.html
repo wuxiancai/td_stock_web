@@ -191,7 +191,33 @@
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                     <button class="back-btn" onclick="history.back()">← 返回</button>
                     <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <button class="back-btn" id="addToWatchlistBtn" onclick="addToWatchlist()" style="background: linear-gradient(45deg, #ffc107, #fd7e14);">⭐ 加入自选股</button>
+                        <div style="position: relative; display: inline-block;">
+                            <select id="addToWatchlistSelect" onchange="addToWatchlistWithPriority(this.value)" style="
+                                background: linear-gradient(45deg, #ffc107, #fd7e14);
+                                color: #333;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 20px;
+                                cursor: pointer;
+                                font-size: 14px;
+                                font-weight: bold;
+                                transition: all 0.3s ease;
+                                appearance: none;
+                                -webkit-appearance: none;
+                                -moz-appearance: none;
+                                padding-right: 30px;
+                                background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 4 5%22><path fill=%22%23333%22 d=%22M2 0L0 2h4zm0 5L0 3h4z%22/></svg>');
+                                background-repeat: no-repeat;
+                                background-position: right 10px center;
+                                background-size: 12px;
+                            ">
+                                <option value="" disabled selected>⭐ 加入自选股</option>
+                                <option value="purple" style="background-color: #8e44ad; color: white;">🟣 可立即买入</option>
+                                <option value="red" style="background-color: #e74c3c; color: white;">🔴 重点关注</option>
+                                <option value="blue" style="background-color: #3498db; color: white;">🔵 观察2天</option>
+                                <option value="green" style="background-color: #27ae60; color: white;">🟢 观察3天</option>
+                            </select>
+                        </div>
                         <button class="back-btn" id="refreshDataBtn" onclick="refreshStockData()" style="background: linear-gradient(45deg, #28a745, #20c997);">🔄 刷新数据</button>
                     </div>
                 </div>
@@ -204,7 +230,7 @@
                         <div class="stock-price" id="stockPrice"></div>
                         <div class="price-info">
                             <span class="price-high">90天最高: ¥<span id="highestPrice"></span> (<span id="highestDate"></span>)</span>
-                            <span class="price-low">90天最低: ¥<span id="lowestPrice"></span> (<span id="lowestDate"></span>)</span>
+                            <span class="price-low">90天最低: ¥<span id="lowestPrice"></span> (<span id="lowestDate"></span>) <span id="lastKlineDate" style="color: black; float: right;"></span></span>
                         </div>
                     </div>
                 </div>
@@ -318,6 +344,14 @@
             return dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8);
         }
         
+        function formatDateChinese(dateStr) {
+            if (!dateStr) return '';
+            const year = dateStr.substring(0, 4);
+            const month = parseInt(dateStr.substring(4, 6));
+            const day = parseInt(dateStr.substring(6, 8));
+            return `${year}年${month}月${day}日`;
+        }
+        
         // 安全的数值转换函数 - 移到全局作用域
         function safeParseFloat(value, defaultValue = 0) {
             if (value === null || value === undefined || value === '') {
@@ -367,6 +401,12 @@
             document.getElementById('lowestPrice').textContent = data.lowest_price.toFixed(2);
             document.getElementById('highestDate').textContent = formatDate(data.highest_date);
             document.getElementById('lowestDate').textContent = formatDate(data.lowest_date);
+            
+            // 获取最后一根K线的时间并显示
+            if (data.kline_data && data.kline_data.length > 0) {
+                const lastKlineDate = data.kline_data[data.kline_data.length - 1].trade_date;
+                document.getElementById('lastKlineDate').textContent = formatDateChinese(lastKlineDate);
+            }
             
             document.getElementById('marketCap').textContent = formatNumber(data.market_cap * 10000);
             document.getElementById('amount').textContent = formatNumber(data.amount * 1000);
@@ -1290,9 +1330,15 @@
                 });
         }
         
-        function addToWatchlist() {
+        function addToWatchlistWithPriority(priority) {
+            if (!priority) {
+                return; // 如果没有选择优先级，不执行任何操作
+            }
+            
             if (!stockData) {
                 alert('股票数据尚未加载完成，请稍后再试');
+                // 重置选择器
+                document.getElementById('addToWatchlistSelect').selectedIndex = 0;
                 return;
             }
             
@@ -1311,12 +1357,13 @@
                 latest_price: stockData.latest_price,
                 pct_chg: stockData.pct_chg || 0,
                 industry: stockData.industry || '-',
-                 volume_ratio: stockData.volume_ratio || 0,
-                 pe: stockData.pe || 0,
-                 amount: stockData.amount || 0,
-                 total_mv: stockData.total_mv || 0,
-                 nine_turn_up: nineTurnUp,
-                 nine_turn_down: nineTurnDown,
+                volume_ratio: stockData.volume_ratio || 0,
+                pe: stockData.pe || 0,
+                amount: stockData.amount || 0,
+                total_mv: stockData.total_mv || 0,
+                nine_turn_up: nineTurnUp,
+                nine_turn_down: nineTurnDown,
+                priority: priority, // 添加优先级
                 add_time: new Date().toISOString()
             };
             
@@ -1330,16 +1377,28 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const btn = document.getElementById('addToWatchlistBtn');
-                    btn.textContent = '✓ 已加入自选股';
-                    btn.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
-                    btn.onclick = null;
+                    const select = document.getElementById('addToWatchlistSelect');
+                    const priorityNames = {
+                        'purple': '可立即买入',
+                        'red': '重点关注',
+                        'blue': '观察2天',
+                        'green': '观察3天'
+                    };
+                    
+                    // 更新选择器显示为已添加状态
+                    select.innerHTML = `<option selected>✓ 已加入 (${priorityNames[priority]})</option>`;
+                    select.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
+                    select.disabled = true;
                 } else {
                     alert(data.message || '加入自选股失败');
+                    // 重置选择器
+                    document.getElementById('addToWatchlistSelect').selectedIndex = 0;
                 }
             })
             .catch(error => {
                 alert('加入自选股失败: ' + error.message);
+                // 重置选择器
+                document.getElementById('addToWatchlistSelect').selectedIndex = 0;
             });
         }
         

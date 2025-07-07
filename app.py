@@ -1564,6 +1564,7 @@ def add_to_watchlist():
             'total_mv': data.get('total_mv', 0),
             'nine_turn_up': data.get('nine_turn_up', 0),
             'nine_turn_down': data.get('nine_turn_down', 0),
+            'priority': data.get('priority', 'green'),  # 默认绿色优先级
             'add_time': data.get('add_time', datetime.now().isoformat())
         }
         
@@ -1639,6 +1640,58 @@ def clear_watchlist():
             return jsonify({
                 'success': False,
                 'message': '清空失败'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/watchlist/update_priority', methods=['POST'])
+def update_watchlist_priority():
+    """更新自选股优先级"""
+    try:
+        data = request.get_json()
+        if not data or 'ts_code' not in data or 'priority' not in data:
+            return jsonify({
+                'success': False,
+                'message': '缺少必要参数'
+            }), 400
+        
+        # 验证优先级值
+        valid_priorities = ['purple', 'red', 'blue', 'green']
+        if data['priority'] not in valid_priorities:
+            return jsonify({
+                'success': False,
+                'message': '无效的优先级值'
+            }), 400
+        
+        watchlist_data = load_watchlist()
+        
+        # 查找并更新股票优先级
+        stock_found = False
+        for stock in watchlist_data:
+            if stock['ts_code'] == data['ts_code']:
+                stock['priority'] = data['priority']
+                stock_found = True
+                break
+        
+        if not stock_found:
+            return jsonify({
+                'success': False,
+                'message': '股票不在自选股中'
+            })
+        
+        if save_watchlist(watchlist_data):
+            return jsonify({
+                'success': True,
+                'message': '优先级更新成功'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '保存失败'
             }), 500
             
     except Exception as e:
