@@ -278,6 +278,16 @@
             font-style: italic;
         }
         
+        .price-positive {
+            color: #e74c3c; /* 上涨用红色 */
+            font-weight: bold;
+        }
+        
+        .price-negative {
+            color: #27ae60; /* 下跌用绿色 */
+            font-weight: bold;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -332,6 +342,7 @@
                     <button class="market-btn" onclick="loadMarketStocks('bj')">北交所</button>
                     <button class="market-btn" onclick="syncAllMarkets()" style="background: linear-gradient(45deg, #28a745, #20c997);">A股</button>
                     <button class="market-btn" onclick="openWatchlist()" style="background: linear-gradient(45deg, #ffc107, #fd7e14);">⭐ 自选股</button>
+                    <button class="market-btn" onclick="openCacheMonitor()" style="background: linear-gradient(45deg, #17a2b8, #138496);">🔧 缓存监控</button>
                 </div>
             </div>
             
@@ -361,6 +372,7 @@
                         <span style="font-size: 12px; color: #fff;">工作日 17:00</span>
                     </div>
                     <button onclick="triggerAutoSync()" style="padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🚀 立即同步</button>
+                    <button onclick="updateAllData()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">📈 更新全部数据</button>
                     <button onclick="refreshSchedulerStatus()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新状态</button>
                 </div>
                 <div style="margin-top: 10px; font-size: 10px; color: #ccc;">
@@ -481,8 +493,12 @@
         }
         
         function openWatchlist() {
-            window.open('/watchlist', '_blank');
-        }
+         window.open('/watchlist', '_blank');
+     }
+     
+     function openCacheMonitor() {
+         window.open('/cache/monitor', '_blank');
+     }
         
         let progressInterval = null;
         let currentStocks = [];
@@ -1351,6 +1367,44 @@
                  triggerBtn.disabled = false;
                  // 刷新状态
                  setTimeout(refreshSchedulerStatus, 1000);
+             });
+     }
+     
+     function updateAllData() {
+         const updateBtn = document.getElementById('updateAllDataBtn');
+         const originalText = updateBtn.textContent;
+         
+         updateBtn.textContent = '检查中...';
+         updateBtn.disabled = true;
+         
+         fetch('/api/update_all_data', { method: 'POST' })
+             .then(response => response.json())
+             .then(data => {
+                 if (data.status === 'success') {
+                     if (data.updated_markets && data.updated_markets.length > 0) {
+                         const marketNames = {
+                             'cyb': '创业板',
+                             'hs': '沪A',
+                             'sz': '深A', 
+                             'kc': '科创板',
+                             'bj': '北交所'
+                         };
+                         const updatedMarketNames = data.updated_markets.map(m => marketNames[m] || m).join('、');
+                         alert(`开始更新以下市场的数据：${updatedMarketNames}\n\n更新将在后台进行，请稍后刷新页面查看最新数据。`);
+                     } else {
+                         alert('已经是最新数据，无需更新。');
+                     }
+                 } else {
+                     alert('更新失败：' + (data.message || '未知错误'));
+                 }
+             })
+             .catch(error => {
+                 console.error('更新全部数据失败:', error);
+                 alert('更新失败：网络错误');
+             })
+             .finally(() => {
+                 updateBtn.textContent = originalText;
+                 updateBtn.disabled = false;
              });
      }
      

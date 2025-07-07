@@ -135,33 +135,8 @@ def find_available_port(start_port=8080):
             continue
     return None
 
-def get_cache_file_path(market):
-    """获取缓存文件路径"""
-    cache_dir = 'cache'
-    if not os.path.exists(cache_dir):
-        os.makedirs(cache_dir)
-    return os.path.join(cache_dir, f'{market}_stocks_cache.json')
-
-def load_cache_data(market):
-    """加载缓存数据"""
-    cache_file = get_cache_file_path(market)
-    if os.path.exists(cache_file):
-        try:
-            with open(cache_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
-            return None
-    return None
-
-def save_cache_data(market, data):
-    """保存缓存数据"""
-    cache_file = get_cache_file_path(market)
-    try:
-        with open(cache_file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        return True
-    except:
-        return False
+# 导入优化的缓存管理器
+from cache_manager import cache_manager, load_cache_data, save_cache_data, get_cache_file_path
 
 def get_latest_cache_date(market):
     """获取缓存中最新的日期"""
@@ -238,8 +213,37 @@ def update_stock_data_progressive(market, stocks_list):
             
             # 更新实时数据
             if not latest_data.empty:
-                stock_info['latest_price'] = safe_float(latest_data.iloc[0]['close'])
+                current_close = safe_float(latest_data.iloc[0]['close'])
+                stock_info['latest_price'] = current_close
                 stock_info['amount'] = safe_float(latest_data.iloc[0]['amount'])
+                
+                # 计算当天涨幅 (pct_chg)
+                if 'pct_chg' in latest_data.columns and not pd.isna(latest_data.iloc[0]['pct_chg']):
+                    # 如果Tushare数据中有pct_chg字段，直接使用
+                    stock_info['pct_chg'] = safe_float(latest_data.iloc[0]['pct_chg'])
+                else:
+                    # 如果没有pct_chg字段，尝试计算
+                    # 获取前一个交易日的收盘价来计算涨幅
+                    if 'pre_close' in latest_data.columns and not pd.isna(latest_data.iloc[0]['pre_close']):
+                        pre_close = safe_float(latest_data.iloc[0]['pre_close'])
+                        if pre_close > 0:
+                            stock_info['pct_chg'] = ((current_close - pre_close) / pre_close) * 100
+                        else:
+                            stock_info['pct_chg'] = 0
+                    else:
+                        # 如果没有前收盘价，尝试从K线数据计算
+                        if not kline_data.empty and len(kline_data) >= 2:
+                            kline_sorted = kline_data.sort_values('trade_date')
+                            if len(kline_sorted) >= 2:
+                                yesterday_close = safe_float(kline_sorted.iloc[-2]['close'])
+                                if yesterday_close > 0:
+                                    stock_info['pct_chg'] = ((current_close - yesterday_close) / yesterday_close) * 100
+                                else:
+                                    stock_info['pct_chg'] = 0
+                            else:
+                                stock_info['pct_chg'] = 0
+                        else:
+                            stock_info['pct_chg'] = 0
             
             if not daily_basic.empty:
                 if 'turnover_rate' in daily_basic.columns:
@@ -677,9 +681,17 @@ def stock_detail(stock_code):
 def watchlist():
     return render_template('watchlist.html')
 
+@app.route('/cache/monitor')
+def cache_monitor():
+    """缓存系统监控页面"""
+    return render_template('cache_monitor.html')
+
 @app.route('/api/stock/<stock_code>')
 def get_stock_data(stock_code):
     try:
+        # 检查是否强制刷新数据
+        force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
+        
         # 确保股票代码格式正确
         if len(stock_code) == 6:
             if stock_code.startswith(('60', '68')):
@@ -691,6 +703,11 @@ def get_stock_data(stock_code):
         else:
             # 如果已经包含后缀，直接使用
             ts_code = stock_code
+            
+        # 如果强制刷新，清除相关缓存
+        if force_refresh:
+            print(f"强制刷新股票数据: {ts_code}")
+            # 这里可以添加清除特定股票缓存的逻辑
         
         # 获取基本信息（使用频率限制）
         basic_info = safe_tushare_call(pro.stock_basic, ts_code=ts_code)
@@ -780,15 +797,30 @@ def get_stock_data(stock_code):
             # 如果积分不足或其他错误，继续执行但不包含资金流向数据
             pass
         
+        # 计算当天涨幅
+        latest_close = safe_float(daily_data.iloc[-1]['close'])
+        pct_chg = 0
+        
+        # 尝试从daily_data中获取pct_chg字段
+        if 'pct_chg' in daily_data.columns and not pd.isna(daily_data.iloc[-1]['pct_chg']):
+            pct_chg = safe_float(daily_data.iloc[-1]['pct_chg'])
+        elif len(daily_data) >= 2:
+            # 如果没有pct_chg字段，从前一天收盘价计算
+            yesterday_close = safe_float(daily_data.iloc[-2]['close'])
+            if yesterday_close > 0:
+                pct_chg = ((latest_close - yesterday_close) / yesterday_close) * 100
+        
         # 准备返回数据
         stock_info = {
             'ts_code': ts_code,
             'name': basic_info.iloc[0]['name'],
             'industry': basic_info.iloc[0]['industry'],
-            'latest_price': safe_float(daily_data.iloc[-1]['close']),
+            'latest_price': latest_close,
+            'pct_chg': pct_chg,  # 添加当天涨幅
             'market_cap': safe_float(daily_basic.iloc[0]['total_mv']) if not daily_basic.empty and 'total_mv' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['total_mv']) else 0,
             'turnover_rate': safe_float(daily_basic.iloc[0]['turnover_rate']) if not daily_basic.empty and 'turnover_rate' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['turnover_rate']) else 0,
             'pe_ttm': safe_float(daily_basic.iloc[0]['pe_ttm']) if not daily_basic.empty and 'pe_ttm' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['pe_ttm']) and daily_basic.iloc[0]['pe_ttm'] > 0 else None,
+            'pb': safe_float(daily_basic.iloc[0]['pb']) if not daily_basic.empty and 'pb' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['pb']) and daily_basic.iloc[0]['pb'] > 0 else None,
             'volume_ratio': safe_float(daily_basic.iloc[0]['volume_ratio']) if not daily_basic.empty and 'volume_ratio' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['volume_ratio']) else 0,
             'amount': safe_float(daily_data.iloc[-1]['amount']),
             'highest_price': safe_float(highest_price),
@@ -904,10 +936,19 @@ def get_stocks_by_market(market):
             need_full_update = True
             print(f"首次获取{market}市场数据，进行全量更新")
         elif latest_cache_date < current_date:
-            # 有缓存但不是最新，需要增量更新
-            need_incremental_update = True
-            days_diff = get_trading_days_between(latest_cache_date, current_date)
-            print(f"{market}市场数据需要增量更新，距离上次更新{days_diff}天")
+            # 有缓存但不是最新日期
+            # 检查是否是同一天的数据（避免重启后重复更新）
+            cache_stocks = cache_data.get('stocks', [])
+            has_today_data = any(stock.get('last_update') == current_date for stock in cache_stocks)
+            
+            if has_today_data:
+                # 如果已有今天的数据，直接使用缓存
+                print(f"{market}市场已有今天的数据，使用缓存")
+            else:
+                # 确实需要增量更新
+                need_incremental_update = True
+                days_diff = get_trading_days_between(latest_cache_date, current_date)
+                print(f"{market}市场数据需要增量更新，距离上次更新{days_diff}天")
         else:
             print(f"{market}市场数据已是最新，使用缓存")
         
@@ -972,6 +1013,7 @@ def get_stocks_by_market(market):
                         'name': stock['name'],
                         'industry': stock['industry'],
                         'latest_price': 0,
+                        'pct_chg': 0,  # 添加当天涨幅字段
                         'turnover_rate': 0,
                         'volume_ratio': 0,
                         'amount': 0,
@@ -1311,6 +1353,111 @@ def trigger_auto_sync():
             'message': str(e)
         }), 500
 
+@app.route('/api/update_all_data', methods=['POST'])
+def update_all_data():
+    """智能更新全部数据 - 只更新有新增日期的市场数据"""
+    try:
+        current_date = datetime.now().strftime('%Y%m%d')
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        market_names = {
+            'cyb': '创业板',
+            'hu': '沪A股', 
+            'zxb': '深A',
+            'kcb': '科创板',
+            'bj': '北交所'
+        }
+        
+        markets_to_update = []
+        markets_already_latest = []
+        
+        # 检查每个市场的缓存状态
+        for market in markets:
+            cache_data = load_cache_data(market)
+            latest_cache_date = get_latest_cache_date(market)
+            
+            if cache_data is None or latest_cache_date is None:
+                # 没有缓存，需要更新
+                markets_to_update.append(market)
+            else:
+                # 检查是否已有今天的数据
+                cache_stocks = cache_data.get('stocks', [])
+                has_today_data = any(stock.get('last_update') == current_date for stock in cache_stocks)
+                
+                if has_today_data:
+                    # 已有今天的数据
+                    markets_already_latest.append(market)
+                elif latest_cache_date < current_date:
+                    # 需要增量更新
+                    markets_to_update.append(market)
+                else:
+                    # 数据已是最新
+                    markets_already_latest.append(market)
+        
+        if not markets_to_update:
+            # 所有市场数据都是最新的
+            return jsonify({
+                'status': 'success',
+                'message': '所有市场数据已是最新，无需更新',
+                'updated_markets': [],
+                'latest_markets': [market_names[m] for m in markets_already_latest]
+            })
+        
+        # 启动需要更新的市场
+        updated_market_names = []
+        for market in markets_to_update:
+            try:
+                print(f"开始更新{market_names[market]}数据...")
+                
+                # 取消正在运行的更新线程
+                if market in update_status and update_status[market].get('status') == 'updating':
+                    update_status[market]['status'] = 'cancelled'
+                    print(f"取消{market}市场正在运行的更新线程")
+                    time.sleep(0.5)
+                
+                # 加载现有缓存数据进行增量更新
+                cache_data = load_cache_data(market)
+                if cache_data and 'stocks' in cache_data and cache_data['stocks']:
+                    all_stocks_data = cache_data['stocks']
+                    
+                    # 标记数据状态为更新中
+                    cache_data['data_status'] = 'updating'
+                    cache_data['last_update_date'] = current_date
+                    save_cache_data(market, cache_data)
+                    
+                    # 启动后台线程进行增量更新
+                    update_thread = threading.Thread(
+                        target=update_stock_data_progressive,
+                        args=(market, all_stocks_data),
+                        daemon=True
+                    )
+                    update_thread.start()
+                    updated_market_names.append(market_names[market])
+                    print(f"已启动{market_names[market]}增量更新线程")
+                else:
+                    # 没有缓存数据，需要全量更新
+                    print(f"{market_names[market]}无缓存数据，需要全量更新")
+                    updated_market_names.append(f"{market_names[market]}(全量)")
+                
+                # 避免API频率限制
+                time.sleep(0.5)
+                
+            except Exception as e:
+                print(f"更新{market_names[market]}数据失败: {e}")
+                continue
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'已启动{len(updated_market_names)}个市场的数据更新',
+            'updated_markets': updated_market_names,
+            'latest_markets': [market_names[m] for m in markets_already_latest]
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 @app.route('/api/rate_limiter/status')
 def get_rate_limiter_status():
     """获取Tushare API频率限制器状态"""
@@ -1498,6 +1645,53 @@ def clear_watchlist():
         return jsonify({
             'success': False,
             'message': str(e)
+        }), 500
+
+@app.route('/api/cache/status')
+def get_cache_status():
+    """获取缓存系统状态"""
+    try:
+        status = cache_manager.get_status()
+        return jsonify({
+            'success': True,
+            'data': status
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/cache/info/<market>')
+def get_cache_info(market):
+    """获取特定市场的缓存信息"""
+    try:
+        info = cache_manager.get_cache_info(market)
+        return jsonify({
+            'success': True,
+            'data': info
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/cache/clear', methods=['POST'])
+def clear_cache():
+    """清理缓存"""
+    try:
+        market = request.json.get('market') if request.json else None
+        cache_manager.clear_cache(market)
+        
+        return jsonify({
+            'success': True,
+            'message': f'缓存清理完成: {market or "全部"}'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500
 
 if __name__ == '__main__':
