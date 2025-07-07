@@ -474,12 +474,12 @@
             const dates = data.kline_data.map(item => formatDate(item.trade_date));
             const volumes = data.kline_data.map(item => safeParseFloat(item.vol));
             
-            // 九转序列数据 - 修正标注位置
+            // 九转序列数据 - 原有的1-9数字
             const nineTurnUp = data.kline_data.map((item, index) => {
                 return item.nine_turn_up > 0 ? [
                     index, // x坐标：数据索引
                     safeParseFloat(item.high) + (safeParseFloat(item.high) * 0.02), // y坐标：K线最高价上方2%
-                    item.nine_turn_up // 显示的数值
+                    item.nine_turn_up // 显示的数值（1-9）
                 ] : null;
             }).filter(item => item !== null);
             
@@ -487,7 +487,24 @@
                 return item.nine_turn_down > 0 ? [
                     index, // x坐标：数据索引
                     safeParseFloat(item.low) - (safeParseFloat(item.low) * 0.02), // y坐标：K线最低价下方2%
-                    item.nine_turn_down // 显示的数值
+                    item.nine_turn_down // 显示的数值（1-9）
+                ] : null;
+            }).filter(item => item !== null);
+            
+            // Countdown数据 - 新增的10-13数字，位置更极端
+            const countdownUp = data.kline_data.map((item, index) => {
+                return item.countdown_up > 0 ? [
+                    index, // x坐标：数据索引
+                    safeParseFloat(item.high) + (safeParseFloat(item.high) * 0.05), // y坐标：K线最高价上方5%（更高位置）
+                    item.countdown_up // 显示的数值（10-13）
+                ] : null;
+            }).filter(item => item !== null);
+            
+            const countdownDown = data.kline_data.map((item, index) => {
+                return item.countdown_down > 0 ? [
+                    index, // x坐标：数据索引
+                    safeParseFloat(item.low) - (safeParseFloat(item.low) * 0.05), // y坐标：K线最低价下方5%（更低位置）
+                    item.countdown_down // 显示的数值（10-13）
                 ] : null;
             }).filter(item => item !== null);
             
@@ -526,7 +543,7 @@
                 legend: {
                     bottom: 10,
                     left: 'center',
-                    data: ['日K', '成交量', '九转序列']
+                    data: ['日K', '成交量', '九转序列', 'Countdown']
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -725,7 +742,7 @@
                             borderRadius: 3,
                             padding: [2, 4],
                             formatter: function(param) {
-                                return param.data[2]; // 数组的第三个元素是数值
+                                return param.data[2]; // 数组的第三个元素是数值（1-9）
                             }
                         }
                     },
@@ -747,7 +764,51 @@
                             borderRadius: 3,
                             padding: [2, 4],
                             formatter: function(param) {
-                                return param.data[2]; // 数组的第三个元素是数值
+                                return param.data[2]; // 数组的第三个元素是数值（1-9）
+                            }
+                        }
+                    },
+                    {
+                        name: 'Countdown(上)',
+                        type: 'scatter',
+                        data: countdownUp,
+                        symbolSize: 0, // 隐藏散点符号
+                        itemStyle: {
+                            color: 'transparent'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            color: '#8A2BE2', // 紫色数字
+                            fontWeight: 'bold',
+                            fontSize: 14,
+                            backgroundColor: 'rgba(255,255,255,0.8)',
+                            borderRadius: 3,
+                            padding: [2, 4],
+                            formatter: function(param) {
+                                return param.data[2]; // 数组的第三个元素是数值（10-13）
+                            }
+                        }
+                    },
+                    {
+                        name: 'Countdown(下)',
+                        type: 'scatter',
+                        data: countdownDown,
+                        symbolSize: 0, // 隐藏散点符号
+                        itemStyle: {
+                            color: 'transparent'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            color: '#1E90FF', // 蓝色数字
+                            fontWeight: 'bold',
+                            fontSize: 14,
+                            backgroundColor: 'rgba(255,255,255,0.8)',
+                            borderRadius: 3,
+                            padding: [2, 4],
+                            formatter: function(param) {
+                                return param.data[2]; // 数组的第三个元素是数值（10-13）
                             }
                         }
                     },

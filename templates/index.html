@@ -430,6 +430,7 @@
                         <th>股票代码</th>
                         <th>股票名称</th>
                         <th>所属行业</th>
+                        <th class="sortable" onclick="sortTable('pct_chg')" style="cursor: pointer;">当天涨幅(%) <span id="sort-pct_chg">↕</span></th>
                         <th class="sortable" onclick="sortTable('latest_price')" style="cursor: pointer;">最新价格 <span id="sort-latest_price">↕</span></th>
                         <th class="sortable" onclick="sortTable('turnover_rate')" style="cursor: pointer;">换手率(%) <span id="sort-turnover_rate">↕</span></th>
                         <th class="sortable" onclick="sortTable('volume_ratio')" style="cursor: pointer;">量比 <span id="sort-volume_ratio">↕</span></th>
@@ -681,10 +682,15 @@
                     }
                 }
                 
+                const changePercent = hasRealTimeData ? (stock.pct_chg || 0) : 0;
+                const priceClass = changePercent >= 0 ? 'price-positive' : 'price-negative';
+                const changeSign = changePercent >= 0 ? '+' : '';
+                
                 row.innerHTML = `
                     <td><span class="stock-code" onclick="goToStock('${stock.ts_code}')">${stock.ts_code}</span></td>
                     <td>${stock.name}</td>
                     <td>${stock.industry || '-'}</td>
+                    <td class="${hasRealTimeData ? priceClass : ''}">${hasRealTimeData ? changeSign + changePercent.toFixed(2) + '%' : '加载中...'}</td>
                     <td>${hasRealTimeData ? '¥' + stock.latest_price.toFixed(2) : '加载中...'}</td>
                     <td>${hasRealTimeData ? stock.turnover_rate.toFixed(2) : '-'}</td>
                     <td>${hasRealTimeData ? stock.volume_ratio.toFixed(2) : '-'}</td>
@@ -720,10 +726,15 @@
                     }
                 }
                 
+                const changePercent = stock.pct_chg || 0;
+                const priceClass = changePercent >= 0 ? 'price-positive' : 'price-negative';
+                const changeSign = changePercent >= 0 ? '+' : '';
+                
                 row.innerHTML = `
                     <td><span class="stock-code" onclick="goToStock('${stock.ts_code}')">${stock.ts_code}</span></td>
                     <td>${stock.name}</td>
                     <td>${stock.industry || '-'}</td>
+                    <td class="${priceClass}">${changeSign}${changePercent.toFixed(2)}%</td>
                     <td>¥${stock.latest_price.toFixed(2)}</td>
                     <td>${stock.turnover_rate.toFixed(2)}</td>
                     <td>${stock.volume_ratio.toFixed(2)}</td>
