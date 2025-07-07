@@ -739,98 +739,120 @@ def get_stocks_by_market(market):
             print(f"{market}市场数据已是最新，使用缓存")
         
         if need_full_update:
-            # 全量更新：获取股票列表（使用频率限制）
-            if market == 'cyb':  # 创业板
-                stocks = safe_tushare_call(pro.stock_basic, market='创业板')
-            elif market == 'hu':  # 沪A
-                stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SSE')
-            elif market == 'zxb':  # 深A（原中小板，已并入深市主板）
-                stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SZSE')
-            elif market == 'kcb':  # 科创板
-                # 科创板股票代码以688开头，需要单独获取
-                stocks = safe_tushare_call(pro.stock_basic, market='科创板', exchange='SSE')
-                print(f"获取到{len(stocks)}只科创板股票")
-            elif market == 'bj':  # 北交所
-                stocks = safe_tushare_call(pro.stock_basic, exchange='BSE')
-            else:
-                return jsonify({'error': '无效的市场类型'}), 400
-            
-            if stocks.empty:
-                return jsonify({'stocks': [], 'total': 0, 'pages': 0})
-            
-            print(f"开始获取{len(stocks)}只{market}股票的数据...")
-            
-            # 先返回基本信息，避免长时间等待
-            all_stocks_data = []
-            for i, (_, stock) in enumerate(stocks.iterrows()):
-                # 先添加基本信息
-                stock_info = {
-                    'ts_code': stock['ts_code'],
-                    'name': stock['name'],
-                    'industry': stock['industry'],
-                    'latest_price': 0,
-                    'turnover_rate': 0,
-                    'volume_ratio': 0,
-                    'amount': 0,
-                    'market_cap': 0,
-                    'pe_ttm': 0,
-                    'last_update': current_date
-                }
-                all_stocks_data.append(stock_info)
+            # 优先使用缓存中的股票列表，避免不必要的API调用
+            if cache_data and 'stocks' in cache_data and cache_data['stocks']:
+                # 如果缓存中有股票列表，直接使用缓存数据进行更新
+                print(f"使用缓存中的{market}市场股票列表，共{len(cache_data['stocks'])}只股票")
+                all_stocks_data = cache_data['stocks']
                 
-                # 每处理10只股票打印一次进度
-                if (i + 1) % 10 == 0:
-                    print(f"已处理 {i + 1}/{len(stocks)} 只股票")
+                # 重置数据状态为基本信息
+                for stock_info in all_stocks_data:
+                    stock_info['last_update'] = current_date
+                    stock_info['data_loaded'] = False  # 标记需要重新加载实时数据
+                
+                # 保存基本信息到缓存
+                cache_data = {
+                    'stocks': all_stocks_data,
+                    'last_update_date': current_date,
+                    'total': len(all_stocks_data),
+                    'data_status': 'basic_only'  # 标记为仅基本信息
+                }
+                save_cache_data(market, cache_data)
+                
+                # 启动后台线程进行渐进式数据更新
+                update_thread = threading.Thread(
+                    target=update_stock_data_progressive, 
+                    args=(market, all_stocks_data),
+                    daemon=True
+                )
+                update_thread.start()
+                print(f"已启动后台线程更新{market}市场实时数据")
+            else:
+                # 只有在没有缓存时才调用API获取股票列表
+                print(f"缓存中无{market}市场数据，从API获取股票列表")
+                if market == 'cyb':  # 创业板
+                    stocks = safe_tushare_call(pro.stock_basic, market='创业板')
+                elif market == 'hu':  # 沪A
+                    stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SSE')
+                elif market == 'zxb':  # 深A（原中小板，已并入深市主板）
+                    stocks = safe_tushare_call(pro.stock_basic, market='主板', exchange='SZSE')
+                elif market == 'kcb':  # 科创板
+                    # 科创板股票代码以688开头，需要单独获取
+                    stocks = safe_tushare_call(pro.stock_basic, market='科创板', exchange='SSE')
+                    print(f"获取到{len(stocks)}只科创板股票")
+                elif market == 'bj':  # 北交所
+                    stocks = safe_tushare_call(pro.stock_basic, exchange='BSE')
+                else:
+                    return jsonify({'error': '无效的市场类型'}), 400
+                
+                if stocks.empty:
+                    return jsonify({'stocks': [], 'total': 0, 'pages': 0})
+                
+                print(f"开始获取{len(stocks)}只{market}股票的数据...")
+                
+                # 先返回基本信息，避免长时间等待
+                all_stocks_data = []
+                for i, (_, stock) in enumerate(stocks.iterrows()):
+                    # 先添加基本信息
+                    stock_info = {
+                        'ts_code': stock['ts_code'],
+                        'name': stock['name'],
+                        'industry': stock['industry'],
+                        'latest_price': 0,
+                        'turnover_rate': 0,
+                        'volume_ratio': 0,
+                        'amount': 0,
+                        'market_cap': 0,
+                        'pe_ttm': 0,
+                        'nine_turn_up': 0,
+                        'nine_turn_down': 0,
+                        'last_update': current_date
+                    }
+                    all_stocks_data.append(stock_info)
+                    
+                    # 每处理10只股票打印一次进度
+                    if (i + 1) % 10 == 0:
+                        print(f"已处理 {i + 1}/{len(stocks)} 只股票")
+                
+                print(f"完成{market}市场基本信息获取，共{len(all_stocks_data)}只股票")
+                
+                # 保存基本信息到缓存
+                cache_data = {
+                    'stocks': all_stocks_data,
+                    'last_update_date': current_date,
+                    'total': len(all_stocks_data),
+                    'data_status': 'basic_only'  # 标记为仅基本信息
+                }
+                save_cache_data(market, cache_data)
+                
+                # 启动后台线程进行渐进式数据更新
+                update_thread = threading.Thread(
+                    target=update_stock_data_progressive, 
+                    args=(market, all_stocks_data),
+                    daemon=True
+                )
+                update_thread.start()
+                print(f"已启动后台线程更新{market}市场实时数据")
             
-            print(f"完成{market}市场基本信息获取，共{len(all_stocks_data)}只股票")
+        elif need_incremental_update:
+            # 增量更新：使用后台线程更新，避免阻塞用户界面
+            all_stocks_data = cache_data['stocks']
             
-            # 保存基本信息到缓存
-            cache_data = {
-                'stocks': all_stocks_data,
-                'last_update_date': current_date,
-                'total': len(all_stocks_data),
-                'data_status': 'basic_only'  # 标记为仅基本信息
-            }
+            print(f"启动{market}市场增量更新，共{len(all_stocks_data)}只股票")
+            
+            # 标记数据状态为更新中
+            cache_data['data_status'] = 'updating'
+            cache_data['last_update_date'] = current_date
             save_cache_data(market, cache_data)
             
-            # 启动后台线程进行渐进式数据更新
+            # 启动后台线程进行增量更新
             update_thread = threading.Thread(
                 target=update_stock_data_progressive, 
                 args=(market, all_stocks_data),
                 daemon=True
             )
             update_thread.start()
-            print(f"已启动后台线程更新{market}市场实时数据")
-            
-        elif need_incremental_update:
-            # 增量更新：只更新价格等实时数据
-            all_stocks_data = cache_data['stocks']
-            
-            # 批量更新股票的最新数据
-            for stock_info in all_stocks_data:
-                try:
-                    # 获取最新价格和基本面数据（使用频率限制）
-                    latest_data = safe_tushare_call(pro.daily, ts_code=stock_info['ts_code'], limit=1)
-                    daily_basic = safe_tushare_call(pro.daily_basic, ts_code=stock_info['ts_code'], limit=1)
-                    
-                    # 更新实时数据
-                    stock_info['latest_price'] = safe_float(latest_data.iloc[0]['close']) if not latest_data.empty else stock_info.get('latest_price', 0)
-                    stock_info['turnover_rate'] = safe_float(daily_basic.iloc[0]['turnover_rate']) if not daily_basic.empty and 'turnover_rate' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['turnover_rate']) else stock_info.get('turnover_rate', 0)
-                    stock_info['volume_ratio'] = safe_float(daily_basic.iloc[0]['volume_ratio']) if not daily_basic.empty and 'volume_ratio' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['volume_ratio']) else stock_info.get('volume_ratio', 0)
-                    stock_info['amount'] = safe_float(latest_data.iloc[0]['amount']) if not latest_data.empty else stock_info.get('amount', 0)
-                    stock_info['market_cap'] = safe_float(daily_basic.iloc[0]['total_mv']) if not daily_basic.empty and 'total_mv' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['total_mv']) else stock_info.get('market_cap', 0)
-                    stock_info['pe_ttm'] = safe_float(daily_basic.iloc[0]['pe_ttm']) if not daily_basic.empty and 'pe_ttm' in daily_basic.columns and not pd.isna(daily_basic.iloc[0]['pe_ttm']) else stock_info.get('pe_ttm', 0)
-                    stock_info['last_update'] = current_date
-                    
-                except Exception as e:
-                    print(f"增量更新股票{stock_info['ts_code']}数据失败: {e}")
-                    # 更新失败时保持原有数据
-                    stock_info['last_update'] = current_date
-            
-            # 更新缓存
-            cache_data['last_update_date'] = current_date
-            cache_data['stocks'] = all_stocks_data
-            save_cache_data(market, cache_data)
+            print(f"已启动后台线程进行{market}市场增量更新")
             
         else:
             # 使用缓存数据
