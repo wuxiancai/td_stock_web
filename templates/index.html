@@ -371,7 +371,7 @@
                         <span style="font-size: 10px; color: #ccc;">执行时间</span>
                         <span style="font-size: 12px; color: #fff;">工作日 17:00</span>
                     </div>
-                    <button onclick="triggerAutoSync()" style="padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🚀 立即同步</button>
+                    <button onclick="triggerAutoSync()" style="padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🚀 立即增量同步</button>
                     <button onclick="updateAllData()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">📈 更新全部数据</button>
                     <button onclick="refreshSchedulerStatus()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新状态</button>
                 </div>
@@ -518,7 +518,13 @@
             document.querySelectorAll('.market-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            // 找到对应的按钮并设置为活跃状态
+            const marketButtons = document.querySelectorAll('.market-btn');
+            marketButtons.forEach(btn => {
+                if (btn.onclick && btn.onclick.toString().includes(`'${market}'`)) {
+                    btn.classList.add('active');
+                }
+            });
             
             // 显示加载状态
             document.getElementById('stocksSection').style.display = 'block';
@@ -1343,7 +1349,7 @@
      }
      
      function triggerAutoSync() {
-         const triggerBtn = document.querySelector('#schedulerPanel button:last-child');
+         const triggerBtn = event.target;
          const originalText = triggerBtn.textContent;
          
          triggerBtn.textContent = '触发中...';
@@ -1371,7 +1377,7 @@
      }
      
      function updateAllData() {
-         const updateBtn = document.getElementById('updateAllDataBtn');
+         const updateBtn = event.target;
          const originalText = updateBtn.textContent;
          
          updateBtn.textContent = '检查中...';

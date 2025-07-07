@@ -932,25 +932,24 @@ def get_stocks_by_market(market):
             need_full_update = True
             print(f"强制刷新{market}市场数据，进行全量更新")
         elif cache_data is None or latest_cache_date is None:
-            # 没有缓存，需要全量更新
-            need_full_update = True
-            print(f"首次获取{market}市场数据，进行全量更新")
-        elif latest_cache_date < current_date:
-            # 有缓存但不是最新日期
-            # 检查是否是同一天的数据（避免重启后重复更新）
-            cache_stocks = cache_data.get('stocks', [])
-            has_today_data = any(stock.get('last_update') == current_date for stock in cache_stocks)
-            
-            if has_today_data:
-                # 如果已有今天的数据，直接使用缓存
-                print(f"{market}市场已有今天的数据，使用缓存")
-            else:
-                # 确实需要增量更新
-                need_incremental_update = True
-                days_diff = get_trading_days_between(latest_cache_date, current_date)
-                print(f"{market}市场数据需要增量更新，距离上次更新{days_diff}天")
+            # 没有缓存，返回空数据，提示用户使用"立即同步"按钮
+            print(f"{market}市场无缓存数据，请使用'立即同步'按钮获取数据")
+            return jsonify({
+                'stocks': [],
+                'total': 0,
+                'pages': 0,
+                'current_page': page,
+                'data_status': 'no_cache',
+                'message': '暂无缓存数据，请点击"立即同步"按钮获取最新数据',
+                'cache_info': {
+                    'last_update': None,
+                    'is_cached': False,
+                    'force_refreshed': False
+                }
+            })
         else:
-            print(f"{market}市场数据已是最新，使用缓存")
+            # 有缓存数据，直接使用缓存，不触发任何更新
+            print(f"{market}市场使用缓存数据，缓存日期: {latest_cache_date}")
         
         if need_full_update:
             # 优先使用缓存中的股票列表，避免不必要的API调用
@@ -1049,28 +1048,8 @@ def get_stocks_by_market(market):
                 update_thread.start()
                 print(f"已启动后台线程更新{market}市场实时数据")
             
-        elif need_incremental_update:
-            # 增量更新：使用后台线程更新，避免阻塞用户界面
-            all_stocks_data = cache_data['stocks']
-            
-            print(f"启动{market}市场增量更新，共{len(all_stocks_data)}只股票")
-            
-            # 标记数据状态为更新中
-            cache_data['data_status'] = 'updating'
-            cache_data['last_update_date'] = current_date
-            save_cache_data(market, cache_data)
-            
-            # 启动后台线程进行增量更新
-            update_thread = threading.Thread(
-                target=update_stock_data_progressive, 
-                args=(market, all_stocks_data),
-                daemon=True
-            )
-            update_thread.start()
-            print(f"已启动后台线程进行{market}市场增量更新")
-            
         else:
-            # 使用缓存数据
+            # 使用缓存数据，不触发任何更新
             all_stocks_data = cache_data['stocks']
         
         # 分页处理
@@ -1087,7 +1066,7 @@ def get_stocks_by_market(market):
             'data_status': cache_data.get('data_status', 'complete') if cache_data else 'basic_only',
             'cache_info': {
                 'last_update': cache_data.get('last_update_date', current_date) if cache_data else current_date,
-                'is_cached': not (need_full_update or need_incremental_update),
+                'is_cached': not need_full_update,  # 只有强制刷新时才不是缓存数据
                 'force_refreshed': force_refresh
             }
         })

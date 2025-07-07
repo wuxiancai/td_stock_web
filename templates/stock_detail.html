@@ -586,7 +586,7 @@
                 legend: {
                     bottom: 10,
                     left: 'center',
-                    data: ['日K', '成交量', '九转序列', 'Countdown']
+                    data: ['日K', '成交量', '九转序列', 'Countdown', 'BOLL上轨', 'BOLL中轨', 'BOLL下轨']
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -598,6 +598,71 @@
                     borderColor: '#ccc',
                     textStyle: {
                         color: '#000'
+                    },
+                    formatter: function (params) {
+                        const dataIndex = params[0].dataIndex;
+                        const klineItem = data.kline_data[dataIndex];
+                        const date = params[0].axisValue;
+                        
+                        let html = `<div style="font-weight: bold; margin-bottom: 5px;">${date}</div>`;
+                        
+                        // 查找K线数据参数
+                        const klineParam = params.find(p => p.seriesName === '日K');
+                        if (klineParam && klineParam.data) {
+                            const klineData = klineParam.data;
+                            // ECharts candlestick数据格式: [open, close, low, high]
+                            html += `<div style="color: #333; margin-bottom: 3px;">Open: ${klineData[0].toFixed(2)}</div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">Close: ${klineData[1].toFixed(2)}</div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">Low: ${klineData[2].toFixed(2)}</div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">High: ${klineData[3].toFixed(2)}</div>`;
+                        }
+                        
+                        // BOLL线数据
+                        const bollUpperParam = params.find(p => p.seriesName === 'BOLL上轨');
+                        const bollMidParam = params.find(p => p.seriesName === 'BOLL中轨');
+                        const bollLowerParam = params.find(p => p.seriesName === 'BOLL下轨');
+                        
+                        if (bollUpperParam && bollUpperParam.data !== null) {
+                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Upper: ${bollUpperParam.data.toFixed(2)}</div>`;
+                        }
+                        if (bollMidParam && bollMidParam.data !== null) {
+                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Mid: ${bollMidParam.data.toFixed(2)}</div>`;
+                        }
+                        if (bollLowerParam && bollLowerParam.data !== null) {
+                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Lower: ${bollLowerParam.data.toFixed(2)}</div>`;
+                        }
+                        
+                        // 成交额
+                        if (klineItem && klineItem.amount) {
+                            const amount = parseFloat(klineItem.amount);
+                            html += `<div style="color: #666; margin-bottom: 3px;">Amount: ${formatNumber(amount * 1000)}</div>`;
+                        }
+                        
+                        // 涨跌幅
+                        if (klineItem && klineItem.pct_chg !== undefined && klineItem.pct_chg !== null) {
+                            const pctChg = parseFloat(klineItem.pct_chg);
+                            const color = pctChg >= 0 ? '#ff4444' : '#44aa44';
+                            html += `<div style="color: ${color}; margin-bottom: 3px;">Change: ${pctChg >= 0 ? '+' : ''}${pctChg.toFixed(2)}%</div>`;
+                        }
+                        
+                        // 换手率（如果是最新一天的数据）
+                        if (dataIndex === data.kline_data.length - 1 && data.turnover_rate) {
+                            html += `<div style="color: #666; margin-bottom: 3px;">Turnover Rate: ${data.turnover_rate.toFixed(2)}%</div>`;
+                        }
+                        
+                        // 量比（如果是最新一天的数据）
+                        if (dataIndex === data.kline_data.length - 1 && data.volume_ratio) {
+                            html += `<div style="color: #666; margin-bottom: 3px;">Volume Ratio: ${data.volume_ratio.toFixed(2)}</div>`;
+                        }
+                        
+                        // 成交量数据
+                        const volumeParam = params.find(p => p.seriesName === '成交量');
+                        if (volumeParam) {
+                            const vol = volumeParam.data;
+                            html += `<div style="color: #888; margin-top: 5px;">Volume: ${formatNumber(vol * 100)}</div>`;
+                        }
+                        
+                        return html;
                     }
                 },
                 axisPointer: {

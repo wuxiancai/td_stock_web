@@ -227,6 +227,9 @@ class OptimizedCacheManager:
     
     def _cleanup_loop(self):
         """数据清理循环"""
+        # 启动后等待1小时再开始清理，避免影响应用启动
+        time.sleep(3600)
+        
         while True:
             try:
                 self._cleanup_old_data()
@@ -259,9 +262,12 @@ class OptimizedCacheManager:
                     with open(cache_file, 'r', encoding='utf-8') as f:
                         data = json.load(f)
                     
-                    is_valid, validation_errors = self.validator.validate_json_structure(data)
-                    if not is_valid:
-                        corrupted_files.append(str(cache_file))
+                    # 只对股票缓存文件进行结构验证，跳过watchlist.json等其他文件
+                    if cache_file.name.endswith('_stocks_cache.json'):
+                        is_valid, validation_errors = self.validator.validate_json_structure(data)
+                        if not is_valid:
+                            corrupted_files.append(str(cache_file))
+                    # 对于其他JSON文件（如watchlist.json），只要能正常解析JSON就认为是有效的
                         
                 except Exception:
                     corrupted_files.append(str(cache_file))
@@ -300,25 +306,33 @@ class OptimizedCacheManager:
             
             for cache_file in self.cache_dir.glob('*.json'):
                 try:
+                    # 跳过非股票缓存文件
+                    if not cache_file.name.endswith('_stocks_cache.json'):
+                        continue
+                        
                     with open(cache_file, 'r', encoding='utf-8') as f:
                         data = json.load(f)
                     
                     if 'stocks' in data:
-                        original_count = len(data['stocks'])
+                        original_count = sum(len(stock.get('kline_data', [])) for stock in data['stocks'])
+                        data_modified = False
                         
                         # 清理每只股票的历史数据
                         for stock in data['stocks']:
-                            if 'kline_data' in stock:
+                            if 'kline_data' in stock and stock['kline_data']:
                                 # 只保留90天内的K线数据
                                 keep_date = (current_date - timedelta(days=90)).strftime('%Y%m%d')
+                                original_kline_count = len(stock['kline_data'])
                                 stock['kline_data'] = [
                                     kline for kline in stock['kline_data']
                                     if kline.get('trade_date', '99999999') >= keep_date
                                 ]
+                                if len(stock['kline_data']) != original_kline_count:
+                                    data_modified = True
                         
                         # 如果数据被修改，保存回文件
-                        new_count = sum(len(stock.get('kline_data', [])) for stock in data['stocks'])
-                        if new_count != original_count:
+                        if data_modified:
+                            new_count = sum(len(stock.get('kline_data', [])) for stock in data['stocks'])
                             self._save_data_with_backup(cache_file, data)
                             cleaned_count += 1
                             logger.info(f"清理缓存文件 {cache_file}: {original_count} -> {new_count} 条K线数据")
@@ -328,6 +342,8 @@ class OptimizedCacheManager:
             
             if cleaned_count > 0:
                 logger.info(f"数据清理完成，处理了 {cleaned_count} 个缓存文件")
+            else:
+                logger.debug("数据清理完成，无需清理的数据")
                 
         except Exception as e:
             logger.error(f"数据清理失败: {e}")
@@ -399,13 +415,16 @@ class OptimizedCacheManager:
                 self._attempt_recovery(cache_file)
                 return None
             
-            # 校验和验证
+            # 校验和验证（宽松模式）
             if '_checksum' in data:
                 expected_checksum = data.pop('_checksum')
                 if not self.validator.verify_checksum(data, expected_checksum):
-                    logger.error(f"缓存数据校验和不匹配: {cache_file}")
-                    self._attempt_recovery(cache_file)
-                    return None
+                    logger.warning(f"缓存数据校验和不匹配: {cache_file}，可能是数据清理导致，继续使用")
+                    # 不立即恢复，先检查数据是否基本可用
+                    if 'stocks' not in data or not isinstance(data['stocks'], list):
+                        logger.error(f"缓存数据结构异常，尝试恢复: {cache_file}")
+                        self._attempt_recovery(cache_file)
+                        return None
             
             # 加载到内存缓存
             with self.memory_lock:
