@@ -517,7 +517,7 @@
             const dates = data.kline_data.map(item => formatDate(item.trade_date));
             const volumes = data.kline_data.map(item => safeParseFloat(item.vol));
             
-            // 九转序列数据 - 原有的1-9数字
+            // 卖出Setup数据 - 1-9数字，红色，K线上方
             const nineTurnUp = data.kline_data.map((item, index) => {
                 return item.nine_turn_up > 0 ? [
                     index, // x坐标：数据索引
@@ -526,6 +526,7 @@
                 ] : null;
             }).filter(item => item !== null);
             
+            // 买入Setup数据 - 1-9数字，绿色，K线下方
             const nineTurnDown = data.kline_data.map((item, index) => {
                 return item.nine_turn_down > 0 ? [
                     index, // x坐标：数据索引
@@ -534,20 +535,21 @@
                 ] : null;
             }).filter(item => item !== null);
             
-            // Countdown数据 - 新增的10-13数字，位置更极端
+            // 卖出Countdown数据 - 1-13数字，紫色，卖出Setup上方
             const countdownUp = data.kline_data.map((item, index) => {
                 return item.countdown_up > 0 ? [
                     index, // x坐标：数据索引
-                    safeParseFloat(item.high) + (safeParseFloat(item.high) * 0.05), // y坐标：K线最高价上方5%（更高位置）
-                    item.countdown_up // 显示的数值（10-13）
+                    safeParseFloat(item.high) + (safeParseFloat(item.high) * 0.05), // y坐标：K线最高价上方5%（卖出Setup上方）
+                    item.countdown_up // 显示的数值（1-13）
                 ] : null;
             }).filter(item => item !== null);
             
+            // 买入Countdown数据 - 1-13数字，蓝色，买入Setup下方
             const countdownDown = data.kline_data.map((item, index) => {
                 return item.countdown_down > 0 ? [
                     index, // x坐标：数据索引
-                    safeParseFloat(item.low) - (safeParseFloat(item.low) * 0.05), // y坐标：K线最低价下方5%（更低位置）
-                    item.countdown_down // 显示的数值（10-13）
+                    safeParseFloat(item.low) - (safeParseFloat(item.low) * 0.05), // y坐标：K线最低价下方5%（买入Setup下方）
+                    item.countdown_down // 显示的数值（1-13）
                 ] : null;
             }).filter(item => item !== null);
             
@@ -586,7 +588,7 @@
                 legend: {
                     bottom: 10,
                     left: 'center',
-                    data: ['日K', '成交量', '九转序列', 'Countdown', 'BOLL上轨', 'BOLL中轨', 'BOLL下轨']
+                    data: ['日K', '成交量', '卖出Setup', '买入Setup', '卖出Countdown', '买入Countdown', 'BOLL上轨', 'BOLL中轨', 'BOLL下轨']
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -833,7 +835,7 @@
                         }
                     },
                     {
-                        name: '九转序列(上)',
+                        name: '卖出Setup',
                         type: 'scatter',
                         data: nineTurnUp,
                         symbolSize: 0, // 隐藏散点符号
@@ -855,7 +857,7 @@
                         }
                     },
                     {
-                        name: '九转序列(下)',
+                        name: '买入Setup',
                         type: 'scatter',
                         data: nineTurnDown,
                         symbolSize: 0, // 隐藏散点符号
@@ -865,7 +867,7 @@
                         label: {
                             show: true,
                             position: 'inside',
-                            color: '#14b143', // 绿色数字
+                            color: '#00aa00', // 绿色数字
                             fontWeight: 'bold',
                             fontSize: 14,
                             backgroundColor: 'rgba(255,255,255,0.8)',
@@ -877,7 +879,7 @@
                         }
                     },
                     {
-                        name: 'Countdown(上)',
+                        name: '卖出Countdown',
                         type: 'scatter',
                         data: countdownUp,
                         symbolSize: 0, // 隐藏散点符号
@@ -887,19 +889,19 @@
                         label: {
                             show: true,
                             position: 'inside',
-                            color: '#8A2BE2', // 紫色数字
+                            color: '#8A2BE2', // 紫色数字 - 卖出信号
                             fontWeight: 'bold',
                             fontSize: 14,
                             backgroundColor: 'rgba(255,255,255,0.8)',
                             borderRadius: 3,
                             padding: [2, 4],
                             formatter: function(param) {
-                                return param.data[2]; // 数组的第三个元素是数值（10-13）
+                                return param.data[2]; // 数组的第三个元素是数值（1-13）
                             }
                         }
                     },
                     {
-                        name: 'Countdown(下)',
+                        name: '买入Countdown',
                         type: 'scatter',
                         data: countdownDown,
                         symbolSize: 0, // 隐藏散点符号
@@ -909,14 +911,14 @@
                         label: {
                             show: true,
                             position: 'inside',
-                            color: '#1E90FF', // 蓝色数字
+                            color: '#1E90FF', // 蓝色数字 - 买入信号
                             fontWeight: 'bold',
                             fontSize: 14,
                             backgroundColor: 'rgba(255,255,255,0.8)',
                             borderRadius: 3,
                             padding: [2, 4],
                             formatter: function(param) {
-                                return param.data[2]; // 数组的第三个元素是数值（10-13）
+                                return param.data[2]; // 数组的第三个元素是数值（1-13）
                             }
                         }
                     },

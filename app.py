@@ -425,18 +425,17 @@ def calculate_nine_turn(df):
     """
     计算九转序列和Countdown - 完整TD Sequential算法
     Setup阶段（1-9）：
-    - 上涨Setup：当日收盘价 > 4个交易日前的收盘价，连续满足条件
-    - 下跌Setup：当日收盘价 < 4个交易日前的收盘价，连续满足条件
+    - 买入Setup（看跌转涨）：当日收盘价 < 4个交易日前的收盘价，连续满足9次
+    - 卖出Setup（看涨转跌）：当日收盘价 > 4个交易日前的收盘价，连续满足9次
     
-    Countdown阶段（10-13）：
-    - 买入Countdown：收盘价 <= 2天前最低价，需要13次（Setup完成后开始）
-    - 卖出Countdown：收盘价 >= 2天前最高价，需要13次（Setup完成后开始）
+    Countdown阶段（1-13）：
+    - 买入Countdown（寻找反弹）：收盘价 <= 2天前最低价，满足13次（不要求连续）
+    - 卖出Countdown（寻找见顶）：收盘价 >= 2天前最高价，满足13次（不要求连续）
     
     规则：
-    1. Setup阶段：只有连续4天或以上满足条件时才开始显示序列1-9
-    2. Countdown阶段：Setup完成（出现9）后开始计算，显示10-13
-    3. 如果Setup中途中断，则前面的序列全部消失
-    4. 如果Countdown过程中出现新Setup，则重置Countdown
+    1. Setup阶段：连续满足条件，中断则全部清除
+    2. Countdown阶段：Setup完成后开始，标注1-13，可被新Setup中断
+    3. Countdown不要求连续，只要满足条件就计数
     """
     df = df.copy()
     df['nine_turn_up'] = 0
@@ -444,7 +443,7 @@ def calculate_nine_turn(df):
     df['countdown_up'] = 0  # 卖出Countdown（K线上方）
     df['countdown_down'] = 0  # 买入Countdown（K线下方）
     
-    # Setup阶段 - 上涨九转序列
+    # Setup阶段 - 卖出Setup（看涨转跌）
     up_count = 0
     up_positions = []  # 记录满足条件的位置
     up_setup_complete_pos = -1  # Setup完成的位置
@@ -455,12 +454,10 @@ def calculate_nine_turn(df):
             up_count += 1
             up_positions.append(i)
             
-            # 只有连续4天或以上满足条件时才开始显示
-            if up_count >= 4:
-                # 显示所有序列号
-                for j, pos in enumerate(up_positions):
-                    if j < 9:  # 最多显示9个
-                        df.iloc[pos, df.columns.get_loc('nine_turn_up')] = j + 1
+            # 实时显示序列号（从第1个开始）
+            for j, pos in enumerate(up_positions):
+                if j < 9:  # 最多显示9个
+                    df.iloc[pos, df.columns.get_loc('nine_turn_up')] = j + 1
             
             # 如果达到9个，记录Setup完成位置并停止计数
             if up_count >= 9:
@@ -474,7 +471,7 @@ def calculate_nine_turn(df):
             up_count = 0
             up_positions = []
     
-    # Setup阶段 - 下跌九转序列
+    # Setup阶段 - 买入Setup（看跌转涨）
     down_count = 0
     down_positions = []  # 记录满足条件的位置
     down_setup_complete_pos = -1  # Setup完成的位置
@@ -485,12 +482,10 @@ def calculate_nine_turn(df):
             down_count += 1
             down_positions.append(i)
             
-            # 只有连续4天或以上满足条件时才开始显示
-            if down_count >= 4:
-                # 显示所有序列号
-                for j, pos in enumerate(down_positions):
-                    if j < 9:  # 最多显示9个
-                        df.iloc[pos, df.columns.get_loc('nine_turn_down')] = j + 1
+            # 实时显示序列号（从第1个开始）
+            for j, pos in enumerate(down_positions):
+                if j < 9:  # 最多显示9个
+                    df.iloc[pos, df.columns.get_loc('nine_turn_down')] = j + 1
             
             # 如果达到9个，记录Setup完成位置并停止计数
             if down_count >= 9:
@@ -510,10 +505,10 @@ def calculate_nine_turn(df):
         sell_countdown_completed = False  # 添加完成标志
         
         for i in range(max(up_setup_complete_pos + 1, 2), len(df)):
-            # 检查是否有新的Setup出现，如果有则重置Countdown
-            if df.iloc[i]['nine_turn_up'] > 0 or df.iloc[i]['nine_turn_down'] > 0:
+            # 检查是否有相反方向的Setup出现（下跌Setup），如果有则重置Countdown
+            if df.iloc[i]['nine_turn_down'] > 0:
                 sell_countdown = 0
-                sell_countdown_completed = False  # 新Setup出现时重置完成标志
+                sell_countdown_completed = False  # 相反Setup出现时重置完成标志
                 continue
             
             # 如果Countdown已完成（达到13），则停止计算
@@ -523,11 +518,11 @@ def calculate_nine_turn(df):
             # 卖出Countdown条件：收盘价 >= 2天前最高价
             if df.iloc[i]['close'] >= df.iloc[i-2]['high']:
                 sell_countdown += 1
-                if sell_countdown <= 4:  # 只显示10-13（对应countdown的1-4）
-                    df.iloc[i, df.columns.get_loc('countdown_up')] = sell_countdown + 9  # 10, 11, 12, 13
+                if sell_countdown <= 13:  # 显示1-13
+                    df.iloc[i, df.columns.get_loc('countdown_up')] = sell_countdown  # 1, 2, 3, ..., 13
                 
                 # 达到13后标记为完成，停止计算
-                if sell_countdown >= 4:
+                if sell_countdown >= 13:
                     sell_countdown_completed = True
     
     # Countdown阶段 - 买入Countdown（下跌Setup完成后）
@@ -536,10 +531,10 @@ def calculate_nine_turn(df):
         buy_countdown_completed = False  # 添加完成标志
         
         for i in range(max(down_setup_complete_pos + 1, 2), len(df)):
-            # 检查是否有新的Setup出现，如果有则重置Countdown
-            if df.iloc[i]['nine_turn_up'] > 0 or df.iloc[i]['nine_turn_down'] > 0:
+            # 检查是否有相反方向的Setup出现（上涨Setup），如果有则重置Countdown
+            if df.iloc[i]['nine_turn_up'] > 0:
                 buy_countdown = 0
-                buy_countdown_completed = False  # 新Setup出现时重置完成标志
+                buy_countdown_completed = False  # 相反Setup出现时重置完成标志
                 continue
             
             # 如果Countdown已完成（达到13），则停止计算
@@ -549,11 +544,11 @@ def calculate_nine_turn(df):
             # 买入Countdown条件：收盘价 <= 2天前最低价
             if df.iloc[i]['close'] <= df.iloc[i-2]['low']:
                 buy_countdown += 1
-                if buy_countdown <= 4:  # 只显示10-13（对应countdown的1-4）
-                    df.iloc[i, df.columns.get_loc('countdown_down')] = buy_countdown + 9  # 10, 11, 12, 13
+                if buy_countdown <= 13:  # 显示1-13
+                    df.iloc[i, df.columns.get_loc('countdown_down')] = buy_countdown  # 1, 2, 3, ..., 13
                 
                 # 达到13后标记为完成，停止计算
-                if buy_countdown >= 4:
+                if buy_countdown >= 13:
                     buy_countdown_completed = True
     
     return df
