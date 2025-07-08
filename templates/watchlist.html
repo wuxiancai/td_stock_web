@@ -484,7 +484,31 @@
             document.getElementById('loadingDiv').style.display = 'block';
             document.getElementById('emptyDiv').style.display = 'none';
             document.getElementById('watchlistContent').style.display = 'none';
-            loadWatchlist();
+            
+            // 调用刷新API更新数据
+            fetch('/api/watchlist/refresh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(data.message);
+                    // 刷新完成后重新加载列表
+                    loadWatchlist();
+                } else {
+                    alert('刷新失败: ' + (data.message || '未知错误'));
+                    document.getElementById('loadingDiv').style.display = 'none';
+                    document.getElementById('watchlistContent').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                alert('刷新失败: ' + error.message);
+                document.getElementById('loadingDiv').style.display = 'none';
+                document.getElementById('watchlistContent').style.display = 'block';
+            });
         }
         
         function clearAllWatchlist() {

@@ -1674,6 +1674,111 @@ def update_watchlist_priority():
             'message': str(e)
         }), 500
 
+@app.route('/api/watchlist/refresh', methods=['POST'])
+def refresh_watchlist():
+    """刷新自选股数据，获取最新的换手率、市盈率和市值"""
+    def safe_float(value, default=0.0):
+        try:
+            if value is None or pd.isna(value):
+                return default
+            return float(value)
+        except (ValueError, TypeError):
+            return default
+    
+    try:
+        watchlist_data = load_watchlist()
+        if not watchlist_data:
+            return jsonify({
+                'success': False,
+                'message': '自选股列表为空'
+            })
+        
+        updated_count = 0
+        failed_stocks = []
+        
+        for stock in watchlist_data:
+            try:
+                ts_code = stock['ts_code']
+                print(f"正在更新自选股: {ts_code} {stock.get('name', '')}")
+                
+                # 获取最新的基本面数据
+                daily_basic = safe_tushare_call(pro.daily_basic, ts_code=ts_code, limit=1)
+                latest_data = safe_tushare_call(pro.daily, ts_code=ts_code, limit=1)
+                
+                if not daily_basic.empty:
+                    # 更新换手率
+                    if 'turnover_rate' in daily_basic.columns:
+                        turnover_rate = safe_float(daily_basic.iloc[0]['turnover_rate'])
+                        stock['turnover_rate'] = turnover_rate
+                    
+                    # 更新市盈率
+                    if 'pe_ttm' in daily_basic.columns:
+                        pe = safe_float(daily_basic.iloc[0]['pe_ttm'])
+                        stock['pe'] = pe
+                    
+                    # 更新市值
+                    if 'total_mv' in daily_basic.columns:
+                        total_mv = safe_float(daily_basic.iloc[0]['total_mv'])
+                        stock['total_mv'] = total_mv
+                    
+                    # 更新流通市值
+                    if 'circ_mv' in daily_basic.columns:
+                        circ_mv = safe_float(daily_basic.iloc[0]['circ_mv'])
+                        stock['circ_mv'] = circ_mv
+                    
+                    # 更新市净率
+                    if 'pb' in daily_basic.columns:
+                        pb = safe_float(daily_basic.iloc[0]['pb'])
+                        stock['pb'] = pb
+                
+                # 更新最新价格和成交额
+                if not latest_data.empty:
+                    stock['latest_price'] = safe_float(latest_data.iloc[0]['close'])
+                    stock['amount'] = safe_float(latest_data.iloc[0]['amount'])
+                    
+                    # 更新涨跌幅
+                    if 'pct_chg' in latest_data.columns:
+                        stock['pct_chg'] = safe_float(latest_data.iloc[0]['pct_chg'])
+                
+                # 更新时间戳
+                stock['last_refresh'] = datetime.now().isoformat()
+                updated_count += 1
+                
+            except Exception as e:
+                error_msg = str(e)
+                print(f"更新股票 {ts_code} 失败: {error_msg}")
+                failed_stocks.append({
+                    'ts_code': ts_code,
+                    'name': stock.get('name', ''),
+                    'error': error_msg
+                })
+                continue
+        
+        # 保存更新后的数据
+        if save_watchlist(watchlist_data):
+            message = f"成功更新 {updated_count} 只股票"
+            if failed_stocks:
+                message += f"，{len(failed_stocks)} 只股票更新失败"
+            
+            return jsonify({
+                'success': True,
+                'message': message,
+                'updated_count': updated_count,
+                'failed_count': len(failed_stocks),
+                'failed_stocks': failed_stocks
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '保存数据失败'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'刷新失败: {str(e)}'
+        }), 500
+
 @app.route('/api/cache/status')
 def get_cache_status():
     """获取缓存系统状态"""
