@@ -900,7 +900,7 @@ def get_update_progress(market):
 def get_stocks_by_market(market):
     try:
         page = int(request.args.get('page', 1))
-        per_page = 100  # 每页显示100行数据
+        per_page = 500  # 每页显示500行数据
         force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
         current_date = datetime.now().strftime('%Y%m%d')
         
