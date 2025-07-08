@@ -333,7 +333,7 @@
                                 市盈率(PE)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'amount')" data-sort="amount">
-                                成交额(万元)<span class="sort-indicator"></span>
+                                成交额(亿元)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'total_mv')" data-sort="total_mv">
                                 市值(亿元)<span class="sort-indicator"></span>
@@ -390,7 +390,7 @@
                             ${(stock.pe || 0).toFixed(2)}
                         </td>
                         <td>
-                            ${((stock.amount || 0) / 10000).toFixed(2)}
+                            ${((stock.amount || 0) / 100000).toFixed(2)}
                         </td>
                         <td>
                             ${(stock.total_mv || 0).toFixed(2)}
