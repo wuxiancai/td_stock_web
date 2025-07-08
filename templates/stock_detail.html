@@ -1160,33 +1160,46 @@
                         },
                         symbol: 'none',
                         smooth: true
-                    }
-                ],
-                // 添加超买超卖区域标识
-                markLine: {
-                    silent: true,
-                    lineStyle: {
-                        color: '#999',
-                        type: 'dashed',
-                        width: 1
                     },
-                    data: [
-                        {
-                            yAxis: 20,
-                            label: {
-                                formatter: '超卖区 20',
-                                position: 'insideEndTop'
-                            }
-                        },
-                        {
-                            yAxis: 80,
-                            label: {
-                                formatter: '超买区 80',
-                                position: 'insideEndBottom'
-                            }
+                    {
+                        name: '超买超卖线',
+                        type: 'line',
+                        data: [],
+                        markLine: {
+                            silent: true,
+                            data: [
+                                {
+                                    yAxis: 20,
+                                    lineStyle: {
+                                        color: '#27ae60',
+                                        type: 'solid',
+                                        width: 2
+                                    },
+                                    label: {
+                                        formatter: '超卖区',
+                                        position: 'insideEndTop',
+                                        color: '#27ae60',
+                                        fontWeight: 'bold'
+                                    }
+                                },
+                                {
+                                    yAxis: 80,
+                                    lineStyle: {
+                                        color: '#e74c3c',
+                                        type: 'solid',
+                                        width: 2
+                                    },
+                                    label: {
+                                        formatter: '超买区',
+                                        position: 'insideEndBottom',
+                                        color: '#e74c3c',
+                                        fontWeight: 'bold'
+                                    }
+                                }
+                            ]
                         }
-                    ]
-                }
+                    }
+                ]
             };
             
             chart.setOption(option);
