@@ -433,7 +433,7 @@ def calculate_nine_turn(df):
     - 卖出Countdown：收盘价 >= 2天前最高价，需要13次（Setup完成后开始）
     
     规则：
-    1. Setup阶段：只有连续3天或以上满足条件时才开始显示序列1-9
+    1. Setup阶段：只有连续4天或以上满足条件时才开始显示序列1-9
     2. Countdown阶段：Setup完成（出现9）后开始计算，显示10-13
     3. 如果Setup中途中断，则前面的序列全部消失
     4. 如果Countdown过程中出现新Setup，则重置Countdown
@@ -455,8 +455,8 @@ def calculate_nine_turn(df):
             up_count += 1
             up_positions.append(i)
             
-            # 只有连续3天或以上满足条件时才开始显示
-            if up_count >= 3:
+            # 只有连续4天或以上满足条件时才开始显示
+            if up_count >= 4:
                 # 显示所有序列号
                 for j, pos in enumerate(up_positions):
                     if j < 9:  # 最多显示9个
@@ -485,8 +485,8 @@ def calculate_nine_turn(df):
             down_count += 1
             down_positions.append(i)
             
-            # 只有连续3天或以上满足条件时才开始显示
-            if down_count >= 3:
+            # 只有连续4天或以上满足条件时才开始显示
+            if down_count >= 4:
                 # 显示所有序列号
                 for j, pos in enumerate(down_positions):
                     if j < 9:  # 最多显示9个
