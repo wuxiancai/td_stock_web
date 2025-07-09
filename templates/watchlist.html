@@ -340,11 +340,11 @@
                             <th>股票名称</th>
                             <th>所属行业</th>
                             <th onclick="sortTable('${dateKey}', 'pct_chg')" data-sort="pct_chg">
-                                当天涨幅(%)<span class="sort-indicator"></span>
+                                当天涨幅<span class="sort-indicator"></span>
                             </th>
                             <th>最新价格</th>
                             <th onclick="sortTable('${dateKey}', 'turnover_rate')" data-sort="turnover_rate">
-                                换手率(%)<span class="sort-indicator"></span>
+                                换手率<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'volume_ratio')" data-sort="volume_ratio">
                                 量比<span class="sort-indicator"></span>
@@ -353,13 +353,13 @@
                                 市盈率(PE)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'amount')" data-sort="amount">
-                                成交额(亿元)<span class="sort-indicator"></span>
+                                成交额(亿)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'total_mv')" data-sort="total_mv">
-                                市值(亿元)<span class="sort-indicator"></span>
+                                市值(亿)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'nine_turn')" data-sort="nine_turn">
-                                九转买入<span class="sort-indicator"></span>
+                                九转<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'priority')" data-sort="priority">
                                 优先级<span class="sort-indicator"></span>
@@ -396,7 +396,7 @@
                             ${stock.industry || '-'}
                         </td>
                         <td class="${priceClass}">
-                            ${changeSign}${(changePercent || 0).toFixed(2)}%
+                            ${changeSign}${(changePercent || 0).toFixed(2)}
                         </td>
                         <td class="${priceClass}">
                             ¥${(stock.latest_price || 0).toFixed(2)}
