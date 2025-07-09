@@ -199,6 +199,26 @@
             padding: 8px;
         }
         
+        .note-input {
+            width: 100%;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.8em;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+        
+        .note-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+        
+        .note-input:hover {
+            border-color: #999;
+        }
+        
         .empty-message {
             text-align: center;
             padding: 40px;
@@ -344,6 +364,7 @@
                             <th onclick="sortTable('${dateKey}', 'priority')" data-sort="priority">
                                 优先级<span class="sort-indicator"></span>
                             </th>
+                            <th>备注</th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -412,6 +433,12 @@
                                 <option value="blue" ${priority === 'blue' ? 'selected' : ''}>观察2天</option>
                                 <option value="green" ${priority === 'green' ? 'selected' : ''}>观察3天</option>
                             </select>
+                        </td>
+                        <td>
+                            <input type="text" class="note-input" value="${stock.note || ''}" 
+                                   placeholder="点击输入备注" 
+                                   onblur="updateNote('${stock.ts_code}', this.value)"
+                                   onkeypress="if(event.key==='Enter') this.blur()">
                         </td>
                         <td>
                             <button class="remove-btn" onclick="removeFromWatchlist('${stock.ts_code}')">移除</button>
@@ -565,6 +592,28 @@
                 alert('更新优先级失败: ' + error.message);
                 // 重新加载以恢复原状态
                 loadWatchlist();
+            });
+        }
+        
+        function updateNote(tsCode, note) {
+            fetch('/api/watchlist/update_note', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    ts_code: tsCode, 
+                    note: note 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('更新备注失败: ' + (data.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                alert('更新备注失败: ' + error.message);
             });
         }
         

@@ -1539,6 +1539,7 @@ def add_to_watchlist():
             'nine_turn_up': data.get('nine_turn_up', 0),
             'nine_turn_down': data.get('nine_turn_down', 0),
             'priority': data.get('priority', 'green'),  # 默认绿色优先级
+            'note': data.get('note', ''),  # 默认备注为空
             'add_time': data.get('add_time', datetime.now().isoformat())
         }
         
@@ -1661,6 +1662,53 @@ def update_watchlist_priority():
             return jsonify({
                 'success': True,
                 'message': '优先级更新成功'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '保存失败'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/watchlist/update_note', methods=['POST'])
+def update_watchlist_note():
+    """更新自选股备注"""
+    try:
+        data = request.get_json()
+        if not data or 'ts_code' not in data:
+            return jsonify({
+                'success': False,
+                'message': '缺少必要参数'
+            }), 400
+        
+        note = data.get('note', '').strip()
+        
+        watchlist_data = load_watchlist()
+        
+        # 查找并更新股票备注
+        stock_found = False
+        for stock in watchlist_data:
+            if stock['ts_code'] == data['ts_code']:
+                stock['note'] = note
+                stock['note_update_time'] = datetime.now().isoformat()
+                stock_found = True
+                break
+        
+        if not stock_found:
+            return jsonify({
+                'success': False,
+                'message': '股票不在自选股中'
+            })
+        
+        if save_watchlist(watchlist_data):
+            return jsonify({
+                'success': True,
+                'message': '备注更新成功'
             })
         else:
             return jsonify({
