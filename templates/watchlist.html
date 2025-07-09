@@ -183,13 +183,18 @@
             color: white;
         }
         
-        .priority-blue {
-            background-color: #3498db !important;
+        .priority-green {
+            background-color: #27ae60 !important;
             color: white;
         }
         
-        .priority-green {
-            background-color: #27ae60 !important;
+        .priority-holding {
+            background-color: #ff9800 !important;
+            color: white;
+        }
+        
+        .priority-sold {
+            background-color: #9e9e9e !important;
             color: white;
         }
         
@@ -254,7 +259,7 @@
     <div class="container">
         <div class="header">
             <div class="title">⭐ 我的自选股</div>
-            <div class="subtitle">紫色:可立即买入; 红色:重点关注; 蓝色:观察2天; 绿色:观察3天</div>
+            <div class="subtitle">紫色:可立即买入; 红色:重点关注; 绿色:观察; 橙色:持仓中; 灰色:已卖出</div>
         </div>
         
         <div class="controls">
@@ -430,8 +435,9 @@
                             <select class="priority-selector priority-${priority}" onchange="updatePriority('${stock.ts_code}', this.value)">
                                 <option value="purple" ${priority === 'purple' ? 'selected' : ''}>可立即买入</option>
                                 <option value="red" ${priority === 'red' ? 'selected' : ''}>重点关注</option>
-                                <option value="blue" ${priority === 'blue' ? 'selected' : ''}>观察2天</option>
-                                <option value="green" ${priority === 'green' ? 'selected' : ''}>观察3天</option>
+                                <option value="green" ${priority === 'green' ? 'selected' : ''}>观察</option>
+                                <option value="holding" ${priority === 'holding' ? 'selected' : ''}>持仓中</option>
+                                <option value="sold" ${priority === 'sold' ? 'selected' : ''}>已卖出</option>
                             </select>
                         </td>
                         <td>
@@ -675,9 +681,9 @@
                     }
                     return 0;
                 case 'priority':
-                    // 优先级排序：purple > red > blue > green
-                    const priorityOrder = { 'purple': 4, 'red': 3, 'blue': 2, 'green': 1 };
-                    return priorityOrder[stock.priority || 'green'] || 1;
+                    // 优先级排序：purple > red > holding > green > sold
+                    const priorityOrder = { 'purple': 5, 'red': 4, 'holding': 3, 'green': 2, 'sold': 1 };
+                    return priorityOrder[stock.priority || 'green'] || 2;
                 default:
                     return 0;
             }

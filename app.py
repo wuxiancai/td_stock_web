@@ -1635,7 +1635,7 @@ def update_watchlist_priority():
             }), 400
         
         # 验证优先级值
-        valid_priorities = ['purple', 'red', 'blue', 'green']
+        valid_priorities = ['purple', 'red', 'green', 'holding', 'sold']
         if data['priority'] not in valid_priorities:
             return jsonify({
                 'success': False,
