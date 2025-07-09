@@ -1796,18 +1796,30 @@ def refresh_watchlist():
                     if 'vol' in latest_data.columns:
                         stock['vol'] = safe_float(latest_data.iloc[0]['vol'])
                 
-                # 计算九转买入信号（这里使用简化逻辑，实际应该基于技术分析）
-                # 暂时设置为随机值或基于价格变化的简单逻辑
-                if 'pct_chg' in stock and stock['pct_chg'] > 0:
-                    stock['nine_turn_up'] = min(stock.get('nine_turn_up', 0) + 1, 9)
-                    stock['nine_turn_down'] = 0
-                elif 'pct_chg' in stock and stock['pct_chg'] < 0:
-                    stock['nine_turn_down'] = min(stock.get('nine_turn_down', 0) + 1, 9)
-                    stock['nine_turn_up'] = 0
-                else:
-                    # 价格无变化时保持原值
-                    stock['nine_turn_up'] = stock.get('nine_turn_up', 0)
-                    stock['nine_turn_down'] = stock.get('nine_turn_down', 0)
+                # 计算九转序列（使用正确的算法）
+                nine_turn_up = 0
+                nine_turn_down = 0
+                try:
+                    # 获取最近30天的K线数据用于计算九转序列
+                    end_date = datetime.now().strftime('%Y%m%d')
+                    start_date = (datetime.now() - timedelta(days=45)).strftime('%Y%m%d')
+                    kline_data = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
+                    
+                    if not kline_data.empty and len(kline_data) >= 5:
+                        kline_data = kline_data.sort_values('trade_date')
+                        kline_with_nine_turn = calculate_nine_turn(kline_data)
+                        # 获取最新一天的九转序列数据
+                        latest_nine_turn = kline_with_nine_turn.iloc[-1]
+                        nine_turn_up = int(latest_nine_turn['nine_turn_up']) if latest_nine_turn['nine_turn_up'] > 0 else 0
+                        nine_turn_down = int(latest_nine_turn['nine_turn_down']) if latest_nine_turn['nine_turn_down'] > 0 else 0
+                except Exception as e:
+                    print(f"计算股票 {ts_code} 九转序列失败: {e}")
+                    # 如果计算失败，保持原值或设为0
+                    nine_turn_up = stock.get('nine_turn_up', 0)
+                    nine_turn_down = stock.get('nine_turn_down', 0)
+                
+                stock['nine_turn_up'] = nine_turn_up
+                stock['nine_turn_down'] = nine_turn_down
                 
                 # 更新时间戳
                 stock['last_refresh'] = datetime.now().isoformat()
