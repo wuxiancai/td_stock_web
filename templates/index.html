@@ -1085,6 +1085,10 @@
                  let valueA, valueB;
                  
                  switch (field) {
+                     case 'pct_chg':
+                         valueA = a.pct_chg || 0;
+                         valueB = b.pct_chg || 0;
+                         break;
                      case 'latest_price':
                          valueA = a.latest_price || 0;
                          valueB = b.latest_price || 0;
@@ -1144,7 +1148,7 @@
          
          function updateSortIcons(activeField, order) {
              // 重置所有排序图标
-             const sortFields = ['latest_price', 'turnover_rate', 'volume_ratio', 'pe_ratio', 'amount', 'market_cap', 'nine_turn'];
+             const sortFields = ['pct_chg', 'latest_price', 'turnover_rate', 'volume_ratio', 'pe_ratio', 'amount', 'market_cap', 'nine_turn'];
              sortFields.forEach(field => {
                  const icon = document.getElementById(`sort-${field}`);
                  if (icon) {

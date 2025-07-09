@@ -1489,6 +1489,11 @@
                     select.innerHTML = `<option selected>✓ 已加入 (${priorityNames[priority]})</option>`;
                     select.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
                     select.disabled = true;
+                    
+                    // 自动跳转到自选股页面
+                    setTimeout(() => {
+                        window.location.href = '/watchlist';
+                    }, 1000); // 延迟1秒后跳转，让用户看到成功提示
                 } else {
                     alert(data.message || '加入自选股失败');
                     // 重置选择器
