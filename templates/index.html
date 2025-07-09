@@ -903,7 +903,7 @@
             filteredStocks = allStocks.filter(stock => {
                 // 只对有实时数据的股票进行筛选
                 const hasRealTimeData = stock.data_loaded !== false && stock.latest_price > 0;
-                if (!hasRealTimeData) return true; // 保留加载中的股票
+                if (!hasRealTimeData) return false; // 过滤掉数据未加载完成的股票
                 
                 // 换手率筛选
                 if (stock.turnover_rate < turnoverMin || stock.turnover_rate > turnoverMax) {
@@ -1020,7 +1020,7 @@
              filteredStocks = allStocks.filter(stock => {
                  // 只对有实时数据的股票进行筛选
                  const hasRealTimeData = stock.data_loaded !== false && stock.latest_price > 0;
-                 if (!hasRealTimeData) return true; // 保留加载中的股票
+                 if (!hasRealTimeData) return false; // 过滤掉数据未加载完成的股票
                  
                  // 换手率筛选
                  if (stock.turnover_rate < turnoverMin || stock.turnover_rate > turnoverMax) {

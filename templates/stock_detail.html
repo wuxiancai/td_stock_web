@@ -1450,6 +1450,21 @@
                 nineTurnDown = latestData.nine_turn_down || 0;
             }
             
+            // 生成自动备注：日期 + 九转数据和颜色
+            const today = new Date();
+            const dateStr = `${today.getDate()}号`;
+            let nineTurnNote = '';
+            
+            if (nineTurnUp > 0) {
+                nineTurnNote = `红色${nineTurnUp}`;
+            } else if (nineTurnDown > 0) {
+                nineTurnNote = `绿色${nineTurnDown}`;
+            } else {
+                nineTurnNote = '无九转信号';
+            }
+            
+            const autoNote = `${dateStr}加入，${nineTurnNote}`;
+            
             const watchlistData = {
                 ts_code: stockData.ts_code,
                 name: stockData.name,
@@ -1464,6 +1479,7 @@
                 nine_turn_up: nineTurnUp,
                 nine_turn_down: nineTurnDown,
                 priority: priority, // 添加优先级
+                note: autoNote, // 自动生成的备注
                 add_time: new Date().toISOString()
             };
             
