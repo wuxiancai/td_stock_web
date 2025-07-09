@@ -1787,6 +1787,27 @@ def refresh_watchlist():
                     # 更新涨跌幅
                     if 'pct_chg' in latest_data.columns:
                         stock['pct_chg'] = safe_float(latest_data.iloc[0]['pct_chg'])
+                    
+                    # 更新量比
+                    if 'vol_ratio' in latest_data.columns:
+                        stock['volume_ratio'] = safe_float(latest_data.iloc[0]['vol_ratio'])
+                    
+                    # 更新成交量
+                    if 'vol' in latest_data.columns:
+                        stock['vol'] = safe_float(latest_data.iloc[0]['vol'])
+                
+                # 计算九转买入信号（这里使用简化逻辑，实际应该基于技术分析）
+                # 暂时设置为随机值或基于价格变化的简单逻辑
+                if 'pct_chg' in stock and stock['pct_chg'] > 0:
+                    stock['nine_turn_up'] = min(stock.get('nine_turn_up', 0) + 1, 9)
+                    stock['nine_turn_down'] = 0
+                elif 'pct_chg' in stock and stock['pct_chg'] < 0:
+                    stock['nine_turn_down'] = min(stock.get('nine_turn_down', 0) + 1, 9)
+                    stock['nine_turn_up'] = 0
+                else:
+                    # 价格无变化时保持原值
+                    stock['nine_turn_up'] = stock.get('nine_turn_up', 0)
+                    stock['nine_turn_down'] = stock.get('nine_turn_down', 0)
                 
                 # 更新时间戳
                 stock['last_refresh'] = datetime.now().isoformat()
