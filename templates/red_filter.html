@@ -235,6 +235,16 @@
         let filterData = [];
         let sortStates = {}; // 存储每个分组的排序状态
         
+        function formatNumber(num, decimals = 2) {
+            if (num === 0 || num === null || num === undefined) return '-';
+            if (num >= 100000000) {
+                return (num / 100000000).toFixed(decimals) + '亿';
+            } else if (num >= 10000) {
+                return (num / 10000).toFixed(decimals) + '万';
+            }
+            return num.toFixed(decimals);
+        }
+        
         function loadFilterData() {
             fetch('/api/red-filter')
                 .then(response => response.json())
@@ -361,8 +371,8 @@
                         <td>${(stock.turnover_rate || 0).toFixed(2)}%</td>
                         <td>${(stock.volume_ratio || 0).toFixed(2)}</td>
                         <td>${stock.pe_ttm && stock.pe_ttm > 0 ? stock.pe_ttm.toFixed(2) : '-'}</td>
-                        <td>${((stock.amount || 0) / 10000).toFixed(2)}</td>
-                        <td>${((stock.market_cap || 0) / 10000).toFixed(2)}</td>
+                        <td>${formatNumber((stock.amount || 0) * 1000)}</td>
+                        <td>${formatNumber(stock.market_cap || 0)}</td>
                         <td>${nineTurnDisplay}</td>
                         <td>
                             <input type="text" class="note-input" value="${getStockNote(stock.ts_code)}" 
