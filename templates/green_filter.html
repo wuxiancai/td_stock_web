@@ -364,7 +364,13 @@
                         <td>${((stock.amount || 0) / 100000000).toFixed(2)}</td>
                         <td>${((stock.market_cap || 0) / 100000000).toFixed(2)}</td>
                         <td>${nineTurnDisplay}</td>
-                        <td>${stock.remark || '-'}</td>
+                        <td>
+                            <input type="text" class="note-input" value="${getStockNote(stock.ts_code)}" 
+                                   placeholder="点击输入备注" 
+                                   onblur="updateStockNote('${stock.ts_code}', this.value)"
+                                   onkeypress="if(event.key==='Enter') this.blur()"
+                                   style="width: 100px; padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+                        </td>
                         <td>
                             <select onchange="addToWatchlistWithPriority('${stock.ts_code}', this.value)" style="
                                 background: linear-gradient(45deg, #ffc107, #fd7e14);
@@ -458,6 +464,22 @@
         
         function viewStock(tsCode) {
             window.open(`/stock/${tsCode}`, '_blank');
+        }
+        
+        // 备注本地存储功能
+        function getStockNote(tsCode) {
+            const notes = JSON.parse(localStorage.getItem('greenFilterNotes') || '{}');
+            return notes[tsCode] || '';
+        }
+        
+        function updateStockNote(tsCode, note) {
+            const notes = JSON.parse(localStorage.getItem('greenFilterNotes') || '{}');
+            if (note.trim()) {
+                notes[tsCode] = note.trim();
+            } else {
+                delete notes[tsCode];
+            }
+            localStorage.setItem('greenFilterNotes', JSON.stringify(notes));
         }
         
         function addToWatchlistWithPriority(tsCode, priority) {
