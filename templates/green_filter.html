@@ -281,7 +281,6 @@
         }
         
         // 筛选功能
-        let originalFilterData = []; // 存储原始数据
         
         function loadFilterData() {
             fetch('/api/green-filter')
@@ -298,39 +297,6 @@
                 .catch(error => {
                     showError('加载筛选数据失败: ' + error.message);
                 });
-        }
-        
-        function applyFilters() {
-            const turnoverMin = parseFloat(document.getElementById('turnoverMin').value) || 0;
-            const turnoverMax = parseFloat(document.getElementById('turnoverMax').value) || Infinity;
-            const volumeRatioMin = parseFloat(document.getElementById('volumeRatioMin').value) || 0;
-            const volumeRatioMax = parseFloat(document.getElementById('volumeRatioMax').value) || Infinity;
-            const nineTurnDownMin = parseInt(document.getElementById('nineTurnDownMin').value) || 0;
-            const nineTurnDownMax = parseInt(document.getElementById('nineTurnDownMax').value) || 13;
-            
-            filterData = originalFilterData.filter(stock => {
-                const turnoverRate = stock.turnover_rate || 0;
-                const volumeRatio = stock.volume_ratio || 0;
-                const nineTurnDown = stock.nine_turn_down || 0;
-                
-                return turnoverRate >= turnoverMin && turnoverRate <= turnoverMax &&
-                       volumeRatio >= volumeRatioMin && volumeRatio <= volumeRatioMax &&
-                       nineTurnDown >= nineTurnDownMin && nineTurnDown <= nineTurnDownMax;
-            });
-            
-            displayFilterData();
-        }
-        
-        function clearFilters() {
-            document.getElementById('turnoverMin').value = '';
-            document.getElementById('turnoverMax').value = '';
-            document.getElementById('volumeRatioMin').value = '';
-            document.getElementById('volumeRatioMax').value = '';
-            document.getElementById('nineTurnDownMin').value = '';
-            document.getElementById('nineTurnDownMax').value = '';
-            
-            filterData = [...originalFilterData];
-            displayFilterData();
         }
         
         function displayFilterData() {
@@ -485,6 +451,9 @@
                     tbody.appendChild(row);
                 });
                 
+                // 更新排序指示器
+                updateTableSortIndicators(table, dateKey);
+                
                 contentDiv.appendChild(table);
             });
         }
@@ -622,6 +591,60 @@
                 <p style="color: #e74c3c;">加载失败</p>
                 <p style="margin-top: 10px; font-size: 0.9em; color: #999;">${message}</p>
             `;
+        }
+        
+        // 筛选功能
+        let originalFilterData = []; // 存储原始数据
+        
+        function applyFilters() {
+            const turnoverMin = parseFloat(document.getElementById('turnoverMin').value) || 0;
+            const turnoverMax = parseFloat(document.getElementById('turnoverMax').value) || Infinity;
+            const volumeRatioMin = parseFloat(document.getElementById('volumeRatioMin').value) || 0;
+            const volumeRatioMax = parseFloat(document.getElementById('volumeRatioMax').value) || Infinity;
+            const nineTurnDownMin = parseInt(document.getElementById('nineTurnDownMin').value) || 0;
+            const nineTurnDownMax = parseInt(document.getElementById('nineTurnDownMax').value) || 13;
+            
+            filterData = originalFilterData.filter(stock => {
+                const turnoverRate = stock.turnover_rate || 0;
+                const volumeRatio = stock.volume_ratio || 0;
+                const nineTurnDown = stock.nine_turn_down || 0;
+                
+                return turnoverRate >= turnoverMin && turnoverRate <= turnoverMax &&
+                       volumeRatio >= volumeRatioMin && volumeRatio <= volumeRatioMax &&
+                       nineTurnDown >= nineTurnDownMin && nineTurnDown <= nineTurnDownMax;
+            });
+            
+            displayFilterData();
+        }
+        
+        function clearFilters() {
+            document.getElementById('turnoverMin').value = '';
+            document.getElementById('turnoverMax').value = '';
+            document.getElementById('volumeRatioMin').value = '';
+            document.getElementById('volumeRatioMax').value = '';
+            document.getElementById('nineTurnDownMin').value = '';
+            document.getElementById('nineTurnDownMax').value = '';
+            
+            filterData = [...originalFilterData];
+            displayFilterData();
+        }
+        
+        function updateTableSortIndicators(table, dateKey) {
+            const sortState = sortStates[dateKey] || {};
+            
+            const headers = table.querySelectorAll('th[data-sort]');
+            headers.forEach(header => {
+                const field = header.getAttribute('data-sort');
+                const indicator = header.querySelector('.sort-indicator');
+                
+                // 清除所有排序指示器
+                indicator.className = 'sort-indicator';
+                
+                // 设置当前排序指示器
+                if (sortState.field === field) {
+                    indicator.className = `sort-indicator sort-${sortState.direction}`;
+                }
+            });
         }
         
         // 页面加载完成后初始化

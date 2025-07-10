@@ -449,6 +449,9 @@
                     tbody.appendChild(row);
                 });
                 
+                // 更新排序指示器
+                updateTableSortIndicators(table, dateKey);
+                
                 contentDiv.appendChild(table);
             });
         }
@@ -622,6 +625,24 @@
             
             filterData = [...originalFilterData];
             displayFilterData();
+        }
+        
+        function updateTableSortIndicators(table, dateKey) {
+            const sortState = sortStates[dateKey] || {};
+            
+            const headers = table.querySelectorAll('th[data-sort]');
+            headers.forEach(header => {
+                const field = header.getAttribute('data-sort');
+                const indicator = header.querySelector('.sort-indicator');
+                
+                // 清除所有排序指示器
+                indicator.className = 'sort-indicator';
+                
+                // 设置当前排序指示器
+                if (sortState.field === field) {
+                    indicator.className = `sort-indicator sort-${sortState.direction}`;
+                }
+            });
         }
         
         // 页面加载完成后初始化
