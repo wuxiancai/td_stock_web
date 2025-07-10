@@ -258,6 +258,10 @@
                         <div class="info-value" id="amount"></div>
                     </div>
                     <div class="info-item">
+                        <div class="info-label">净流入额</div>
+                        <div class="info-value" id="netMfAmount"></div>
+                    </div>
+                    <div class="info-item">
                         <div class="info-label">换手率</div>
                         <div class="info-value" id="turnoverRate"></div>
                     </div>
@@ -479,6 +483,25 @@
             
             document.getElementById('marketCap').textContent = formatNumber(data.market_cap * 10000);
             document.getElementById('amount').textContent = formatNumber(data.amount * 1000);
+            
+            // 显示净流入额
+            if (data.net_mf_amount !== undefined && data.net_mf_amount !== null) {
+                const netMfAmount = data.net_mf_amount;
+                const netMfElement = document.getElementById('netMfAmount');
+                netMfElement.textContent = netMfAmount.toFixed(2) + '千万元';
+                // 根据正负值设置颜色
+                if (netMfAmount > 0) {
+                    netMfElement.style.color = '#ff4444'; // 红色表示净流入
+                } else if (netMfAmount < 0) {
+                    netMfElement.style.color = '#44aa44'; // 绿色表示净流出
+                } else {
+                    netMfElement.style.color = '#666'; // 灰色表示无变化
+                }
+            } else {
+                document.getElementById('netMfAmount').textContent = '-';
+                document.getElementById('netMfAmount').style.color = '#666';
+            }
+            
             document.getElementById('turnoverRate').textContent = data.turnover_rate.toFixed(2) + '%';
             document.getElementById('peTtm').textContent = (data.pe_ttm && data.pe_ttm > 0) ? data.pe_ttm.toFixed(2) : '-';
             document.getElementById('volumeRatio').textContent = data.volume_ratio.toFixed(2);

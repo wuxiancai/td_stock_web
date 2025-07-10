@@ -363,6 +363,9 @@
                             <th onclick="sortTable('${dateKey}', 'market_cap')" data-sort="market_cap">
                                 市值(亿)<span class="sort-indicator"></span>
                             </th>
+                            <th onclick="sortTable('${dateKey}', 'net_mf_amount')" data-sort="net_mf_amount">
+                                净流入额(千万元)<span class="sort-indicator"></span>
+                            </th>
                             <th onclick="sortTable('${dateKey}', 'nine_turn')" data-sort="nine_turn">
                                 九转<span class="sort-indicator"></span>
                             </th>
@@ -413,6 +416,9 @@
                         <td>${stock.pe_ttm && stock.pe_ttm > 0 ? stock.pe_ttm.toFixed(2) : '-'}</td>
                         <td>${formatNumber((stock.amount || 0) * 1000)}</td>
                         <td>${formatNumber(stock.market_cap || 0)}</td>
+                        <td style="color: ${(stock.net_mf_amount || 0) > 0 ? '#ff4444' : (stock.net_mf_amount || 0) < 0 ? '#44aa44' : '#666'}">
+                            ${stock.net_mf_amount !== undefined && stock.net_mf_amount !== null ? (stock.net_mf_amount).toFixed(2) : '-'}
+                        </td>
                         <td>${nineTurnDisplay}</td>
                         <td>
                             <input type="text" class="note-input" value="${getStockNote(stock.ts_code)}" 
