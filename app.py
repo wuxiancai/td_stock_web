@@ -2242,14 +2242,14 @@ def get_green_filter_stocks():
                 print(f"获取市场 {market} 数据失败: {e}")
                 continue
         
-        # 筛选符合条件的股票：九转买入绿色>9
+        # 筛选符合条件的股票：九转买入绿色=9
         filtered_stocks = []
         for stock in all_stocks:
             try:
                 nine_turn_down = int(stock.get('nine_turn_down', 0))
                 
-                # 筛选条件：九转买入绿色>9
-                if nine_turn_down > 9:
+                # 筛选条件：九转买入绿色=9
+                if nine_turn_down == 9:
                     # 添加筛选日期
                     stock_copy = stock.copy()
                     stock_copy['filter_date'] = datetime.now().strftime('%Y-%m-%d')

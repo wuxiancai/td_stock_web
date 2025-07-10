@@ -316,6 +316,8 @@
                             <th onclick="sortTable('${dateKey}', 'nine_turn')" data-sort="nine_turn">
                                 九转<span class="sort-indicator"></span>
                             </th>
+                            <th>备注</th>
+                            <th>加入自选股</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -359,9 +361,33 @@
                         <td>${(stock.turnover_rate || 0).toFixed(2)}%</td>
                         <td>${(stock.volume_ratio || 0).toFixed(2)}</td>
                         <td>${stock.pe_ttm && stock.pe_ttm > 0 ? stock.pe_ttm.toFixed(2) : '-'}</td>
-                        <td>${((stock.amount || 0) / 10000).toFixed(2)}</td>
-                        <td>${((stock.market_cap || 0) / 10000).toFixed(2)}</td>
+                        <td>${((stock.amount || 0) / 100000000).toFixed(2)}</td>
+                        <td>${((stock.market_cap || 0) / 100000000).toFixed(2)}</td>
                         <td>${nineTurnDisplay}</td>
+                        <td>${stock.remark || '-'}</td>
+                        <td>
+                            <select onchange="addToWatchlistWithPriority('${stock.ts_code}', this.value)" style="
+                                background: linear-gradient(45deg, #ffc107, #fd7e14);
+                                color: #333;
+                                border: none;
+                                padding: 5px 10px;
+                                border-radius: 15px;
+                                cursor: pointer;
+                                font-size: 12px;
+                                font-weight: bold;
+                                transition: all 0.3s ease;
+                                appearance: none;
+                                -webkit-appearance: none;
+                                -moz-appearance: none;
+                            ">
+                                <option value="" disabled selected>⭐</option>
+                                <option value="purple">🟣 可立即买入</option>
+                                <option value="red">🔴 重点关注</option>
+                                <option value="green">🟢 观察</option>
+                                <option value="holding">🟠 持仓中</option>
+                                <option value="sold">⚫ 已卖出</option>
+                            </select>
+                        </td>
                     `;
                     
                     tbody.appendChild(row);
@@ -432,6 +458,32 @@
         
         function viewStock(tsCode) {
             window.open(`/stock/${tsCode}`, '_blank');
+        }
+        
+        function addToWatchlistWithPriority(tsCode, priority) {
+            if (!priority) return;
+            
+            fetch('/api/watchlist/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ts_code: tsCode,
+                    priority: priority
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`股票 ${tsCode} 已成功加入自选股！`);
+                } else {
+                    alert(`加入自选股失败: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                alert(`加入自选股失败: ${error.message}`);
+            });
         }
         
         function goBack() {
