@@ -1233,7 +1233,7 @@ def auto_filter_stocks():
         
         for market in markets:
             try:
-                market_data = cache_manager.get_cache(market)
+                market_data = cache_manager.load_cache_data(market)
                 if market_data and 'stocks' in market_data:
                     all_stocks.extend(market_data['stocks'])
             except Exception as e:
@@ -2156,7 +2156,7 @@ def get_red_filter_stocks():
         
         for market in markets:
             try:
-                market_data = cache_manager.get_cache(market)
+                market_data = cache_manager.load_cache_data(market)
                 if market_data and 'stocks' in market_data:
                     all_stocks.extend(market_data['stocks'])
             except Exception as e:
@@ -2235,7 +2235,7 @@ def get_green_filter_stocks():
         
         for market in markets:
             try:
-                market_data = cache_manager.get_cache(market)
+                market_data = cache_manager.load_cache_data(market)
                 if market_data and 'stocks' in market_data:
                     all_stocks.extend(market_data['stocks'])
             except Exception as e:
@@ -2292,13 +2292,10 @@ if __name__ == '__main__':
         app.run(debug=debug_mode, host=host, port=port)
     except Exception as e:
         print(f"服务器启动失败: {e}")
-        # 如果指定端口失败，尝试查找可用端口（仅在开发模式下）
-        if debug_mode:
-            available_port = find_available_port()
-            if available_port:
-                print(f"尝试使用可用端口: {available_port}")
-                app.run(debug=debug_mode, host=host, port=available_port)
-            else:
-                print("无法找到可用端口")
+        # 尝试查找可用端口
+        available_port = find_available_port()
+        if available_port:
+            print(f"尝试使用可用端口: {available_port}")
+            app.run(debug=debug_mode, host=host, port=available_port)
         else:
-            raise
+            print("无法找到可用端口")
