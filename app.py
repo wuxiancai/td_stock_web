@@ -158,6 +158,92 @@ def get_trading_days_between(start_date, end_date):
 # 全局变量存储更新状态
 update_status = {}
 
+def get_real_time_stock_data(ts_code, name, industry, current_date):
+    """获取单只股票的实时数据"""
+    def safe_float(value, default=0.0):
+        try:
+            if value is None or pd.isna(value):
+                return default
+            return float(value)
+        except (ValueError, TypeError):
+            return default
+    
+    # 初始化股票信息
+    stock_info = {
+        'ts_code': ts_code,
+        'name': name,
+        'industry': industry,
+        'latest_price': 0,
+        'pct_chg': 0,
+        'turnover_rate': 0,
+        'volume_ratio': 0,
+        'amount': 0,
+        'market_cap': 0,
+        'pe_ttm': 0,
+        'nine_turn_up': 0,
+        'nine_turn_down': 0,
+        'countdown_up': 0,
+        'countdown_down': 0,
+        'last_update': current_date,
+        'data_loaded': True
+    }
+    
+    try:
+        # 获取最新价格和基本面数据
+        latest_data = safe_tushare_call(pro.daily, ts_code=ts_code, limit=1)
+        daily_basic = safe_tushare_call(pro.daily_basic, ts_code=ts_code, limit=1)
+        
+        # 获取最近30天的K线数据用于计算九转序列
+        end_date = datetime.now().strftime('%Y%m%d')
+        start_date = (datetime.now() - timedelta(days=45)).strftime('%Y%m%d')
+        kline_data = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
+        
+        # 更新实时数据
+        if not latest_data.empty:
+            current_close = safe_float(latest_data.iloc[0]['close'])
+            stock_info['latest_price'] = current_close
+            stock_info['amount'] = safe_float(latest_data.iloc[0]['amount'])
+            
+            # 计算当天涨幅
+            if 'pct_chg' in latest_data.columns and not pd.isna(latest_data.iloc[0]['pct_chg']):
+                stock_info['pct_chg'] = safe_float(latest_data.iloc[0]['pct_chg'])
+            else:
+                # 尝试从K线数据计算涨幅
+                if not kline_data.empty and len(kline_data) >= 2:
+                    kline_sorted = kline_data.sort_values('trade_date')
+                    if len(kline_sorted) >= 2:
+                        yesterday_close = safe_float(kline_sorted.iloc[-2]['close'])
+                        if yesterday_close > 0:
+                            stock_info['pct_chg'] = ((current_close - yesterday_close) / yesterday_close) * 100
+        
+        # 更新财务数据
+        if not daily_basic.empty:
+            if 'turnover_rate' in daily_basic.columns:
+                stock_info['turnover_rate'] = safe_float(daily_basic.iloc[0]['turnover_rate'])
+            if 'volume_ratio' in daily_basic.columns:
+                stock_info['volume_ratio'] = safe_float(daily_basic.iloc[0]['volume_ratio'])
+            if 'total_mv' in daily_basic.columns:
+                stock_info['market_cap'] = safe_float(daily_basic.iloc[0]['total_mv'])
+            if 'pe_ttm' in daily_basic.columns:
+                stock_info['pe_ttm'] = safe_float(daily_basic.iloc[0]['pe_ttm'])
+        
+        # 计算九转序列
+        if not kline_data.empty and len(kline_data) >= 5:
+            kline_data = kline_data.sort_values('trade_date')
+            kline_with_nine_turn = calculate_nine_turn(kline_data)
+            # 获取最新一天的九转序列数据
+            latest_nine_turn = kline_with_nine_turn.iloc[-1]
+            stock_info['nine_turn_up'] = int(latest_nine_turn['nine_turn_up']) if latest_nine_turn['nine_turn_up'] > 0 else 0
+            stock_info['nine_turn_down'] = int(latest_nine_turn['nine_turn_down']) if latest_nine_turn['nine_turn_down'] > 0 else 0
+            stock_info['countdown_up'] = int(latest_nine_turn['countdown_up']) if latest_nine_turn['countdown_up'] > 0 else 0
+            stock_info['countdown_down'] = int(latest_nine_turn['countdown_down']) if latest_nine_turn['countdown_down'] > 0 else 0
+        
+    except Exception as e:
+        print(f"获取{ts_code}实时数据失败: {e}")
+        stock_info['data_loaded'] = False
+    
+    return stock_info
+
 def update_stock_data_progressive(market, stocks_list):
     """渐进式更新股票数据，逐个获取并立即保存"""
     def safe_float(value, default=0.0):
@@ -961,23 +1047,15 @@ def get_stocks_by_market(market):
                     stock_info['last_update'] = current_date
                     stock_info['data_loaded'] = False  # 标记需要重新加载实时数据
                 
-                # 保存基本信息到缓存
+                # 保存实时数据到缓存
                 cache_data = {
                     'stocks': all_stocks_data,
                     'last_update_date': current_date,
                     'total': len(all_stocks_data),
-                    'data_status': 'basic_only'  # 标记为仅基本信息
+                    'data_status': 'complete'  # 标记为完整数据
                 }
                 save_cache_data(market, cache_data)
-                
-                # 启动后台线程进行渐进式数据更新
-                update_thread = threading.Thread(
-                    target=update_stock_data_progressive, 
-                    args=(market, all_stocks_data),
-                    daemon=True
-                )
-                update_thread.start()
-                print(f"已启动后台线程更新{market}市场实时数据")
+                print(f"已保存{market}市场实时数据到缓存")
             else:
                 # 只有在没有缓存时才调用API获取股票列表
                 print(f"缓存中无{market}市场数据，从API获取股票列表")
@@ -1001,32 +1079,20 @@ def get_stocks_by_market(market):
                 
                 print(f"开始获取{len(stocks)}只{market}股票的数据...")
                 
-                # 先返回基本信息，避免长时间等待
+                # 获取真实的实时数据，确保首页显示准确信息
                 all_stocks_data = []
                 for i, (_, stock) in enumerate(stocks.iterrows()):
-                    # 先添加基本信息
-                    stock_info = {
-                        'ts_code': stock['ts_code'],
-                        'name': stock['name'],
-                        'industry': stock['industry'],
-                        'latest_price': 0,
-                        'pct_chg': 0,  # 添加当天涨幅字段
-                        'turnover_rate': 0,
-                        'volume_ratio': 0,
-                        'amount': 0,
-                        'market_cap': 0,
-                        'pe_ttm': 0,
-                        'nine_turn_up': 0,
-                        'nine_turn_down': 0,
-                        'last_update': current_date
-                    }
+                    print(f"正在获取 {stock['ts_code']} 的实时数据 ({i+1}/{len(stocks)})")
+                    
+                    # 获取实时数据
+                    stock_info = get_real_time_stock_data(stock['ts_code'], stock['name'], stock['industry'], current_date)
                     all_stocks_data.append(stock_info)
                     
                     # 每处理10只股票打印一次进度
                     if (i + 1) % 10 == 0:
                         print(f"已处理 {i + 1}/{len(stocks)} 只股票")
                 
-                print(f"完成{market}市场基本信息获取，共{len(all_stocks_data)}只股票")
+                print(f"完成{market}市场实时数据获取，共{len(all_stocks_data)}只股票")
                 
                 # 保存基本信息到缓存
                 cache_data = {
@@ -1117,40 +1183,22 @@ def force_refresh_market(market):
         
         print(f"开始强制刷新{len(stocks)}只{market}股票的数据...")
         
-        # 创建基本信息
+        # 获取真实的实时数据
         all_stocks_data = []
-        for _, stock in stocks.iterrows():
-            stock_info = {
-                'ts_code': stock['ts_code'],
-                'name': stock['name'],
-                'industry': stock['industry'],
-                'latest_price': 0,
-                'turnover_rate': 0,
-                'volume_ratio': 0,
-                'amount': 0,
-                'market_cap': 0,
-                'pe_ttm': 0,
-                'last_update': current_date
-            }
+        for i, (_, stock) in enumerate(stocks.iterrows()):
+            print(f"正在强制刷新 {stock['ts_code']} 的实时数据 ({i+1}/{len(stocks)})")
+            stock_info = get_real_time_stock_data(stock['ts_code'], stock['name'], stock['industry'], current_date)
             all_stocks_data.append(stock_info)
         
-        # 保存基本信息到缓存
+        # 保存实时数据到缓存
         cache_data = {
             'stocks': all_stocks_data,
             'last_update_date': current_date,
             'total': len(all_stocks_data),
-            'data_status': 'basic_only'
+            'data_status': 'complete'
         }
         save_cache_data(market, cache_data)
-        
-        # 启动后台线程进行渐进式数据更新
-        update_thread = threading.Thread(
-            target=update_stock_data_progressive, 
-            args=(market, all_stocks_data),
-            daemon=True
-        )
-        update_thread.start()
-        print(f"已启动后台线程更新{market}市场实时数据")
+        print(f"已保存{market}市场实时数据到缓存")
         
         return jsonify({
             'success': True, 

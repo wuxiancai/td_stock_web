@@ -429,6 +429,14 @@
                             <input type="number" id="nineTurnDownMax" placeholder="最大" style="width: 60px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" min="1" max="9" step="1">
                         </div>
                     </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 10px; color: #6c757d;">九转买入 - 蓝色(下跌)</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="nineTurnBlueMin" placeholder="最小" style="width: 60px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" min="1" max="13" step="1">
+                            <span style="color: #6c757d;">-</span>
+                            <input type="number" id="nineTurnBlueMax" placeholder="最大" style="width: 60px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" min="1" max="13" step="1">
+                        </div>
+                    </div>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="applyFilters()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">应用筛选</button>
                         <button onclick="clearFilters()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">清除筛选</button>
@@ -560,7 +568,7 @@
                     // 显示筛选控件
                     document.getElementById('filterSection').style.display = 'block';
                     
-                    // 如果数据状态是updating，启动或继续渐进式加载
+                    // 检查数据状态
                     if (data.data_status === 'updating' || data.data_status === 'basic_only') {
                         // 如果已经在监控同一个市场的进度，不要重新启动
                         if (progressInterval && currentMarket === market) {
@@ -575,10 +583,15 @@
                             // 启动新的渐进式加载
                             startProgressiveLoading(market, filteredStocks);
                         }
+                    } else if (data.data_status === 'no_cache') {
+                        // 显示无缓存提示
+                        showError(data.message || '暂无缓存数据，请点击"立即同步"按钮获取最新数据');
                     } else {
                         // 直接显示完整数据
                         displayStocks(filteredStocks);
-                        displayPagination(data.current_page, data.pages);
+                        if (data.pages > 1) {
+                            displayPagination(data.current_page, data.pages);
+                        }
                     }
                 })
                 .catch(error => {
@@ -696,11 +709,13 @@
                 
                 // 九转序列显示逻辑
                 let nineTurnDisplay = '-';
-                if (hasRealTimeData && (stock.nine_turn_up || stock.nine_turn_down)) {
+                if (hasRealTimeData && (stock.nine_turn_up || stock.nine_turn_down || stock.countdown_down)) {
                     if (stock.nine_turn_up && stock.nine_turn_up > 0) {
                         nineTurnDisplay = `<span style="color: red; font-weight: bold;">${stock.nine_turn_up}</span>`;
                     } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
                         nineTurnDisplay = `<span style="color: green; font-weight: bold;">${stock.nine_turn_down}</span>`;
+                    } else if (stock.countdown_down && stock.countdown_down > 0) {
+                        nineTurnDisplay = `<span style="color: blue; font-weight: bold;">${stock.countdown_down}</span>`;
                     }
                 }
                 
@@ -740,11 +755,13 @@
                 
                 // 九转序列显示逻辑
                 let nineTurnDisplay = '-';
-                if (stock.nine_turn_up || stock.nine_turn_down) {
+                if (stock.nine_turn_up || stock.nine_turn_down || stock.countdown_down) {
                     if (stock.nine_turn_up && stock.nine_turn_up > 0) {
                         nineTurnDisplay = `<span style="color: red; font-weight: bold;">${stock.nine_turn_up}</span>`;
                     } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
                         nineTurnDisplay = `<span style="color: green; font-weight: bold;">${stock.nine_turn_down}</span>`;
+                    } else if (stock.countdown_down && stock.countdown_down > 0) {
+                        nineTurnDisplay = `<span style="color: blue; font-weight: bold;">${stock.countdown_down}</span>`;
                     }
                 }
                 
@@ -899,6 +916,8 @@
             const nineTurnUpMax = parseInt(document.getElementById('nineTurnUpMax').value) || 9;
             const nineTurnDownMin = parseInt(document.getElementById('nineTurnDownMin').value) || 0;
             const nineTurnDownMax = parseInt(document.getElementById('nineTurnDownMax').value) || 9;
+            const nineTurnBlueMin = parseInt(document.getElementById('nineTurnBlueMin').value) || 0;
+            const nineTurnBlueMax = parseInt(document.getElementById('nineTurnBlueMax').value) || 13;
             
             filteredStocks = allStocks.filter(stock => {
                 // 只对有实时数据的股票进行筛选
@@ -916,10 +935,11 @@
                 }
                 
                 // 九转序列筛选
-                const hasNineTurnFilter = nineTurnUpMin > 0 || nineTurnUpMax < 9 || nineTurnDownMin > 0 || nineTurnDownMax < 9;
+                const hasNineTurnFilter = nineTurnUpMin > 0 || nineTurnUpMax < 9 || nineTurnDownMin > 0 || nineTurnDownMax < 9 || nineTurnBlueMin > 0 || nineTurnBlueMax < 13;
                 if (hasNineTurnFilter) {
                     const upValue = stock.nine_turn_up || 0;
                     const downValue = stock.nine_turn_down || 0;
+                    const blueValue = stock.countdown_down || 0;
                     
                     // 检查是否满足红色(上涨)筛选条件
                     const upInRange = (nineTurnUpMin === 0 && nineTurnUpMax === 9) || 
@@ -929,17 +949,28 @@
                     const downInRange = (nineTurnDownMin === 0 && nineTurnDownMax === 9) || 
                                        (downValue >= nineTurnDownMin && downValue <= nineTurnDownMax && downValue > 0);
                     
-                    // 如果设置了红色筛选条件但没有设置绿色筛选条件
-                    if ((nineTurnUpMin > 0 || nineTurnUpMax < 9) && nineTurnDownMin === 0 && nineTurnDownMax === 9) {
+                    // 检查是否满足蓝色筛选条件
+                    const blueInRange = (nineTurnBlueMin === 0 && nineTurnBlueMax === 13) || 
+                                       (blueValue >= nineTurnBlueMin && blueValue <= nineTurnBlueMax && blueValue > 0);
+                    
+                    // 统计设置了哪些筛选条件
+                    const hasUpFilter = nineTurnUpMin > 0 || nineTurnUpMax < 9;
+                    const hasDownFilter = nineTurnDownMin > 0 || nineTurnDownMax < 9;
+                    const hasBlueFilter = nineTurnBlueMin > 0 || nineTurnBlueMax < 13;
+                    
+                    // 如果只设置了一种筛选条件
+                    if (hasUpFilter && !hasDownFilter && !hasBlueFilter) {
                         if (!upInRange) return false;
                     }
-                    // 如果设置了绿色筛选条件但没有设置红色筛选条件
-                    else if ((nineTurnDownMin > 0 || nineTurnDownMax < 9) && nineTurnUpMin === 0 && nineTurnUpMax === 9) {
+                    else if (!hasUpFilter && hasDownFilter && !hasBlueFilter) {
                         if (!downInRange) return false;
                     }
-                    // 如果同时设置了红色和绿色筛选条件，满足任一即可
-                    else if ((nineTurnUpMin > 0 || nineTurnUpMax < 9) && (nineTurnDownMin > 0 || nineTurnDownMax < 9)) {
-                        if (!upInRange && !downInRange) return false;
+                    else if (!hasUpFilter && !hasDownFilter && hasBlueFilter) {
+                        if (!blueInRange) return false;
+                    }
+                    // 如果设置了多种筛选条件，满足任一即可
+                    else if (hasUpFilter || hasDownFilter || hasBlueFilter) {
+                        if (!upInRange && !downInRange && !blueInRange) return false;
                     }
                 }
                 
@@ -975,6 +1006,8 @@
              document.getElementById('nineTurnUpMax').value = '';
              document.getElementById('nineTurnDownMin').value = '';
              document.getElementById('nineTurnDownMax').value = '';
+             document.getElementById('nineTurnBlueMin').value = '';
+             document.getElementById('nineTurnBlueMax').value = '';
              
              // 重置筛选结果
              filteredStocks = [...allStocks];
@@ -1007,9 +1040,11 @@
              const nineTurnUpMax = parseInt(document.getElementById('nineTurnUpMax').value) || 9;
              const nineTurnDownMin = parseInt(document.getElementById('nineTurnDownMin').value) || 0;
              const nineTurnDownMax = parseInt(document.getElementById('nineTurnDownMax').value) || 9;
+             const nineTurnBlueMin = parseInt(document.getElementById('nineTurnBlueMin').value) || 0;
+             const nineTurnBlueMax = parseInt(document.getElementById('nineTurnBlueMax').value) || 13;
              
              // 如果没有设置任何筛选条件，直接返回所有数据
-             const hasNineTurnFilter = nineTurnUpMin > 0 || nineTurnUpMax < 9 || nineTurnDownMin > 0 || nineTurnDownMax < 9;
+             const hasNineTurnFilter = nineTurnUpMin > 0 || nineTurnUpMax < 9 || nineTurnDownMin > 0 || nineTurnDownMax < 9 || nineTurnBlueMin > 0 || nineTurnBlueMax < 13;
              if (turnoverMin === 0 && turnoverMax === Infinity && 
                  volumeRatioMin === 0 && volumeRatioMax === Infinity && 
                  !hasNineTurnFilter) {
@@ -1036,6 +1071,7 @@
                  if (hasNineTurnFilter) {
                      const upValue = stock.nine_turn_up || 0;
                      const downValue = stock.nine_turn_down || 0;
+                     const blueValue = stock.countdown_down || 0;
                      
                      // 检查是否满足红色(上涨)筛选条件
                      const upInRange = (nineTurnUpMin === 0 && nineTurnUpMax === 9) || 
@@ -1045,17 +1081,28 @@
                      const downInRange = (nineTurnDownMin === 0 && nineTurnDownMax === 9) || 
                                         (downValue >= nineTurnDownMin && downValue <= nineTurnDownMax && downValue > 0);
                      
-                     // 如果设置了红色筛选条件但没有设置绿色筛选条件
-                     if ((nineTurnUpMin > 0 || nineTurnUpMax < 9) && nineTurnDownMin === 0 && nineTurnDownMax === 9) {
+                     // 检查是否满足蓝色筛选条件
+                     const blueInRange = (nineTurnBlueMin === 0 && nineTurnBlueMax === 13) || 
+                                        (blueValue >= nineTurnBlueMin && blueValue <= nineTurnBlueMax && blueValue > 0);
+                     
+                     // 统计设置了哪些筛选条件
+                     const hasUpFilter = nineTurnUpMin > 0 || nineTurnUpMax < 9;
+                     const hasDownFilter = nineTurnDownMin > 0 || nineTurnDownMax < 9;
+                     const hasBlueFilter = nineTurnBlueMin > 0 || nineTurnBlueMax < 13;
+                     
+                     // 如果只设置了一种筛选条件
+                     if (hasUpFilter && !hasDownFilter && !hasBlueFilter) {
                          if (!upInRange) return false;
                      }
-                     // 如果设置了绿色筛选条件但没有设置红色筛选条件
-                     else if ((nineTurnDownMin > 0 || nineTurnDownMax < 9) && nineTurnUpMin === 0 && nineTurnUpMax === 9) {
+                     else if (!hasUpFilter && hasDownFilter && !hasBlueFilter) {
                          if (!downInRange) return false;
                      }
-                     // 如果同时设置了红色和绿色筛选条件，满足任一即可
-                     else if ((nineTurnUpMin > 0 || nineTurnUpMax < 9) && (nineTurnDownMin > 0 || nineTurnDownMax < 9)) {
-                         if (!upInRange && !downInRange) return false;
+                     else if (!hasUpFilter && !hasDownFilter && hasBlueFilter) {
+                         if (!blueInRange) return false;
+                     }
+                     // 如果设置了多种筛选条件，满足任一即可
+                     else if (hasUpFilter || hasDownFilter || hasBlueFilter) {
+                         if (!upInRange && !downInRange && !blueInRange) return false;
                      }
                  }
                  
