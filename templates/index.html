@@ -831,27 +831,30 @@
                 };
                 document.getElementById('sectionTitle').textContent = marketNames[currentMarket] + '股票列表 (强制刷新中...)';
                 
-                // 发起强制刷新请求
-                fetch(`/api/stocks/${currentMarket}?page=${currentPage}&force_refresh=true`)
+                // 调用真正的强制刷新API - 删除缓存并重新初始化
+                fetch(`/api/force_refresh/${currentMarket}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
                     .then(response => response.json())
                     .then(data => {
-                        document.getElementById('loadingDiv').style.display = 'none';
-                        
                         if (data.error) {
+                            document.getElementById('loadingDiv').style.display = 'none';
                             showError(data.error);
                             return;
                         }
                         
-                        // 更新标题
-                        document.getElementById('sectionTitle').textContent = marketNames[currentMarket] + '股票列表';
-                        
-                        // 如果数据状态是updating，启动渐进式加载
-                        if (data.data_status === 'updating' || data.data_status === 'basic_only') {
-                            startProgressiveLoading(currentMarket, data.stocks);
+                        if (data.success) {
+                            // 强制刷新成功，现在重新加载数据
+                            console.log(`${marketNames[currentMarket]}缓存已清除，开始重新加载数据...`);
+                            
+                            // 重新加载市场数据
+                            loadMarketStocks(currentMarket, 1);
                         } else {
-                            // 直接显示完整数据
-                            displayStocks(data.stocks);
-                            displayPagination(data.current_page, data.pages);
+                            document.getElementById('loadingDiv').style.display = 'none';
+                            showError('强制刷新失败: ' + (data.message || '未知错误'));
                         }
                     })
                     .catch(error => {
