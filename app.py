@@ -1193,27 +1193,67 @@ def force_refresh_market(market):
         
         print(f"开始强制刷新{len(stocks)}只{market}股票的数据...")
         
-        # 获取真实的实时数据
-        all_stocks_data = []
-        for i, (_, stock) in enumerate(stocks.iterrows()):
-            print(f"正在强制刷新 {stock['ts_code']} 的实时数据 ({i+1}/{len(stocks)})")
-            stock_info = get_real_time_stock_data(stock['ts_code'], stock['name'], stock['industry'], current_date)
-            all_stocks_data.append(stock_info)
+        # 在后台线程中异步执行强制刷新
+        def force_refresh_worker():
+            try:
+                # 设置更新状态
+                update_status[market] = {
+                    'status': 'updating',
+                    'completed': 0,
+                    'total': len(stocks),
+                    'current_stock': ''
+                }
+                
+                # 获取真实的实时数据
+                all_stocks_data = []
+                for i, (_, stock) in enumerate(stocks.iterrows()):
+                    # 检查是否被取消
+                    if market in update_status and update_status[market].get('status') == 'cancelled':
+                        print(f"{market}市场强制刷新被取消")
+                        return
+                    
+                    print(f"正在强制刷新 {stock['ts_code']} 的实时数据 ({i+1}/{len(stocks)})")
+                    
+                    # 更新进度
+                    update_status[market].update({
+                        'completed': i + 1,
+                        'current_stock': stock['ts_code']
+                    })
+                    
+                    stock_info = get_real_time_stock_data(stock['ts_code'], stock['name'], stock['industry'], current_date)
+                    all_stocks_data.append(stock_info)
+                
+                # 保存实时数据到缓存
+                cache_data = {
+                    'stocks': all_stocks_data,
+                    'last_update_date': current_date,
+                    'total': len(all_stocks_data),
+                    'data_status': 'complete'
+                }
+                save_cache_data(market, cache_data)
+                print(f"已保存{market}市场实时数据到缓存")
+                
+                # 更新状态为完成
+                update_status[market] = {
+                    'status': 'completed',
+                    'completed': len(all_stocks_data),
+                    'total': len(all_stocks_data)
+                }
+                
+            except Exception as e:
+                print(f"强制刷新{market}市场数据失败: {e}")
+                if market in update_status:
+                    update_status[market]['status'] = 'error'
         
-        # 保存实时数据到缓存
-        cache_data = {
-            'stocks': all_stocks_data,
-            'last_update_date': current_date,
-            'total': len(all_stocks_data),
-            'data_status': 'complete'
-        }
-        save_cache_data(market, cache_data)
-        print(f"已保存{market}市场实时数据到缓存")
+        # 启动后台线程
+        refresh_thread = threading.Thread(target=force_refresh_worker, daemon=True)
+        refresh_thread.start()
         
+        # 立即返回响应
         return jsonify({
             'success': True, 
-            'message': f'{market}市场数据刷新已启动',
-            'total_stocks': len(all_stocks_data)
+            'message': f'{market}市场数据强制刷新已启动，正在后台处理...',
+            'total_stocks': len(stocks)
         })
         
     except Exception as e:

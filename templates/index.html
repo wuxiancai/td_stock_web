@@ -838,7 +838,23 @@
                         'Content-Type': 'application/json'
                     }
                 })
-                    .then(response => response.json())
+                    .then(response => {
+                        // 检查响应状态
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        // 检查响应类型
+                        const contentType = response.headers.get('content-type');
+                        if (!contentType || !contentType.includes('application/json')) {
+                            // 如果不是JSON响应，尝试获取文本内容
+                            return response.text().then(text => {
+                                throw new Error(`服务器返回了非JSON响应: ${text.substring(0, 200)}...`);
+                            });
+                        }
+                        
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.error) {
                             document.getElementById('loadingDiv').style.display = 'none';
