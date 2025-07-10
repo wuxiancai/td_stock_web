@@ -770,6 +770,16 @@ def cache_monitor():
     """缓存系统监控页面"""
     return render_template('cache_monitor.html')
 
+@app.route('/red-filter')
+def red_filter():
+    """红 5-6 筛选页面"""
+    return render_template('red_filter.html')
+
+@app.route('/green-filter')
+def green_filter():
+    """绿 9 筛选页面"""
+    return render_template('green_filter.html')
+
 @app.route('/api/stock/<stock_code>')
 def get_stock_data(stock_code):
     try:
@@ -1211,6 +1221,103 @@ def force_refresh_market(market):
         return jsonify({'error': str(e)}), 500
 
 # 定时任务功能
+def auto_filter_stocks():
+    """自动筛选符合条件的股票并保存结果"""
+    try:
+        now = datetime.now()
+        print(f"开始自动筛选股票 - {now.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # 从缓存中获取所有市场的股票数据
+        all_stocks = []
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        
+        for market in markets:
+            try:
+                market_data = cache_manager.get_cache(market)
+                if market_data and 'stocks' in market_data:
+                    all_stocks.extend(market_data['stocks'])
+            except Exception as e:
+                print(f"获取市场 {market} 数据失败: {e}")
+                continue
+        
+        if not all_stocks:
+            print("没有可用的股票数据进行筛选")
+            return
+        
+        # 筛选红 5-6 股票
+        red_filtered_stocks = []
+        for stock in all_stocks:
+            try:
+                turnover_rate = float(stock.get('turnover_rate', 0))
+                volume_ratio = float(stock.get('volume_ratio', 0))
+                nine_turn_up = int(stock.get('nine_turn_up', 0))
+                
+                if (turnover_rate > 2 and 
+                    volume_ratio > 1 and 
+                    5 <= nine_turn_up <= 6):
+                    
+                    stock_copy = stock.copy()
+                    stock_copy['filter_date'] = now.strftime('%Y-%m-%d')
+                    stock_copy['filter_time'] = now.strftime('%H:%M:%S')
+                    red_filtered_stocks.append(stock_copy)
+                    
+            except (ValueError, TypeError):
+                continue
+        
+        # 筛选绿 9 股票
+        green_filtered_stocks = []
+        for stock in all_stocks:
+            try:
+                nine_turn_down = int(stock.get('nine_turn_down', 0))
+                
+                if nine_turn_down > 9:
+                    stock_copy = stock.copy()
+                    stock_copy['filter_date'] = now.strftime('%Y-%m-%d')
+                    stock_copy['filter_time'] = now.strftime('%H:%M:%S')
+                    green_filtered_stocks.append(stock_copy)
+                    
+            except (ValueError, TypeError):
+                continue
+        
+        # 排序
+        red_filtered_stocks.sort(key=lambda x: (x.get('nine_turn_up', 0), x.get('turnover_rate', 0)), reverse=True)
+        green_filtered_stocks.sort(key=lambda x: x.get('nine_turn_down', 0), reverse=True)
+        
+        # 保存筛选结果到文件
+        cache_dir = 'cache'
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+        
+        # 保存红色筛选结果
+        red_filter_file = os.path.join(cache_dir, 'red_filter_results.json')
+        red_filter_data = {
+            'filter_time': now.isoformat(),
+            'filter_date': now.strftime('%Y-%m-%d'),
+            'total': len(red_filtered_stocks),
+            'stocks': red_filtered_stocks
+        }
+        
+        with open(red_filter_file, 'w', encoding='utf-8') as f:
+            json.dump(red_filter_data, f, ensure_ascii=False, indent=2)
+        
+        # 保存绿色筛选结果
+        green_filter_file = os.path.join(cache_dir, 'green_filter_results.json')
+        green_filter_data = {
+            'filter_time': now.isoformat(),
+            'filter_date': now.strftime('%Y-%m-%d'),
+            'total': len(green_filtered_stocks),
+            'stocks': green_filtered_stocks
+        }
+        
+        with open(green_filter_file, 'w', encoding='utf-8') as f:
+            json.dump(green_filter_data, f, ensure_ascii=False, indent=2)
+        
+        print(f"自动筛选完成 - 红色筛选: {len(red_filtered_stocks)}只, 绿色筛选: {len(green_filtered_stocks)}只")
+        print(f"筛选结果已保存到: {red_filter_file} 和 {green_filter_file}")
+        
+    except Exception as e:
+        print(f"自动筛选任务执行失败: {e}")
+
 def auto_sync_all_markets():
     """自动同步所有A股市场数据"""
     try:
@@ -1320,14 +1427,18 @@ def auto_sync_all_markets():
 
 def start_scheduler():
     """启动定时调度器"""
-    # 设置定时任务：工作日下午5点执行
+    # 设置定时任务：工作日下午5点执行数据同步
     schedule.every().monday.at("17:00").do(auto_sync_all_markets)
     schedule.every().tuesday.at("17:00").do(auto_sync_all_markets)
     schedule.every().wednesday.at("17:00").do(auto_sync_all_markets)
     schedule.every().thursday.at("17:00").do(auto_sync_all_markets)
     schedule.every().friday.at("17:00").do(auto_sync_all_markets)
     
+    # 设置定时任务：每天晚上6点执行股票筛选
+    schedule.every().day.at("18:00").do(auto_filter_stocks)
+    
     print("定时任务已设置：工作日下午5点自动同步所有A股数据")
+    print("定时任务已设置：每天晚上6点自动筛选符合条件的股票")
     
     # 在后台线程中运行调度器
     def run_scheduler():
@@ -1371,6 +1482,24 @@ def trigger_auto_sync():
         return jsonify({
             'status': 'success',
             'message': '手动同步任务已启动'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/scheduler/trigger_filter', methods=['POST'])
+def trigger_auto_filter():
+    """手动触发自动筛选任务"""
+    try:
+        # 在后台线程中执行筛选任务
+        filter_thread = threading.Thread(target=auto_filter_stocks, daemon=True)
+        filter_thread.start()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '手动筛选任务已启动'
         })
     except Exception as e:
         return jsonify({
@@ -1987,6 +2116,159 @@ def clear_cache():
             'success': True,
             'message': f'缓存清理完成: {market or "全部"}'
         })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/red-filter')
+def get_red_filter_stocks():
+    """获取红 5-6 筛选的股票数据"""
+    try:
+        # 优先从保存的文件中读取数据
+        cache_dir = 'cache'
+        red_filter_file = os.path.join(cache_dir, 'red_filter_results.json')
+        
+        if os.path.exists(red_filter_file):
+            try:
+                with open(red_filter_file, 'r', encoding='utf-8') as f:
+                    saved_data = json.load(f)
+                
+                # 检查数据是否是今天的
+                filter_date = saved_data.get('filter_date')
+                today = datetime.now().strftime('%Y-%m-%d')
+                
+                if filter_date == today:
+                    return jsonify({
+                        'success': True,
+                        'data': saved_data.get('stocks', []),
+                        'total': saved_data.get('total', 0),
+                        'filter_time': saved_data.get('filter_time'),
+                        'data_source': 'cached'
+                    })
+            except Exception as e:
+                print(f"读取保存的红色筛选数据失败: {e}")
+        
+        # 如果没有保存的数据或数据过期，进行实时筛选
+        all_stocks = []
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        
+        for market in markets:
+            try:
+                market_data = cache_manager.get_cache(market)
+                if market_data and 'stocks' in market_data:
+                    all_stocks.extend(market_data['stocks'])
+            except Exception as e:
+                print(f"获取市场 {market} 数据失败: {e}")
+                continue
+        
+        # 筛选符合条件的股票：换手率>2，量比>1，九转买入红色5-6
+        filtered_stocks = []
+        for stock in all_stocks:
+            try:
+                turnover_rate = float(stock.get('turnover_rate', 0))
+                volume_ratio = float(stock.get('volume_ratio', 0))
+                nine_turn_up = int(stock.get('nine_turn_up', 0))
+                
+                # 筛选条件：换手率>2，量比>1，九转买入红色5-6
+                if (turnover_rate > 2 and 
+                    volume_ratio > 1 and 
+                    5 <= nine_turn_up <= 6):
+                    
+                    # 添加筛选日期
+                    stock_copy = stock.copy()
+                    stock_copy['filter_date'] = datetime.now().strftime('%Y-%m-%d')
+                    filtered_stocks.append(stock_copy)
+                    
+            except (ValueError, TypeError) as e:
+                continue
+        
+        # 按九转序列和换手率排序
+        filtered_stocks.sort(key=lambda x: (x.get('nine_turn_up', 0), x.get('turnover_rate', 0)), reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'data': filtered_stocks,
+            'total': len(filtered_stocks),
+            'filter_time': datetime.now().isoformat(),
+            'data_source': 'realtime'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/green-filter')
+def get_green_filter_stocks():
+    """获取绿 9 筛选的股票数据"""
+    try:
+        # 优先从保存的文件中读取数据
+        cache_dir = 'cache'
+        green_filter_file = os.path.join(cache_dir, 'green_filter_results.json')
+        
+        if os.path.exists(green_filter_file):
+            try:
+                with open(green_filter_file, 'r', encoding='utf-8') as f:
+                    saved_data = json.load(f)
+                
+                # 检查数据是否是今天的
+                filter_date = saved_data.get('filter_date')
+                today = datetime.now().strftime('%Y-%m-%d')
+                
+                if filter_date == today:
+                    return jsonify({
+                        'success': True,
+                        'data': saved_data.get('stocks', []),
+                        'total': saved_data.get('total', 0),
+                        'filter_time': saved_data.get('filter_time'),
+                        'data_source': 'cached'
+                    })
+            except Exception as e:
+                print(f"读取保存的绿色筛选数据失败: {e}")
+        
+        # 如果没有保存的数据或数据过期，进行实时筛选
+        all_stocks = []
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        
+        for market in markets:
+            try:
+                market_data = cache_manager.get_cache(market)
+                if market_data and 'stocks' in market_data:
+                    all_stocks.extend(market_data['stocks'])
+            except Exception as e:
+                print(f"获取市场 {market} 数据失败: {e}")
+                continue
+        
+        # 筛选符合条件的股票：九转买入绿色>9
+        filtered_stocks = []
+        for stock in all_stocks:
+            try:
+                nine_turn_down = int(stock.get('nine_turn_down', 0))
+                
+                # 筛选条件：九转买入绿色>9
+                if nine_turn_down > 9:
+                    # 添加筛选日期
+                    stock_copy = stock.copy()
+                    stock_copy['filter_date'] = datetime.now().strftime('%Y-%m-%d')
+                    filtered_stocks.append(stock_copy)
+                    
+            except (ValueError, TypeError) as e:
+                continue
+        
+        # 按九转序列排序
+        filtered_stocks.sort(key=lambda x: x.get('nine_turn_down', 0), reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'data': filtered_stocks,
+            'total': len(filtered_stocks),
+            'filter_time': datetime.now().isoformat(),
+            'data_source': 'realtime'
+        })
+        
     except Exception as e:
         return jsonify({
             'success': False,

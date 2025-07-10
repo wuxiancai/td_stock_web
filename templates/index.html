@@ -348,6 +348,9 @@
             
             <div class="refresh-section" id="refreshSection" style="display: none;">
                 <button class="refresh-btn" onclick="forceRefreshMarket()">🔄 强制刷新数据</button>
+                <button class="refresh-btn" onclick="openRedFilter()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">红 5-6</button>
+                <button class="refresh-btn" onclick="openGreenFilter()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">绿 9</button>
+                <button class="refresh-btn" onclick="triggerFilterTask()" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);">🎯 执行筛选</button>
                 <span class="refresh-tip">如果数据显示异常，可点击强制刷新重新获取最新数据</span>
             </div>
             
@@ -1507,6 +1510,42 @@
          } else {
              document.getElementById('countdown').textContent = '00:00:00';
          }
+     }
+     
+     // 筛选页面跳转函数
+     function openRedFilter() {
+         window.location.href = '/red-filter';
+     }
+     
+     function openGreenFilter() {
+         window.location.href = '/green-filter';
+     }
+     
+     // 手动触发筛选任务
+     function triggerFilterTask() {
+         const triggerBtn = event.target;
+         const originalText = triggerBtn.textContent;
+         
+         triggerBtn.textContent = '筛选中...';
+         triggerBtn.disabled = true;
+         
+         fetch('/api/scheduler/trigger_filter', { method: 'POST' })
+             .then(response => response.json())
+             .then(data => {
+                 if (data.status === 'success') {
+                     alert('筛选任务已开始执行！\n\n系统将自动筛选符合条件的股票：\n• 红 5-6：换手率>2，量比>1，九转买入红色5-6\n• 绿 9：九转买入绿色>9\n\n筛选结果将保存到缓存中，可通过"红 5-6"和"绿 9"按钮查看。');
+                 } else {
+                     alert('筛选任务触发失败：' + (data.message || '未知错误'));
+                 }
+             })
+             .catch(error => {
+                 console.error('触发筛选任务失败:', error);
+                 alert('筛选任务触发失败：网络错误');
+             })
+             .finally(() => {
+                 triggerBtn.textContent = originalText;
+                 triggerBtn.disabled = false;
+             });
      }
      
      // 页面加载完成后初始化

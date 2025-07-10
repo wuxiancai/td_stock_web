@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红 5-6 筛选 - 九转序列选股及四天持股交易系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-back {
+            background: linear-gradient(45deg, #6c757d, #495057);
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .stock-table th,
+        .stock-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+        
+        .stock-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+        }
+        
+        .stock-table th:hover {
+            background: #e9ecef;
+        }
+        
+        .sort-indicator {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .sort-asc::after {
+            content: '▲';
+        }
+        
+        .sort-desc::after {
+            content: '▼';
+        }
+        
+        .stock-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .stock-name {
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+        }
+        
+        .stock-name:hover {
+            color: #667eea;
+        }
+        
+        .stock-code {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .price-positive {
+            color: #e74c3c;
+        }
+        
+        .price-negative {
+            color: #27ae60;
+        }
+        
+        .nine-turn-red {
+            background-color: #e74c3c;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .nine-turn-green {
+            background-color: #27ae60;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .nine-turn-blue {
+            background-color: #3498db;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.1em;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .stock-table th,
+            .stock-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">🔴 红 5-6 筛选</div>
+            <div class="subtitle">换手率>2%, 量比>1, 九转买入红色 5-6 的股票</div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-back" onclick="goBack()">← 返回首页</button>
+            <button class="btn" onclick="refreshData()">🔄 刷新数据</button>
+        </div>
+        
+        <div class="filter-section">
+            <div id="loadingDiv" class="loading">正在加载筛选数据...</div>
+            
+            <div id="emptyDiv" class="empty-message" style="display: none;">
+                <p>暂无符合条件的股票</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #999;">筛选条件：换手率>2%, 量比>1, 九转买入红色 5-6</p>
+            </div>
+            
+            <div id="filterContent" style="display: none;">
+                <!-- 动态生成的分组表格将在这里显示 -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let filterData = [];
+        let sortStates = {}; // 存储每个分组的排序状态
+        
+        function loadFilterData() {
+            fetch('/api/red-filter')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        filterData = data.data || [];
+                        displayFilterData();
+                    } else {
+                        showError('加载筛选数据失败: ' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    showError('加载筛选数据失败: ' + error.message);
+                });
+        }
+        
+        function displayFilterData() {
+            document.getElementById('loadingDiv').style.display = 'none';
+            
+            if (filterData.length === 0) {
+                document.getElementById('emptyDiv').style.display = 'block';
+                document.getElementById('filterContent').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('emptyDiv').style.display = 'none';
+            document.getElementById('filterContent').style.display = 'block';
+            
+            // 按日期分组
+            const groupedStocks = groupStocksByDate(filterData);
+            
+            // 清空内容区域
+            const contentDiv = document.getElementById('filterContent');
+            contentDiv.innerHTML = '';
+            
+            // 按时间倒序排列（最新的在前面）
+            const sortedDates = Object.keys(groupedStocks).sort((a, b) => new Date(b) - new Date(a));
+            
+            sortedDates.forEach(dateKey => {
+                const stocks = groupedStocks[dateKey];
+                
+                // 创建分组标题
+                const groupTitle = document.createElement('h3');
+                groupTitle.style.cssText = 'margin: 20px 0 10px 0; color: #333; font-size: 1.1em; border-bottom: 2px solid #e74c3c; padding-bottom: 5px;';
+                groupTitle.textContent = `${dateKey} 筛选出 ${stocks.length} 只股票`;
+                contentDiv.appendChild(groupTitle);
+                
+                // 创建该分组的表格
+                const table = document.createElement('table');
+                table.className = 'stock-table';
+                table.style.marginBottom = '30px';
+                
+                // 表头
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>股票代码</th>
+                            <th>股票名称</th>
+                            <th>所属行业</th>
+                            <th onclick="sortTable('${dateKey}', 'pct_chg')" data-sort="pct_chg">
+                                当天涨幅<span class="sort-indicator"></span>
+                            </th>
+                            <th>最新价格</th>
+                            <th onclick="sortTable('${dateKey}', 'turnover_rate')" data-sort="turnover_rate">
+                                换手率<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'volume_ratio')" data-sort="volume_ratio">
+                                量比<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'pe_ratio')" data-sort="pe_ratio">
+                                市盈率(PE)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'amount')" data-sort="amount">
+                                成交额(亿)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'market_cap')" data-sort="market_cap">
+                                市值(亿)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('${dateKey}', 'nine_turn')" data-sort="nine_turn">
+                                九转<span class="sort-indicator"></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                `;
+                
+                const tbody = table.querySelector('tbody');
+                
+                // 应用排序
+                const sortedStocks = applySortToStocks(stocks, dateKey);
+                
+                // 填充该分组的股票数据
+                sortedStocks.forEach(stock => {
+                    const row = document.createElement('tr');
+                    
+                    const changePercent = stock.pct_chg || 0;
+                    const priceClass = changePercent >= 0 ? 'price-positive' : 'price-negative';
+                    const changeSign = changePercent >= 0 ? '+' : '';
+                    
+                    // 九转显示逻辑
+                    let nineTurnDisplay = '-';
+                    if (stock.nine_turn_up && stock.nine_turn_up > 0) {
+                        nineTurnDisplay = `<span class="nine-turn-red">${stock.nine_turn_up}</span>`;
+                    } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
+                        nineTurnDisplay = `<span class="nine-turn-green">${stock.nine_turn_down}</span>`;
+                    } else if (stock.countdown_up && stock.countdown_up > 0) {
+                        nineTurnDisplay = `<span class="nine-turn-blue">${stock.countdown_up}</span>`;
+                    } else if (stock.countdown_down && stock.countdown_down > 0) {
+                        nineTurnDisplay = `<span class="nine-turn-blue">${stock.countdown_down}</span>`;
+                    }
+                    
+                    row.innerHTML = `
+                        <td>
+                            <div class="stock-code">${stock.ts_code}</div>
+                        </td>
+                        <td>
+                            <div class="stock-name" onclick="viewStock('${stock.ts_code}')">${stock.name}</div>
+                        </td>
+                        <td>${stock.industry || '-'}</td>
+                        <td class="${priceClass}">${changeSign}${changePercent.toFixed(2)}%</td>
+                        <td class="${priceClass}">¥${(stock.latest_price || 0).toFixed(2)}</td>
+                        <td>${(stock.turnover_rate || 0).toFixed(2)}%</td>
+                        <td>${(stock.volume_ratio || 0).toFixed(2)}</td>
+                        <td>${stock.pe_ratio ? stock.pe_ratio.toFixed(2) : '-'}</td>
+                        <td>${(stock.amount || 0).toFixed(2)}</td>
+                        <td>${(stock.market_cap || 0).toFixed(2)}</td>
+                        <td>${nineTurnDisplay}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+                
+                contentDiv.appendChild(table);
+            });
+        }
+        
+        function groupStocksByDate(stocks) {
+            const groups = {};
+            const today = new Date().toISOString().split('T')[0];
+            
+            stocks.forEach(stock => {
+                const dateKey = today; // 使用当前日期作为分组键
+                if (!groups[dateKey]) {
+                    groups[dateKey] = [];
+                }
+                groups[dateKey].push(stock);
+            });
+            
+            return groups;
+        }
+        
+        function applySortToStocks(stocks, dateKey) {
+            const sortState = sortStates[dateKey];
+            if (!sortState) {
+                return stocks;
+            }
+            
+            const { field, direction } = sortState;
+            
+            return [...stocks].sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+                
+                // 处理特殊字段
+                if (field === 'nine_turn') {
+                    aVal = a.nine_turn_up || a.nine_turn_down || a.countdown_up || a.countdown_down || 0;
+                    bVal = b.nine_turn_up || b.nine_turn_down || b.countdown_up || b.countdown_down || 0;
+                }
+                
+                // 处理空值
+                if (aVal === null || aVal === undefined) aVal = 0;
+                if (bVal === null || bVal === undefined) bVal = 0;
+                
+                if (direction === 'asc') {
+                    return aVal - bVal;
+                } else {
+                    return bVal - aVal;
+                }
+            });
+        }
+        
+        function sortTable(dateKey, field) {
+            const currentSort = sortStates[dateKey];
+            let newDirection = 'desc';
+            
+            if (currentSort && currentSort.field === field) {
+                newDirection = currentSort.direction === 'desc' ? 'asc' : 'desc';
+            }
+            
+            sortStates[dateKey] = { field, direction: newDirection };
+            
+            // 重新显示数据
+            displayFilterData();
+        }
+        
+        function viewStock(tsCode) {
+            window.open(`/stock/${tsCode}`, '_blank');
+        }
+        
+        function goBack() {
+            window.location.href = '/';
+        }
+        
+        function refreshData() {
+            document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('filterContent').style.display = 'none';
+            document.getElementById('emptyDiv').style.display = 'none';
+            loadFilterData();
+        }
+        
+        function showError(message) {
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.getElementById('filterContent').style.display = 'none';
+            document.getElementById('emptyDiv').style.display = 'block';
+            document.getElementById('emptyDiv').innerHTML = `
+                <p style="color: #e74c3c;">加载失败</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #999;">${message}</p>
+            `;
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFilterData();
+        });
+    </script>
+</body>
+</html>
