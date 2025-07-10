@@ -361,8 +361,8 @@
                         <td>${(stock.turnover_rate || 0).toFixed(2)}%</td>
                         <td>${(stock.volume_ratio || 0).toFixed(2)}</td>
                         <td>${stock.pe_ttm && stock.pe_ttm > 0 ? stock.pe_ttm.toFixed(2) : '-'}</td>
-                        <td>${((stock.amount || 0) / 100000000).toFixed(2)}</td>
-                        <td>${((stock.market_cap || 0) / 100000000).toFixed(2)}</td>
+                        <td>${((stock.amount || 0) / 10000).toFixed(2)}</td>
+                        <td>${((stock.market_cap || 0) / 10000).toFixed(2)}</td>
                         <td>${nineTurnDisplay}</td>
                         <td>
                             <input type="text" class="note-input" value="${getStockNote(stock.ts_code)}" 
