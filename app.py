@@ -1725,6 +1725,41 @@ def update_watchlist_note():
             'message': str(e)
         }), 500
 
+@app.route('/api/watchlist/check', methods=['GET'])
+def check_watchlist_status():
+    """检查股票是否已在自选股中"""
+    try:
+        ts_code = request.args.get('ts_code')
+        if not ts_code:
+            return jsonify({
+                'success': False,
+                'message': '缺少股票代码参数'
+            }), 400
+        
+        watchlist_data = load_watchlist()
+        
+        # 检查股票是否在自选股中
+        for stock in watchlist_data:
+            if stock['ts_code'] == ts_code:
+                return jsonify({
+                    'success': True,
+                    'in_watchlist': True,
+                    'priority': stock.get('priority', 'green'),
+                    'note': stock.get('note', ''),
+                    'add_time': stock.get('add_time', '')
+                })
+        
+        return jsonify({
+            'success': True,
+            'in_watchlist': False
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 @app.route('/api/watchlist/refresh', methods=['POST'])
 def refresh_watchlist():
     """刷新自选股数据，获取最新的换手率、市盈率和市值"""

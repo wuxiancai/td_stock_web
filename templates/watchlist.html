@@ -489,10 +489,6 @@
         }
         
         function removeFromWatchlist(tsCode) {
-            if (!confirm('确定要从自选股中移除这只股票吗？')) {
-                return;
-            }
-            
             fetch('/api/watchlist/remove', {
                 method: 'POST',
                 headers: {

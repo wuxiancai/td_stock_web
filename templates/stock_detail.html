@@ -219,6 +219,18 @@
                                 <option value="sold" style="background-color: #9e9e9e; color: white;">⚫ 已卖出</option>
                             </select>
                         </div>
+                        <button id="removeFromWatchlistBtn" onclick="removeFromWatchlist()" style="
+                            background: linear-gradient(45deg, #dc3545, #c82333);
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 20px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            font-weight: bold;
+                            transition: all 0.3s ease;
+                            display: none;
+                        ">🗑️ 删除自选</button>
                         <button class="back-btn" id="refreshDataBtn" onclick="refreshStockData()" style="background: linear-gradient(45deg, #28a745, #20c997);">🔄 刷新数据</button>
                     </div>
                 </div>
@@ -377,10 +389,64 @@
                     drawMacdChart(data);
                     drawKdjChart(data);
                     drawRsiChart(data);
+                    
+                    // 检查股票是否已在自选股中
+                    checkWatchlistStatus();
                 })
                 .catch(error => {
                     showError('加载数据失败: ' + error.message);
                 });
+        }
+        
+        function checkWatchlistStatus() {
+            fetch(`/api/watchlist/check?ts_code=${stockCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateWatchlistUI(data.in_watchlist, data.priority);
+                    }
+                })
+                .catch(error => {
+                    console.error('检查自选股状态失败:', error);
+                });
+        }
+        
+        function updateWatchlistUI(inWatchlist, priority) {
+            const select = document.getElementById('addToWatchlistSelect');
+            const removeBtn = document.getElementById('removeFromWatchlistBtn');
+            
+            if (inWatchlist) {
+                // 股票已在自选股中
+                const priorityNames = {
+                    'purple': '可立即买入',
+                    'red': '重点关注',
+                    'green': '观察',
+                    'holding': '持仓中',
+                    'sold': '已卖出'
+                };
+                
+                select.innerHTML = `<option selected>✓ 已加入自选 (${priorityNames[priority] || '观察'})</option>`;
+                select.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
+                select.disabled = true;
+                
+                // 显示删除按钮
+                removeBtn.style.display = 'inline-block';
+            } else {
+                // 股票不在自选股中，恢复原始状态
+                select.innerHTML = `
+                    <option value="" disabled selected>⭐ 加入自选股</option>
+                    <option value="purple" style="background-color: #8e44ad; color: white;">🟣 可立即买入</option>
+                    <option value="red" style="background-color: #e74c3c; color: white;">🔴 重点关注</option>
+                    <option value="green" style="background-color: #27ae60; color: white;">🟢 观察</option>
+                    <option value="holding" style="background-color: #ff9800; color: white;">🟠 持仓中</option>
+                    <option value="sold" style="background-color: #9e9e9e; color: white;">⚫ 已卖出</option>
+                `;
+                select.style.background = 'linear-gradient(45deg, #ffc107, #fd7e14)';
+                select.disabled = false;
+                
+                // 隐藏删除按钮
+                removeBtn.style.display = 'none';
+            }
         }
         
         function displayStockInfo(data) {
@@ -1494,24 +1560,10 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const select = document.getElementById('addToWatchlistSelect');
-                    const priorityNames = {
-                'purple': '可立即买入',
-                'red': '重点关注',
-                'green': '观察',
-                'holding': '持仓中',
-                'sold': '已卖出'
-            };
+                    // 更新UI状态为已添加
+                    updateWatchlistUI(true, priority);
                     
-                    // 更新选择器显示为已添加状态
-                    select.innerHTML = `<option selected>✓ 已加入 (${priorityNames[priority]})</option>`;
-                    select.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
-                    select.disabled = true;
-                    
-                    // 自动跳转到自选股页面
-                    setTimeout(() => {
-                        window.location.href = '/watchlist';
-                    }, 1000); // 延迟1秒后跳转，让用户看到成功提示
+                    // 成功加入自选股，无需提示
                 } else {
                     alert(data.message || '加入自选股失败');
                     // 重置选择器
@@ -1522,6 +1574,38 @@
                 alert('加入自选股失败: ' + error.message);
                 // 重置选择器
                 document.getElementById('addToWatchlistSelect').selectedIndex = 0;
+            });
+        }
+        
+        function removeFromWatchlist() {
+            if (!stockData) {
+                alert('股票数据尚未加载完成，请稍后再试');
+                return;
+            }
+            
+            
+            fetch('/api/watchlist/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ts_code: stockData.ts_code
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新UI状态为未添加
+                    updateWatchlistUI(false);
+                    
+                    // 成功删除自选股，无需提示
+                } else {
+                    alert(data.message || '删除失败');
+                }
+            })
+            .catch(error => {
+                alert('删除失败: ' + error.message);
             });
         }
         
