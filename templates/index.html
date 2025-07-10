@@ -450,7 +450,7 @@
             <table class="stocks-table" id="stocksTable" style="display: none;">
                 <thead>
                     <tr>
-                        <th>股票代码</th>
+                        <th class="sortable" onclick="sortTable('stock_code')" style="cursor: pointer;">股票代码 <span id="sort-stock_code">↕</span></th>
                         <th>股票名称</th>
                         <th>所属行业</th>
                         <th class="sortable" onclick="sortTable('pct_chg')" style="cursor: pointer;">当天涨幅(%) <span id="sort-pct_chg">↕</span></th>
@@ -1165,6 +1165,15 @@
                  let valueA, valueB;
                  
                  switch (field) {
+                     case 'stock_code':
+                         valueA = a.ts_code || '';
+                         valueB = b.ts_code || '';
+                         // 对于字符串排序，使用localeCompare
+                         if (currentSortOrder === 'asc') {
+                             return valueA.localeCompare(valueB);
+                         } else {
+                             return valueB.localeCompare(valueA);
+                         }
                      case 'pct_chg':
                          valueA = a.pct_chg || 0;
                          valueB = b.pct_chg || 0;
@@ -1228,7 +1237,7 @@
          
          function updateSortIcons(activeField, order) {
              // 重置所有排序图标
-             const sortFields = ['pct_chg', 'latest_price', 'turnover_rate', 'volume_ratio', 'pe_ratio', 'amount', 'market_cap', 'nine_turn'];
+             const sortFields = ['stock_code', 'pct_chg', 'latest_price', 'turnover_rate', 'volume_ratio', 'pe_ratio', 'amount', 'market_cap', 'nine_turn'];
              sortFields.forEach(field => {
                  const icon = document.getElementById(`sort-${field}`);
                  if (icon) {

@@ -341,7 +341,9 @@
                 table.innerHTML = `
                     <thead>
                         <tr>
-                            <th>股票代码</th>
+                            <th onclick="sortTable('${dateKey}', 'stock_code')" data-sort="stock_code">
+                                股票代码<span class="sort-indicator"></span>
+                            </th>
                             <th>股票名称</th>
                             <th>所属行业</th>
                             <th onclick="sortTable('${dateKey}', 'pct_chg')" data-sort="pct_chg">
@@ -656,6 +658,8 @@
         
         function getSortValue(stock, field) {
             switch (field) {
+                case 'stock_code':
+                    return stock.ts_code || '';
                 case 'pct_chg':
                     return parseFloat(stock.pct_chg || 0);
                 case 'turnover_rate':
@@ -697,6 +701,15 @@
             return [...stocks].sort((a, b) => {
                 const valueA = getSortValue(a, sortField);
                 const valueB = getSortValue(b, sortField);
+                
+                // 对于字符串类型的字段使用localeCompare
+                if (sortField === 'stock_code') {
+                    if (sortDirection === 'asc') {
+                        return valueA.localeCompare(valueB);
+                    } else {
+                        return valueB.localeCompare(valueA);
+                    }
+                }
                 
                 if (sortDirection === 'asc') {
                     return valueA - valueB;

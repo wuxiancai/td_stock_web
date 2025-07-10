@@ -301,7 +301,9 @@
                 table.innerHTML = `
                     <thead>
                         <tr>
-                            <th>股票代码</th>
+                            <th onclick="sortTable('${dateKey}', 'stock_code')" data-sort="stock_code">
+                                股票代码<span class="sort-indicator"></span>
+                            </th>
                             <th>股票名称</th>
                             <th>所属行业</th>
                             <th onclick="sortTable('${dateKey}', 'pct_chg')" data-sort="pct_chg">
@@ -441,7 +443,16 @@
                 let bVal = b[field];
                 
                 // 处理特殊字段
-                if (field === 'nine_turn') {
+                if (field === 'stock_code') {
+                    aVal = a.ts_code || '';
+                    bVal = b.ts_code || '';
+                    // 对于字符串类型使用localeCompare
+                    if (direction === 'asc') {
+                        return aVal.localeCompare(bVal);
+                    } else {
+                        return bVal.localeCompare(aVal);
+                    }
+                } else if (field === 'nine_turn') {
                     aVal = a.nine_turn_up || a.nine_turn_down || a.countdown_up || a.countdown_down || 0;
                     bVal = b.nine_turn_up || b.nine_turn_down || b.countdown_up || b.countdown_down || 0;
                 }
