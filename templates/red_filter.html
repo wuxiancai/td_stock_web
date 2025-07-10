@@ -220,6 +220,41 @@
         <div class="filter-section">
             <div id="loadingDiv" class="loading">正在加载筛选数据...</div>
             
+            <!-- 筛选控件 -->
+            <div class="filter-controls" id="filterControls" style="display: none; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                <h4 style="margin: 0 0 15px 0; color: #495057;">筛选条件</h4>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 10px; color: #6c757d;">换手率(%)</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="turnoverMin" placeholder="最小" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" step="0.1">
+                            <span style="color: #6c757d;">-</span>
+                            <input type="number" id="turnoverMax" placeholder="最大" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" step="0.1">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 10px; color: #6c757d;">量比</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="volumeRatioMin" placeholder="最小" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" step="0.1">
+                            <span style="color: #6c757d;">-</span>
+                            <input type="number" id="volumeRatioMax" placeholder="最大" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" step="0.1">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 10px; color: #6c757d;">九转买入 - 红色(上涨)</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="nineTurnUpMin" placeholder="最小" style="width: 60px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" min="1" max="9" step="1">
+                            <span style="color: #6c757d;">-</span>
+                            <input type="number" id="nineTurnUpMax" placeholder="最大" style="width: 60px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" min="1" max="9" step="1">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="applyFilters()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">应用筛选</button>
+                        <button onclick="clearFilters()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">清除筛选</button>
+                    </div>
+                </div>
+            </div>
+            
             <div id="emptyDiv" class="empty-message" style="display: none;">
                 <p>暂无符合条件的股票</p>
                 <p style="margin-top: 10px; font-size: 0.9em; color: #999;">筛选条件：换手率>2%, 量比>1, 九转买入红色 5-6</p>
@@ -250,7 +285,8 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        filterData = data.data || [];
+                        originalFilterData = data.data || [];
+                        filterData = [...originalFilterData];
                         displayFilterData();
                     } else {
                         showError('加载筛选数据失败: ' + (data.message || '未知错误'));
@@ -267,11 +303,13 @@
             if (filterData.length === 0) {
                 document.getElementById('emptyDiv').style.display = 'block';
                 document.getElementById('filterContent').style.display = 'none';
+                document.getElementById('filterControls').style.display = 'none';
                 return;
             }
             
             document.getElementById('emptyDiv').style.display = 'none';
             document.getElementById('filterContent').style.display = 'block';
+            document.getElementById('filterControls').style.display = 'block';
             
             // 按日期分组
             const groupedStocks = groupStocksByDate(filterData);
@@ -548,6 +586,42 @@
                 <p style="color: #e74c3c;">加载失败</p>
                 <p style="margin-top: 10px; font-size: 0.9em; color: #999;">${message}</p>
             `;
+        }
+        
+        // 筛选功能
+        let originalFilterData = []; // 存储原始数据
+        
+        function applyFilters() {
+            const turnoverMin = parseFloat(document.getElementById('turnoverMin').value) || 0;
+            const turnoverMax = parseFloat(document.getElementById('turnoverMax').value) || Infinity;
+            const volumeRatioMin = parseFloat(document.getElementById('volumeRatioMin').value) || 0;
+            const volumeRatioMax = parseFloat(document.getElementById('volumeRatioMax').value) || Infinity;
+            const nineTurnUpMin = parseInt(document.getElementById('nineTurnUpMin').value) || 0;
+            const nineTurnUpMax = parseInt(document.getElementById('nineTurnUpMax').value) || 9;
+            
+            filterData = originalFilterData.filter(stock => {
+                const turnoverRate = stock.turnover_rate || 0;
+                const volumeRatio = stock.volume_ratio || 0;
+                const nineTurnUp = stock.nine_turn_up || 0;
+                
+                return turnoverRate >= turnoverMin && turnoverRate <= turnoverMax &&
+                       volumeRatio >= volumeRatioMin && volumeRatio <= volumeRatioMax &&
+                       nineTurnUp >= nineTurnUpMin && nineTurnUp <= nineTurnUpMax;
+            });
+            
+            displayFilterData();
+        }
+        
+        function clearFilters() {
+            document.getElementById('turnoverMin').value = '';
+            document.getElementById('turnoverMax').value = '';
+            document.getElementById('volumeRatioMin').value = '';
+            document.getElementById('volumeRatioMax').value = '';
+            document.getElementById('nineTurnUpMin').value = '';
+            document.getElementById('nineTurnUpMax').value = '';
+            
+            filterData = [...originalFilterData];
+            displayFilterData();
         }
         
         // 页面加载完成后初始化
