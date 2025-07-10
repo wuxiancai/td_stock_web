@@ -343,14 +343,14 @@
                     <button class="market-btn" onclick="syncAllMarkets()" style="background: linear-gradient(45deg, #28a745, #20c997);">A股</button>
                     <button class="market-btn" onclick="openWatchlist()" style="background: linear-gradient(45deg, #ffc107, #fd7e14);">⭐ 自选股</button>
                     <button class="market-btn" onclick="openCacheMonitor()" style="background: linear-gradient(45deg, #17a2b8, #138496);">🔧 缓存监控</button>
+                    <button class="market-btn" onclick="openRedFilter()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">红 5-6</button>
+                    <button class="market-btn" onclick="openGreenFilter()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">绿 9</button>
+                    <button class="market-btn" onclick="triggerFilterTask()" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);">🎯 执行筛选</button>
                 </div>
             </div>
             
             <div class="refresh-section" id="refreshSection" style="display: none;">
                 <button class="refresh-btn" onclick="forceRefreshMarket()">🔄 强制刷新数据</button>
-                <button class="refresh-btn" onclick="openRedFilter()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">红 5-6</button>
-                <button class="refresh-btn" onclick="openGreenFilter()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">绿 9</button>
-                <button class="refresh-btn" onclick="triggerFilterTask()" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);">🎯 执行筛选</button>
                 <span class="refresh-tip">如果数据显示异常，可点击强制刷新重新获取最新数据</span>
             </div>
             

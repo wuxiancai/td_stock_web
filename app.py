@@ -1270,7 +1270,7 @@ def auto_filter_stocks():
             try:
                 nine_turn_down = int(stock.get('nine_turn_down', 0))
                 
-                if nine_turn_down > 9:
+                if nine_turn_down == 9:
                     stock_copy = stock.copy()
                     stock_copy['filter_date'] = now.strftime('%Y-%m-%d')
                     stock_copy['filter_time'] = now.strftime('%H:%M:%S')
