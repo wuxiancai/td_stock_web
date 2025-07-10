@@ -863,11 +863,22 @@
                         }
                         
                         if (data.success) {
-                            // 强制刷新成功，现在重新加载数据
-                            console.log(`${marketNames[currentMarket]}缓存已清除，开始重新加载数据...`);
+                            // 强制刷新成功，启动进度监控
+                            console.log(`${marketNames[currentMarket]}缓存已清除，开始后台刷新数据...`);
                             
-                            // 重新加载市场数据
-                            loadMarketStocks(currentMarket, 1);
+                            // 隐藏加载状态，显示进度监控
+                            document.getElementById('loadingDiv').style.display = 'none';
+                            document.getElementById('progressDiv').style.display = 'block';
+                            document.getElementById('stocksTable').style.display = 'table';
+                            
+                            // 清空表格内容，显示刷新中状态
+                            const tbody = document.getElementById('stocksTableBody');
+                            tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 20px;">正在后台刷新数据，请稍候...</td></tr>';
+                            
+                            // 启动进度监控
+                            progressInterval = setInterval(() => {
+                                checkUpdateProgress(currentMarket);
+                            }, 2000);
                         } else {
                             document.getElementById('loadingDiv').style.display = 'none';
                             showError('强制刷新失败: ' + (data.message || '未知错误'));
