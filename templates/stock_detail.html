@@ -399,7 +399,9 @@
         }
         
         function checkWatchlistStatus() {
-            fetch(`/api/watchlist/check?ts_code=${stockCode}`)
+            // 使用stockData.ts_code而不是stockCode，确保格式正确
+            const tsCode = stockData ? stockData.ts_code : stockCode;
+            fetch(`/api/watchlist/check?ts_code=${tsCode}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
