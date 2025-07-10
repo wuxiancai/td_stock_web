@@ -460,6 +460,7 @@
                         <th class="sortable" onclick="sortTable('pe_ratio')" style="cursor: pointer;">市盈率(PE) <span id="sort-pe_ratio">↕</span></th>
                         <th class="sortable" onclick="sortTable('amount')" style="cursor: pointer;">成交额(亿元) <span id="sort-amount">↕</span></th>
                         <th class="sortable" onclick="sortTable('market_cap')" style="cursor: pointer;">市值(亿元) <span id="sort-market_cap">↕</span></th>
+                        <th class="sortable" onclick="sortTable('net_mf_amount')" style="cursor: pointer;">净流入额(千万元) <span id="sort-net_mf_amount">↕</span></th>
                         <th class="sortable" onclick="sortTable('nine_turn')" style="cursor: pointer;">九转买入 <span id="sort-nine_turn">↕</span></th>
                     </tr>
                 </thead>
@@ -737,6 +738,7 @@
                     <td>${hasRealTimeData ? ((stock.pe_ttm && stock.pe_ttm > 0) ? stock.pe_ttm.toFixed(2) : '-') : '-'}</td>
                     <td>${hasRealTimeData ? (stock.amount / 100000).toFixed(2) : '-'}</td>
                     <td>${hasRealTimeData ? (stock.market_cap / 10000).toFixed(2) : '-'}</td>
+                    <td>${hasRealTimeData ? (stock.net_mf_amount !== undefined ? stock.net_mf_amount.toFixed(2) : '-') : '-'}</td>
                     <td>${nineTurnDisplay}</td>
                 `;
                 
@@ -783,6 +785,7 @@
                     <td>${(stock.pe_ttm && stock.pe_ttm > 0) ? stock.pe_ttm.toFixed(2) : '-'}</td>
                     <td>${(stock.amount / 100000).toFixed(2)}</td>
                     <td>${(stock.market_cap / 10000).toFixed(2)}</td>
+                    <td>${stock.net_mf_amount !== undefined ? stock.net_mf_amount.toFixed(2) : '-'}</td>
                     <td>${nineTurnDisplay}</td>
                 `;
                 tbody.appendChild(row);
@@ -873,7 +876,7 @@
                             
                             // 清空表格内容，显示刷新中状态
                             const tbody = document.getElementById('stocksTableBody');
-                            tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 20px;">正在后台刷新数据，请稍候...</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 20px;">正在后台刷新数据，请稍候...</td></tr>';
                             
                             // 启动进度监控
                             progressInterval = setInterval(() => {

@@ -180,6 +180,7 @@ def get_real_time_stock_data(ts_code, name, industry, current_date):
         'amount': 0,
         'market_cap': 0,
         'pe_ttm': 0,
+        'net_mf_amount': 0,  # 净流入额（千万元）
         'nine_turn_up': 0,
         'nine_turn_down': 0,
         'countdown_up': 0,
@@ -192,6 +193,10 @@ def get_real_time_stock_data(ts_code, name, industry, current_date):
         # 获取最新价格和基本面数据
         latest_data = safe_tushare_call(pro.daily, ts_code=ts_code, limit=1)
         daily_basic = safe_tushare_call(pro.daily_basic, ts_code=ts_code, limit=1)
+        
+        # 获取资金流向数据
+        current_trade_date = datetime.now().strftime('%Y%m%d')
+        moneyflow_data = safe_tushare_call(pro.moneyflow, ts_code=ts_code, trade_date=current_trade_date)
         
         # 获取最近30天的K线数据用于计算九转序列
         end_date = datetime.now().strftime('%Y%m%d')
@@ -226,6 +231,13 @@ def get_real_time_stock_data(ts_code, name, industry, current_date):
                 stock_info['market_cap'] = safe_float(daily_basic.iloc[0]['total_mv'])
             if 'pe_ttm' in daily_basic.columns:
                 stock_info['pe_ttm'] = safe_float(daily_basic.iloc[0]['pe_ttm'])
+        
+        # 更新资金流向数据
+        if not moneyflow_data.empty:
+            if 'net_mf_amount' in moneyflow_data.columns:
+                # net_mf_amount单位是万元，转换为千万元
+                net_mf_amount_wan = safe_float(moneyflow_data.iloc[0]['net_mf_amount'])
+                stock_info['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)  # 转换为千万元，保留2位小数
         
         # 计算九转序列
         if not kline_data.empty and len(kline_data) >= 5:
@@ -292,6 +304,10 @@ def update_stock_data_progressive(market, stocks_list):
             latest_data = safe_tushare_call(pro.daily, ts_code=stock_info['ts_code'], limit=1)
             daily_basic = safe_tushare_call(pro.daily_basic, ts_code=stock_info['ts_code'], limit=1)
             
+            # 获取资金流向数据
+            current_trade_date = datetime.now().strftime('%Y%m%d')
+            moneyflow_data = safe_tushare_call(pro.moneyflow, ts_code=stock_info['ts_code'], trade_date=current_trade_date)
+            
             # 获取最近30天的K线数据用于计算九转序列（使用频率限制）
             end_date = datetime.now().strftime('%Y%m%d')
             start_date = (datetime.now() - timedelta(days=45)).strftime('%Y%m%d')
@@ -340,6 +356,15 @@ def update_stock_data_progressive(market, stocks_list):
                     stock_info['market_cap'] = safe_float(daily_basic.iloc[0]['total_mv'])
                 if 'pe_ttm' in daily_basic.columns:
                     stock_info['pe_ttm'] = safe_float(daily_basic.iloc[0]['pe_ttm'])
+            
+            # 更新资金流向数据
+            if not moneyflow_data.empty:
+                if 'net_mf_amount' in moneyflow_data.columns:
+                    # net_mf_amount单位是万元，转换为千万元
+                    net_mf_amount_wan = safe_float(moneyflow_data.iloc[0]['net_mf_amount'])
+                    stock_info['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)  # 转换为千万元，保留2位小数
+            else:
+                stock_info['net_mf_amount'] = 0  # 如果没有数据，设置为0
             
             # 计算九转序列
             nine_turn_up = 0
@@ -431,6 +456,10 @@ def update_stock_data_progressive(market, stocks_list):
                 latest_data = safe_tushare_call(pro.daily, ts_code=retry_stock['ts_code'], limit=1)
                 daily_basic = safe_tushare_call(pro.daily_basic, ts_code=retry_stock['ts_code'], limit=1)
                 
+                # 获取资金流向数据
+                current_trade_date = datetime.now().strftime('%Y%m%d')
+                moneyflow_data = safe_tushare_call(pro.moneyflow, ts_code=retry_stock['ts_code'], trade_date=current_trade_date)
+                
                 end_date = datetime.now().strftime('%Y%m%d')
                 start_date = (datetime.now() - timedelta(days=45)).strftime('%Y%m%d')
                 kline_data = safe_tushare_call(pro.daily, ts_code=retry_stock['ts_code'], start_date=start_date, end_date=end_date)
@@ -449,6 +478,15 @@ def update_stock_data_progressive(market, stocks_list):
                         retry_stock['market_cap'] = safe_float(daily_basic.iloc[0]['total_mv'])
                     if 'pe_ttm' in daily_basic.columns:
                         retry_stock['pe_ttm'] = safe_float(daily_basic.iloc[0]['pe_ttm'])
+                
+                # 更新资金流向数据
+                if not moneyflow_data.empty:
+                    if 'net_mf_amount' in moneyflow_data.columns:
+                        # net_mf_amount单位是万元，转换为千万元
+                        net_mf_amount_wan = safe_float(moneyflow_data.iloc[0]['net_mf_amount'])
+                        retry_stock['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)  # 转换为千万元，保留2位小数
+                else:
+                    retry_stock['net_mf_amount'] = 0  # 如果没有数据，设置为0
                 
                 # 计算九转序列
                 nine_turn_up = 0

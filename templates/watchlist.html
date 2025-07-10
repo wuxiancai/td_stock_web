@@ -365,6 +365,9 @@
                             <th onclick="sortTable('${dateKey}', 'total_mv')" data-sort="total_mv">
                                 市值(亿)<span class="sort-indicator"></span>
                             </th>
+                            <th onclick="sortTable('${dateKey}', 'net_mf_amount')" data-sort="net_mf_amount">
+                                净流入额(千万元)<span class="sort-indicator"></span>
+                            </th>
                             <th onclick="sortTable('${dateKey}', 'nine_turn')" data-sort="nine_turn">
                                 九转<span class="sort-indicator"></span>
                             </th>
@@ -422,6 +425,9 @@
                         </td>
                         <td>
                             ${((stock.total_mv || 0) / 10000).toFixed(2)}
+                        </td>
+                        <td>
+                            ${stock.net_mf_amount !== undefined ? stock.net_mf_amount.toFixed(2) : '-'}
                         </td>
                         <td>
                             ${(() => {
