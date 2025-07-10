@@ -358,9 +358,9 @@
                         <td class="${priceClass}">¥${(stock.latest_price || 0).toFixed(2)}</td>
                         <td>${(stock.turnover_rate || 0).toFixed(2)}%</td>
                         <td>${(stock.volume_ratio || 0).toFixed(2)}</td>
-                        <td>${stock.pe_ratio ? stock.pe_ratio.toFixed(2) : '-'}</td>
-                        <td>${(stock.amount || 0).toFixed(2)}</td>
-                        <td>${(stock.market_cap || 0).toFixed(2)}</td>
+                        <td>${stock.pe_ttm && stock.pe_ttm > 0 ? stock.pe_ttm.toFixed(2) : '-'}</td>
+                        <td>${((stock.amount || 0) / 10000).toFixed(2)}</td>
+                        <td>${((stock.market_cap || 0) / 10000).toFixed(2)}</td>
                         <td>${nineTurnDisplay}</td>
                     `;
                     
