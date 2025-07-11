@@ -307,19 +307,19 @@
                                 换手率(%)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('amount')" data-sort="amount">
-                                总成交额(万)<span class="sort-indicator"></span>
+                                总成交额(亿)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('l_sell')" data-sort="l_sell">
-                                龙虎榜卖出额(万)<span class="sort-indicator"></span>
+                                龙虎榜卖出额(亿)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('l_buy')" data-sort="l_buy">
-                                龙虎榜买入额(万)<span class="sort-indicator"></span>
+                                龙虎榜买入额(亿)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('l_amount')" data-sort="l_amount">
-                                龙虎榜成交额(万)<span class="sort-indicator"></span>
+                                龙虎榜成交额(亿)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('net_amount')" data-sort="net_amount">
-                                龙虎榜净买入额(万)<span class="sort-indicator"></span>
+                                龙虎榜净买入额(亿)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('net_rate')" data-sort="net_rate">
                                 净买额占比(%)<span class="sort-indicator"></span>
@@ -328,7 +328,7 @@
                                 成交额占比(%)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('float_values')" data-sort="float_values">
-                                流通市值(万)<span class="sort-indicator"></span>
+                                流通市值(亿)<span class="sort-indicator"></span>
                             </th>
                             <th>上榜理由</th>
                         </tr>
@@ -346,11 +346,7 @@
         
         function formatNumber(num, decimals = 2) {
             if (num === 0 || num === null || num === undefined) return '-';
-            if (num >= 100000000) {
-                return (num / 100000000).toFixed(decimals) + '亿';
-            } else if (num >= 10000) {
-                return (num / 10000).toFixed(decimals) + '万';
-            }
+            // 数据已经转换为亿元，直接显示
             return num.toFixed(decimals);
         }
         
@@ -441,14 +437,14 @@
                     <td class="${priceClass}">¥${(stock.close || 0).toFixed(2)}</td>
                     <td class="${priceClass}">${changeSign}${changePercent.toFixed(2)}%</td>
                     <td>${(stock.turnover_rate || 0).toFixed(2)}%</td>
-                    <td>${formatNumber((stock.amount || 0) / 10000)}</td>
-                    <td>${formatNumber((stock.l_sell || 0) / 10000)}</td>
-                    <td>${formatNumber((stock.l_buy || 0) / 10000)}</td>
-                    <td>${formatNumber((stock.l_amount || 0) / 10000)}</td>
-                    <td class="${netClass}">${netSign}${formatNumber((netAmount) / 10000)}</td>
+                    <td>${formatNumber((stock.amount || 0) / 100000000)}</td>
+                    <td>${formatNumber((stock.l_sell || 0) / 100000000)}</td>
+                    <td>${formatNumber((stock.l_buy || 0) / 100000000)}</td>
+                    <td>${formatNumber((stock.l_amount || 0) / 100000000)}</td>
+                    <td class="${netClass}">${netSign}${formatNumber((netAmount) / 100000000)}</td>
                     <td class="${netClass}">${netSign}${(stock.net_rate || 0).toFixed(2)}%</td>
                     <td>${(stock.amount_rate || 0).toFixed(2)}%</td>
-                    <td>${formatNumber((stock.float_values || 0) / 10000)}</td>
+                    <td>${formatNumber((stock.float_values || 0) / 100000000)}</td>
                     <td style="max-width: 200px; word-wrap: break-word;">${stock.reason || '-'}</td>
                 `;
                 
