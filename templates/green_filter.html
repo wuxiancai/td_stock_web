@@ -286,9 +286,11 @@
                 return '<span style="color: #666; font-weight: bold;">-</span>';
             }
             
-            const absValue = Math.abs(amount);
+            // 转换为万元单位
+            const amountInWan = amount * 1000;
+            const absValue = Math.abs(amountInWan);
             let formatted;
-            let sign = amount >= 0 ? '+' : '-';
+            let sign = amountInWan >= 0 ? '+' : '-';
             
             if (absValue >= 10000) {
                 formatted = (absValue / 10000).toFixed(2) + '亿';
@@ -297,9 +299,9 @@
             }
             
             let color;
-            if (amount > 0) {
+            if (amountInWan > 0) {
                 color = '#ff4444'; // 红色表示净流入
-            } else if (amount < 0) {
+            } else if (amountInWan < 0) {
                 color = '#44aa44'; // 绿色表示净流出
             } else {
                 color = '#666'; // 灰色表示无变化
