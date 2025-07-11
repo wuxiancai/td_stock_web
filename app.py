@@ -818,6 +818,11 @@ def green_filter():
     """绿 9 筛选页面"""
     return render_template('green_filter.html')
 
+@app.route('/top-list')
+def top_list():
+    """龙虎榜页面"""
+    return render_template('top_list.html')
+
 @app.route('/api/stock/<stock_code>')
 def get_stock_data(stock_code):
     try:
@@ -2345,6 +2350,92 @@ def get_green_filter_stocks():
             'total': len(filtered_stocks),
             'filter_time': datetime.now().isoformat(),
             'data_source': 'realtime'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/top-list')
+def get_top_list():
+    """获取龙虎榜数据"""
+    try:
+        # 获取交易日期参数
+        trade_date = request.args.get('trade_date')
+        if not trade_date:
+            # 如果没有指定日期，使用今天
+            trade_date = datetime.now().strftime('%Y%m%d')
+        
+        # 验证日期格式
+        try:
+            datetime.strptime(trade_date, '%Y%m%d')
+        except ValueError:
+            return jsonify({
+                'success': False,
+                'error': '日期格式错误，请使用YYYYMMDD格式'
+            }), 400
+        
+        # 获取龙虎榜数据（使用频率限制）
+        top_list_data = safe_tushare_call(pro.top_list, trade_date=trade_date)
+        
+        if top_list_data.empty:
+            return jsonify({
+                'success': True,
+                'data': [],
+                'total': 0,
+                'trade_date': trade_date,
+                'message': '该日期无龙虎榜数据'
+            })
+        
+        # 获取股票基本信息，用于补充股票名称
+        ts_codes = top_list_data['ts_code'].unique().tolist()
+        stock_basic_data = safe_tushare_call(pro.stock_basic, ts_code=','.join(ts_codes))
+        
+        # 创建股票代码到名称的映射
+        name_mapping = {}
+        if not stock_basic_data.empty:
+            name_mapping = dict(zip(stock_basic_data['ts_code'], stock_basic_data['name']))
+        
+        # 安全获取数值的辅助函数
+        def safe_float(value, default=0.0):
+            try:
+                if value is None or pd.isna(value):
+                    return default
+                return float(value)
+            except (ValueError, TypeError):
+                return default
+        
+        # 处理数据
+        result_data = []
+        for _, row in top_list_data.iterrows():
+            stock_data = {
+                'ts_code': row['ts_code'],
+                'name': name_mapping.get(row['ts_code'], row['ts_code']),  # 如果没有找到名称，使用代码
+                'close': safe_float(row.get('close')),
+                'pct_change': safe_float(row.get('pct_change')),
+                'turnover_rate': safe_float(row.get('turnover_rate')),
+                'amount': safe_float(row.get('amount')),
+                'l_sell': safe_float(row.get('l_sell')),
+                'l_buy': safe_float(row.get('l_buy')),
+                'l_amount': safe_float(row.get('l_amount')),
+                'net_amount': safe_float(row.get('net_amount')),
+                'net_rate': safe_float(row.get('net_rate')),
+                'amount_rate': safe_float(row.get('amount_rate')),
+                'float_values': safe_float(row.get('float_values')),
+                'reason': row.get('reason', '')
+            }
+            result_data.append(stock_data)
+        
+        # 按净买入额排序（从大到小）
+        result_data.sort(key=lambda x: x['net_amount'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'data': result_data,
+            'total': len(result_data),
+            'trade_date': trade_date
         })
         
     except Exception as e:

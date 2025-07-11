@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>龙虎榜每日统计 - 九转序列选股及四天持股交易系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #f39c12;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-back {
+            background: linear-gradient(45deg, #6c757d, #495057);
+        }
+        
+        .date-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .date-input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .date-input:focus {
+            border-color: #667eea;
+        }
+        
+        .top-list-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+        
+        .stock-table th,
+        .stock-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .stock-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+            white-space: nowrap;
+        }
+        
+        .stock-table th:hover {
+            background: #e9ecef;
+        }
+        
+        .sort-indicator {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .sort-asc::after {
+            content: '▲';
+        }
+        
+        .sort-desc::after {
+            content: '▼';
+        }
+        
+        .stock-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .stock-name {
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+        }
+        
+        .stock-name:hover {
+            color: #667eea;
+        }
+        
+        .stock-code {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .price-positive {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .price-negative {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .net-positive {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .net-negative {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.1em;
+            color: #666;
+        }
+        
+        .stats-summary {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #f39c12;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .stock-table {
+                font-size: 10px;
+            }
+            
+            .stock-table th,
+            .stock-table td {
+                padding: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">🏆 龙虎榜每日统计</div>
+            <div class="subtitle">龙虎榜每日交易明细数据，展示异常波动股票的详细交易信息</div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-back" onclick="goBack()">← 返回首页</button>
+            <div class="date-selector">
+                <label for="tradeDate">交易日期：</label>
+                <input type="date" id="tradeDate" class="date-input" onchange="loadTopListData()">
+                <button class="btn" onclick="loadTodayData()">今日数据</button>
+            </div>
+            <button class="btn" onclick="refreshData()">🔄 刷新数据</button>
+        </div>
+        
+        <div class="top-list-section">
+            <div id="loadingDiv" class="loading">正在加载龙虎榜数据...</div>
+            
+            <div id="statsDiv" class="stats-summary" style="display: none;">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalCount">0</div>
+                    <div class="stat-label">上榜股票数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="netBuyCount">0</div>
+                    <div class="stat-label">净买入股票</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="netSellCount">0</div>
+                    <div class="stat-label">净卖出股票</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalAmount">0</div>
+                    <div class="stat-label">总成交额(亿)</div>
+                </div>
+            </div>
+            
+            <div id="emptyDiv" class="empty-message" style="display: none;">
+                <p>暂无龙虎榜数据</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #999;">请选择其他交易日期查看数据</p>
+            </div>
+            
+            <div id="topListContent" style="display: none;">
+                <table class="stock-table" id="topListTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('ts_code')" data-sort="ts_code">
+                                股票代码<span class="sort-indicator"></span>
+                            </th>
+                            <th>股票名称</th>
+                            <th onclick="sortTable('close')" data-sort="close">
+                                收盘价<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('pct_change')" data-sort="pct_change">
+                                涨跌幅(%)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('turnover_rate')" data-sort="turnover_rate">
+                                换手率(%)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('amount')" data-sort="amount">
+                                总成交额(万)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('l_sell')" data-sort="l_sell">
+                                龙虎榜卖出额(万)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('l_buy')" data-sort="l_buy">
+                                龙虎榜买入额(万)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('l_amount')" data-sort="l_amount">
+                                龙虎榜成交额(万)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('net_amount')" data-sort="net_amount">
+                                龙虎榜净买入额(万)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('net_rate')" data-sort="net_rate">
+                                净买额占比(%)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('amount_rate')" data-sort="amount_rate">
+                                成交额占比(%)<span class="sort-indicator"></span>
+                            </th>
+                            <th onclick="sortTable('float_values')" data-sort="float_values">
+                                流通市值(万)<span class="sort-indicator"></span>
+                            </th>
+                            <th>上榜理由</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topListTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let topListData = [];
+        let sortState = { field: null, direction: 'desc' };
+        
+        function formatNumber(num, decimals = 2) {
+            if (num === 0 || num === null || num === undefined) return '-';
+            if (num >= 100000000) {
+                return (num / 100000000).toFixed(decimals) + '亿';
+            } else if (num >= 10000) {
+                return (num / 10000).toFixed(decimals) + '万';
+            }
+            return num.toFixed(decimals);
+        }
+        
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        function loadTodayData() {
+            document.getElementById('tradeDate').value = getTodayDate();
+            loadTopListData();
+        }
+        
+        function loadTopListData() {
+            const tradeDate = document.getElementById('tradeDate').value;
+            if (!tradeDate) {
+                alert('请选择交易日期');
+                return;
+            }
+            
+            document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('topListContent').style.display = 'none';
+            document.getElementById('emptyDiv').style.display = 'none';
+            document.getElementById('statsDiv').style.display = 'none';
+            
+            const formattedDate = tradeDate.replace(/-/g, '');
+            
+            fetch(`/api/top-list?trade_date=${formattedDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        topListData = data.data || [];
+                        displayTopListData();
+                    } else {
+                        showError('加载龙虎榜数据失败: ' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    showError('加载龙虎榜数据失败: ' + error.message);
+                });
+        }
+        
+        function displayTopListData() {
+            document.getElementById('loadingDiv').style.display = 'none';
+            
+            if (topListData.length === 0) {
+                document.getElementById('emptyDiv').style.display = 'block';
+                document.getElementById('topListContent').style.display = 'none';
+                document.getElementById('statsDiv').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('emptyDiv').style.display = 'none';
+            document.getElementById('topListContent').style.display = 'block';
+            document.getElementById('statsDiv').style.display = 'flex';
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 应用排序
+            const sortedData = applySortToData(topListData);
+            
+            // 填充表格数据
+            const tbody = document.getElementById('topListTableBody');
+            tbody.innerHTML = '';
+            
+            sortedData.forEach(stock => {
+                const row = document.createElement('tr');
+                
+                const changePercent = stock.pct_change || 0;
+                const priceClass = changePercent >= 0 ? 'price-positive' : 'price-negative';
+                const changeSign = changePercent >= 0 ? '+' : '';
+                
+                const netAmount = stock.net_amount || 0;
+                const netClass = netAmount >= 0 ? 'net-positive' : 'net-negative';
+                const netSign = netAmount >= 0 ? '+' : '';
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="stock-code">${stock.ts_code}</div>
+                    </td>
+                    <td>
+                        <div class="stock-name" onclick="viewStock('${stock.ts_code}')">${stock.name}</div>
+                    </td>
+                    <td class="${priceClass}">¥${(stock.close || 0).toFixed(2)}</td>
+                    <td class="${priceClass}">${changeSign}${changePercent.toFixed(2)}%</td>
+                    <td>${(stock.turnover_rate || 0).toFixed(2)}%</td>
+                    <td>${formatNumber((stock.amount || 0) / 10000)}</td>
+                    <td>${formatNumber((stock.l_sell || 0) / 10000)}</td>
+                    <td>${formatNumber((stock.l_buy || 0) / 10000)}</td>
+                    <td>${formatNumber((stock.l_amount || 0) / 10000)}</td>
+                    <td class="${netClass}">${netSign}${formatNumber((netAmount) / 10000)}</td>
+                    <td class="${netClass}">${netSign}${(stock.net_rate || 0).toFixed(2)}%</td>
+                    <td>${(stock.amount_rate || 0).toFixed(2)}%</td>
+                    <td>${formatNumber((stock.float_values || 0) / 10000)}</td>
+                    <td style="max-width: 200px; word-wrap: break-word;">${stock.reason || '-'}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            // 更新排序指示器
+            updateSortIndicators();
+        }
+        
+        function updateStats() {
+            const totalCount = topListData.length;
+            const netBuyCount = topListData.filter(stock => (stock.net_amount || 0) > 0).length;
+            const netSellCount = topListData.filter(stock => (stock.net_amount || 0) < 0).length;
+            const totalAmount = topListData.reduce((sum, stock) => sum + (stock.amount || 0), 0) / 100000000; // 转换为亿
+            
+            document.getElementById('totalCount').textContent = totalCount;
+            document.getElementById('netBuyCount').textContent = netBuyCount;
+            document.getElementById('netSellCount').textContent = netSellCount;
+            document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+        }
+        
+        function applySortToData(data) {
+            if (!sortState.field) {
+                return data;
+            }
+            
+            return [...data].sort((a, b) => {
+                let aVal = a[sortState.field];
+                let bVal = b[sortState.field];
+                
+                // 处理空值
+                if (aVal === null || aVal === undefined) aVal = 0;
+                if (bVal === null || bVal === undefined) bVal = 0;
+                
+                // 对于字符串类型使用localeCompare
+                if (sortState.field === 'ts_code' || sortState.field === 'name') {
+                    if (sortState.direction === 'asc') {
+                        return String(aVal).localeCompare(String(bVal));
+                    } else {
+                        return String(bVal).localeCompare(String(aVal));
+                    }
+                }
+                
+                if (sortState.direction === 'asc') {
+                    return aVal - bVal;
+                } else {
+                    return bVal - aVal;
+                }
+            });
+        }
+        
+        function sortTable(field) {
+            let newDirection = 'desc';
+            
+            if (sortState.field === field) {
+                newDirection = sortState.direction === 'desc' ? 'asc' : 'desc';
+            }
+            
+            sortState = { field, direction: newDirection };
+            
+            // 重新显示数据
+            displayTopListData();
+        }
+        
+        function updateSortIndicators() {
+            // 清除所有排序指示器
+            document.querySelectorAll('.sort-indicator').forEach(indicator => {
+                indicator.className = 'sort-indicator';
+            });
+            
+            // 设置当前排序字段的指示器
+            if (sortState.field) {
+                const th = document.querySelector(`th[data-sort="${sortState.field}"] .sort-indicator`);
+                if (th) {
+                    th.className = `sort-indicator sort-${sortState.direction}`;
+                }
+            }
+        }
+        
+        function viewStock(tsCode) {
+            window.open(`/stock/${tsCode}`, '_blank');
+        }
+        
+        function goBack() {
+            window.location.href = '/';
+        }
+        
+        function refreshData() {
+            loadTopListData();
+        }
+        
+        function showError(message) {
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.getElementById('topListContent').style.display = 'none';
+            document.getElementById('statsDiv').style.display = 'none';
+            document.getElementById('emptyDiv').style.display = 'block';
+            document.getElementById('emptyDiv').innerHTML = `
+                <p style="color: #e74c3c;">加载失败</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #999;">${message}</p>
+            `;
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认日期为今天
+            document.getElementById('tradeDate').value = getTodayDate();
+            // 加载今日数据
+            loadTopListData();
+        });
+    </script>
+</body>
+</html>
