@@ -367,7 +367,7 @@
                                 市值(亿)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'net_mf_amount')" data-sort="net_mf_amount">
-                                净流入(千万)<span class="sort-indicator"></span>
+                                净流入额<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'nine_turn')" data-sort="nine_turn">
                                 九转<span class="sort-indicator"></span>
@@ -428,7 +428,9 @@
                             ${((stock.total_mv || 0) / 10000).toFixed(2)}
                         </td>
                         <td>
-                            ${stock.net_mf_amount !== undefined ? stock.net_mf_amount.toFixed(2) : '-'}
+                            ${stock.net_mf_amount !== undefined ? 
+                                `<span style="color: ${stock.net_mf_amount > 0 ? '#ff4444' : (stock.net_mf_amount < 0 ? '#44aa44' : '#666')}; font-weight: ${stock.net_mf_amount !== 0 ? 'bold' : 'normal'}">${formatNetMfAmount(stock.net_mf_amount)}</span>` 
+                                : '-'}
                         </td>
                         <td>
                             ${(() => {
@@ -742,6 +744,25 @@
                     indicator.className = `sort-indicator sort-${sortState[field]}`;
                 }
             });
+        }
+        
+        // 格式化净流入额函数
+        function formatNetMfAmount(value) {
+            if (value === undefined || value === null) return '-';
+            
+            // 转换为万元单位
+            const amountInWan = value * 1000;
+            const absValue = Math.abs(amountInWan);
+            const sign = amountInWan >= 0 ? '+' : '-';
+            
+            let formatted;
+            if (absValue >= 10000) {
+                formatted = (absValue / 10000).toFixed(2) + '亿';
+            } else {
+                formatted = absValue.toFixed(2) + '万';
+            }
+            
+            return sign + formatted;
         }
         
         // 页面加载时获取自选股数据

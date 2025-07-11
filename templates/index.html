@@ -462,7 +462,7 @@
                         <th class="sortable" onclick="sortTable('pe_ratio')" style="cursor: pointer;">市盈率(PE) <span id="sort-pe_ratio">↕</span></th>
                         <th class="sortable" onclick="sortTable('amount')" style="cursor: pointer;">成交额(亿元) <span id="sort-amount">↕</span></th>
                         <th class="sortable" onclick="sortTable('market_cap')" style="cursor: pointer;">市值(亿元) <span id="sort-market_cap">↕</span></th>
-                        <th class="sortable" onclick="sortTable('net_mf_amount')" style="cursor: pointer;">净流入额(千万元) <span id="sort-net_mf_amount">↕</span></th>
+                        <th class="sortable" onclick="sortTable('net_mf_amount')" style="cursor: pointer;">净流入额 <span id="sort-net_mf_amount">↕</span></th>
                         <th class="sortable" onclick="sortTable('nine_turn')" style="cursor: pointer;">九转买入 <span id="sort-nine_turn">↕</span></th>
                     </tr>
                 </thead>
@@ -741,7 +741,7 @@
                     <td>${hasRealTimeData ? (stock.amount / 100000).toFixed(2) : '-'}</td>
                     <td>${hasRealTimeData ? (stock.market_cap / 10000).toFixed(2) : '-'}</td>
                     <td>${hasRealTimeData ? (stock.net_mf_amount !== undefined ? 
-                        `<span style="color: ${stock.net_mf_amount > 0 ? '#ff4444' : (stock.net_mf_amount < 0 ? '#44aa44' : '#666')}; font-weight: ${stock.net_mf_amount !== 0 ? 'bold' : 'normal'}">${stock.net_mf_amount.toFixed(2)}</span>` 
+                        `<span style="color: ${stock.net_mf_amount > 0 ? '#ff4444' : (stock.net_mf_amount < 0 ? '#44aa44' : '#666')}; font-weight: ${stock.net_mf_amount !== 0 ? 'bold' : 'normal'}">${formatNetMfAmount(stock.net_mf_amount)}</span>` 
                         : '-') : '-'}</td>
                     <td>${nineTurnDisplay}</td>
                 `;
@@ -790,7 +790,7 @@
                     <td>${(stock.amount / 100000).toFixed(2)}</td>
                     <td>${(stock.market_cap / 10000).toFixed(2)}</td>
                     <td>${stock.net_mf_amount !== undefined ? 
-                        `<span style="color: ${stock.net_mf_amount > 0 ? '#ff4444' : (stock.net_mf_amount < 0 ? '#44aa44' : '#666')}; font-weight: ${stock.net_mf_amount !== 0 ? 'bold' : 'normal'}">${stock.net_mf_amount.toFixed(2)}</span>` 
+                        `<span style="color: ${stock.net_mf_amount > 0 ? '#ff4444' : (stock.net_mf_amount < 0 ? '#44aa44' : '#666')}; font-weight: ${stock.net_mf_amount !== 0 ? 'bold' : 'normal'}">${formatNetMfAmount(stock.net_mf_amount)}</span>` 
                         : '-'}</td>
                     <td>${nineTurnDisplay}</td>
                 `;
@@ -1617,6 +1617,25 @@
                  triggerBtn.textContent = originalText;
                  triggerBtn.disabled = false;
              });
+     }
+     
+     // 格式化净流入额函数
+     function formatNetMfAmount(value) {
+         if (value === undefined || value === null) return '-';
+         
+         // 转换为万元单位
+         const amountInWan = value * 1000;
+         const absValue = Math.abs(amountInWan);
+         const sign = amountInWan >= 0 ? '+' : '-';
+         
+         let formatted;
+         if (absValue >= 10000) {
+             formatted = (absValue / 10000).toFixed(2) + '亿';
+         } else {
+             formatted = absValue.toFixed(2) + '万';
+         }
+         
+         return sign + formatted;
      }
      
      // 页面加载完成后初始化
