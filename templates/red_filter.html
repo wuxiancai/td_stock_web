@@ -280,6 +280,34 @@
             return num.toFixed(decimals);
         }
         
+        // 格式化净流入额显示
+        function formatNetMfAmount(amount) {
+            if (amount === undefined || amount === null) {
+                return '<span style="color: #666; font-weight: bold;">-</span>';
+            }
+            
+            const absValue = Math.abs(amount);
+            let formatted;
+            let sign = amount >= 0 ? '+' : '-';
+            
+            if (absValue >= 10000) {
+                formatted = (absValue / 10000).toFixed(2) + '亿';
+            } else {
+                formatted = absValue.toFixed(2) + '万';
+            }
+            
+            let color;
+            if (amount > 0) {
+                color = '#ff4444'; // 红色表示净流入
+            } else if (amount < 0) {
+                color = '#44aa44'; // 绿色表示净流出
+            } else {
+                color = '#666'; // 灰色表示无变化
+            }
+            
+            return `<span style="color: ${color}; font-weight: bold;">${sign}${formatted}</span>`;
+        }
+        
         function loadFilterData() {
             fetch('/api/red-filter')
                 .then(response => response.json())
@@ -364,7 +392,7 @@
                                 市值(亿)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'net_mf_amount')" data-sort="net_mf_amount">
-                                净流入额(千万元)<span class="sort-indicator"></span>
+                                净流入额<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'nine_turn')" data-sort="nine_turn">
                                 九转<span class="sort-indicator"></span>
@@ -416,8 +444,8 @@
                         <td>${stock.pe_ttm && stock.pe_ttm > 0 ? stock.pe_ttm.toFixed(2) : '-'}</td>
                         <td>${formatNumber((stock.amount || 0) * 1000)}</td>
                         <td>${formatNumber(stock.market_cap || 0)}</td>
-                        <td style="color: ${(stock.net_mf_amount || 0) > 0 ? '#ff4444' : (stock.net_mf_amount || 0) < 0 ? '#44aa44' : '#666'}">
-                            ${stock.net_mf_amount !== undefined && stock.net_mf_amount !== null ? (stock.net_mf_amount).toFixed(2) : '-'}
+                        <td>
+                            ${formatNetMfAmount(stock.net_mf_amount)}
                         </td>
                         <td>${nineTurnDisplay}</td>
                         <td>
