@@ -977,20 +977,36 @@ def get_stock_data(stock_code):
         # 使用fillna确保所有NaN都被替换为None
         daily_data = daily_data.where(pd.notna(daily_data), None)
         
-        # 获取资金流向数据（优先使用缓存，然后尝试API）
-        moneyflow_data = None
-        net_mf_amount_from_cache = None
-        
-        # 如果有缓存数据且是当天的，直接使用缓存中的净流入数据
+        # 检查缓存中是否有完整的资金流向数据
+        cached_moneyflow = None
         if cached_stock:
             current_date = datetime.now().strftime('%Y%m%d')
             cache_date = cached_stock.get('last_update', '')
-            if cache_date == current_date and cached_stock.get('net_mf_amount') is not None:
-                net_mf_amount_from_cache = cached_stock.get('net_mf_amount')
-                print(f"使用缓存中的净流入数据: {net_mf_amount_from_cache}千万元")
+            if cache_date == current_date:
+                # 检查是否有完整的资金流向数据字段
+                if (cached_stock.get('buy_elg_amount') is not None or 
+                    cached_stock.get('buy_lg_amount') is not None or 
+                    cached_stock.get('net_mf_amount') is not None):
+                    cached_moneyflow = {
+                        'net_amount': cached_stock.get('net_mf_amount', 0) * 1000 if cached_stock.get('net_mf_amount') else 0,
+                        'buy_elg_amount': cached_stock.get('buy_elg_amount', 0),
+                        'sell_elg_amount': cached_stock.get('sell_elg_amount', 0),
+                        'buy_lg_amount': cached_stock.get('buy_lg_amount', 0),
+                        'sell_lg_amount': cached_stock.get('sell_lg_amount', 0),
+                        'buy_md_amount': cached_stock.get('buy_md_amount', 0),
+                        'sell_md_amount': cached_stock.get('sell_md_amount', 0),
+                        'buy_sm_amount': cached_stock.get('buy_sm_amount', 0),
+                        'sell_sm_amount': cached_stock.get('sell_sm_amount', 0),
+                        'net_amount_rate': cached_stock.get('net_amount_rate', 0),
+                        'data_source': 'cache'
+                    }
+                    print(f"从缓存获取完整资金流向数据: 净流入{cached_stock.get('net_mf_amount', 0)}千万元")
         
-        # 如果缓存中没有当天的净流入数据，则通过API获取
-        if net_mf_amount_from_cache is None:
+        # 获取资金流向数据（优先使用缓存，然后尝试API）
+        moneyflow_data = None
+        
+        # 如果缓存中没有完整的资金流向数据，则通过API获取
+        if cached_moneyflow is None:
             try:
                 print(f"缓存中无当天净流入数据，正在通过API获取{ts_code}的资金流向数据...")
                 
@@ -1063,13 +1079,10 @@ def get_stock_data(stock_code):
         }
         
         # 添加资金流向数据（优先使用缓存数据）
-        if net_mf_amount_from_cache is not None:
-            # 使用缓存中的净流入数据
-            stock_info['net_mf_amount'] = net_mf_amount_from_cache
-            stock_info['moneyflow'] = {
-                'data_source': 'cache',
-                'net_amount': net_mf_amount_from_cache * 1000  # 转换回万元用于显示
-            }
+        if cached_moneyflow is not None:
+            # 使用缓存中的完整资金流向数据
+            stock_info['net_mf_amount'] = cached_stock.get('net_mf_amount', 0)
+            stock_info['moneyflow'] = cached_moneyflow
             print(f"使用缓存数据，设置net_mf_amount为: {stock_info['net_mf_amount']}千万元")
         elif moneyflow_data is not None and not moneyflow_data.empty:
             print(f"资金流向原始数据: {moneyflow_data.iloc[0].to_dict()}")
