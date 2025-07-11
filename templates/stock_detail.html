@@ -501,9 +501,26 @@
             });
             
             if (data.net_mf_amount !== undefined && data.net_mf_amount !== null) {
-                const netMfAmount = data.net_mf_amount; // 已经是千万元单位
+                const netMfAmount = data.net_mf_amount * 1000; // 转换为万元单位以匹配formatMoneyflowAmount函数
                 const netMfElement = document.getElementById('netMfAmount');
-                netMfElement.textContent = netMfAmount.toFixed(2) + '千万元'; // 添加单位显示
+                
+                // 使用与特大单买入金额相同的格式化函数
+                function formatMoneyflowAmountForNet(value) {
+                    if (value === 0 || value === null || value === undefined) return '-';
+                    const absValue = Math.abs(value);
+                    const sign = value >= 0 ? '+' : '-';
+                    let formatted;
+                    
+                    if (absValue >= 10000) {
+                        formatted = (absValue / 10000).toFixed(2) + '亿';
+                    } else {
+                        formatted = absValue.toFixed(2) + '万';
+                    }
+                    
+                    return sign + formatted;
+                }
+                
+                netMfElement.textContent = formatMoneyflowAmountForNet(netMfAmount);
                 // 根据正负值设置颜色
                 if (netMfAmount > 0) {
                     netMfElement.style.color = '#ff4444'; // 红色表示净流入
