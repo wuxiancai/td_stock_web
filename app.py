@@ -977,9 +977,11 @@ def get_stock_data(stock_code):
         
         # 添加资金流向数据（如果可用）
         if moneyflow_data is not None and not moneyflow_data.empty:
+            print(f"资金流向原始数据: {moneyflow_data.iloc[0].to_dict()}")
             # 检查是否是moneyflow_dc接口的数据（包含net_amount字段）
             if 'net_amount' in moneyflow_data.columns:
                 net_amount_wan = safe_float(moneyflow_data.iloc[0]['net_amount'])  # 万元
+                print(f"moneyflow_dc接口 - net_amount原始值: {net_amount_wan}万元")
                 stock_info['moneyflow'] = {
                     'net_amount': net_amount_wan,  # 主力净流入额（万元）
                     'net_amount_rate': safe_float(moneyflow_data.iloc[0]['net_amount_rate']),  # 主力净流入净占比
@@ -991,9 +993,11 @@ def get_stock_data(stock_code):
                 }
                 # 设置net_mf_amount字段（转换为千万元，与列表页面保持一致）
                 stock_info['net_mf_amount'] = round(net_amount_wan / 1000, 2)
+                print(f"设置net_mf_amount为: {stock_info['net_mf_amount']}千万元")
             # 检查是否是moneyflow接口的数据（包含net_mf_amount字段）
             elif 'net_mf_amount' in moneyflow_data.columns:
                 net_mf_amount_wan = safe_float(moneyflow_data.iloc[0]['net_mf_amount'])  # 万元
+                print(f"moneyflow接口 - net_mf_amount原始值: {net_mf_amount_wan}万元")
                 stock_info['moneyflow'] = {
                     'net_amount': net_mf_amount_wan,  # 净流入额（万元）
                     'buy_elg_amount': safe_float(moneyflow_data.iloc[0]['buy_elg_amount']),  # 特大单买入金额
@@ -1004,9 +1008,11 @@ def get_stock_data(stock_code):
                 }
                 # 设置net_mf_amount字段（转换为千万元，与列表页面保持一致）
                 stock_info['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)
+                print(f"设置net_mf_amount为: {stock_info['net_mf_amount']}千万元")
         else:
             stock_info['moneyflow'] = None
             stock_info['net_mf_amount'] = 0  # 如果没有资金流向数据，设置为0
+            print(f"无资金流向数据，设置net_mf_amount为0")
         
         return jsonify(stock_info)
     
