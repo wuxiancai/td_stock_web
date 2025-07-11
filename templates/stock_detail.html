@@ -291,10 +291,7 @@
                 <div class="moneyflow-section" id="moneyflowSection" style="display: none;">
                     <h3 style="margin: 20px 0 10px 0; color: #333; font-size: 1.0em;">资金流向</h3>
                     <div class="stock-info">
-                        <div class="info-item">
-                            <div class="info-label">净流入额</div>
-                            <div class="info-value" id="netMfAmount"></div>
-                        </div>
+
                         <div class="info-item">
                             <div class="info-label">特大单买入金额</div>
                             <div class="info-value" id="buyElgAmount"></div>
@@ -578,10 +575,7 @@
                     }
                 }
                 
-                // 显示净流入额
-                const netMfAmount = data.net_mf_amount || 0;
-                document.getElementById('netMfAmount').textContent = netMfAmount.toFixed(2) + '千万元';
-                setNetAmountStyle('netMfAmount', netMfAmount);
+
                 
                 // 显示特大单买入金额
                 const buyElgAmount = data.moneyflow.buy_elg_amount || 0;
