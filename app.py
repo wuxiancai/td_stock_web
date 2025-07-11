@@ -2745,6 +2745,26 @@ def get_top_list():
         if not stock_basic_data.empty:
             name_mapping = dict(zip(stock_basic_data['ts_code'], stock_basic_data['name']))
         
+        # 获取九转数据，从缓存中读取
+        nine_turn_mapping = {}
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        for market in markets:
+            try:
+                market_data = cache_manager.load_cache_data(market)
+                if market_data and 'stocks' in market_data:
+                    for stock in market_data['stocks']:
+                        ts_code = stock.get('ts_code')
+                        if ts_code in ts_codes:
+                            nine_turn_mapping[ts_code] = {
+                                'nine_turn_up': stock.get('nine_turn_up', 0),
+                                'nine_turn_down': stock.get('nine_turn_down', 0),
+                                'countdown_up': stock.get('countdown_up', 0),
+                                'countdown_down': stock.get('countdown_down', 0)
+                            }
+            except Exception as e:
+                print(f"获取市场 {market} 九转数据失败: {e}")
+                continue
+        
         # 安全获取数值的辅助函数
         def safe_float(value, default=0.0):
             try:
@@ -2757,9 +2777,12 @@ def get_top_list():
         # 处理数据
         result_data = []
         for _, row in top_list_data.iterrows():
+            ts_code = row['ts_code']
+            nine_turn_data = nine_turn_mapping.get(ts_code, {})
+            
             stock_data = {
-                'ts_code': row['ts_code'],
-                'name': name_mapping.get(row['ts_code'], row['ts_code']),  # 如果没有找到名称，使用代码
+                'ts_code': ts_code,
+                'name': name_mapping.get(ts_code, ts_code),  # 如果没有找到名称，使用代码
                 'close': safe_float(row.get('close')),
                 'pct_change': safe_float(row.get('pct_change')),
                 'turnover_rate': safe_float(row.get('turnover_rate')),
@@ -2771,7 +2794,12 @@ def get_top_list():
                 'net_rate': safe_float(row.get('net_rate')),
                 'amount_rate': safe_float(row.get('amount_rate')),
                 'float_values': safe_float(row.get('float_values')),
-                'reason': row.get('reason', '')
+                'reason': row.get('reason', ''),
+                # 添加九转数据
+                'nine_turn_up': nine_turn_data.get('nine_turn_up', 0),
+                'nine_turn_down': nine_turn_data.get('nine_turn_down', 0),
+                'countdown_up': nine_turn_data.get('countdown_up', 0),
+                'countdown_down': nine_turn_data.get('countdown_down', 0)
             }
             result_data.append(stock_data)
         

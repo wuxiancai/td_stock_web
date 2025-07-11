@@ -330,6 +330,9 @@
                             <th onclick="sortTable('float_values')" data-sort="float_values">
                                 流通市值(亿)<span class="sort-indicator"></span>
                             </th>
+                            <th onclick="sortTable('nine_turn')" data-sort="nine_turn">
+                                九转<span class="sort-indicator"></span>
+                            </th>
                             <th>上榜理由</th>
                         </tr>
                     </thead>
@@ -445,6 +448,21 @@
                     <td class="${netClass}">${netSign}${(stock.net_rate || 0).toFixed(2)}%</td>
                     <td>${(stock.amount_rate || 0).toFixed(2)}%</td>
                     <td>${formatNumber((stock.float_values || 0) / 100000000)}</td>
+                    <td>
+                        ${(() => {
+                            if (stock.nine_turn_up && stock.nine_turn_up > 0) {
+                                return `<span style="color: red; font-weight: bold;">${stock.nine_turn_up}</span>`;
+                            } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
+                                return `<span style="color: green; font-weight: bold;">${stock.nine_turn_down}</span>`;
+                            } else if (stock.countdown_up && stock.countdown_up > 0) {
+                                return `<span style="color: red; font-weight: bold;">倒${stock.countdown_up}</span>`;
+                            } else if (stock.countdown_down && stock.countdown_down > 0) {
+                                return `<span style="color: green; font-weight: bold;">倒${stock.countdown_down}</span>`;
+                            } else {
+                                return '-';
+                            }
+                        })()} 
+                    </td>
                     <td style="max-width: 200px; word-wrap: break-word;">${stock.reason || '-'}</td>
                 `;
                 
@@ -480,13 +498,18 @@
                 if (aVal === null || aVal === undefined) aVal = 0;
                 if (bVal === null || bVal === undefined) bVal = 0;
                 
-                // 对于字符串类型使用localeCompare
+                // 处理特殊字段
                 if (sortState.field === 'ts_code' || sortState.field === 'name') {
+                    // 对于字符串类型使用localeCompare
                     if (sortState.direction === 'asc') {
                         return String(aVal).localeCompare(String(bVal));
                     } else {
                         return String(bVal).localeCompare(String(aVal));
                     }
+                } else if (sortState.field === 'nine_turn') {
+                    // 九转字段的排序逻辑
+                    aVal = a.nine_turn_up || a.nine_turn_down || a.countdown_up || a.countdown_down || 0;
+                    bVal = b.nine_turn_up || b.nine_turn_down || b.countdown_up || b.countdown_down || 0;
                 }
                 
                 if (sortState.direction === 'asc') {
