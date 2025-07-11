@@ -823,6 +823,52 @@ def top_list():
     """龙虎榜页面"""
     return render_template('top_list.html')
 
+def get_stock_from_cache(ts_code):
+    """从缓存中查找股票数据"""
+    # 确定股票所属市场
+    if ts_code.endswith('.SH'):
+        if ts_code.startswith('688'):
+            market = 'kcb'  # 科创板
+        else:
+            market = 'hu'   # 沪A
+    elif ts_code.endswith('.SZ'):
+        if ts_code.startswith('300'):
+            market = 'cyb'  # 创业板
+        else:
+            market = 'zxb'  # 深A
+    elif ts_code.endswith('.BJ'):
+        market = 'bj'   # 北交所
+    else:
+        return None
+    
+    # 从缓存中查找股票数据
+    cache_data = load_cache_data(market)
+    if cache_data and 'stocks' in cache_data:
+        for stock in cache_data['stocks']:
+            if stock.get('ts_code') == ts_code:
+                return stock
+    return None
+
+def retry_api_call_with_rate_limit(api_func, max_retries=3, retry_delay=60):
+    """带重试机制的API调用，处理频率限制"""
+    for attempt in range(max_retries):
+        try:
+            result = api_func()
+            return result
+        except Exception as e:
+            error_msg = str(e)
+            if "每分钟最多访问该接口" in error_msg or "访问频率" in error_msg:
+                if attempt < max_retries - 1:
+                    print(f"API频率限制，等待{retry_delay}秒后重试... (尝试 {attempt + 1}/{max_retries})")
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    print(f"API频率限制，已达到最大重试次数")
+                    raise e
+            else:
+                raise e
+    return None
+
 @app.route('/api/stock/<stock_code>')
 def get_stock_data(stock_code):
     try:
@@ -841,6 +887,16 @@ def get_stock_data(stock_code):
             # 如果已经包含后缀，直接使用
             ts_code = stock_code
             
+        # 优先从缓存获取净流入数据
+        cached_stock = None
+        if not force_refresh:
+            cached_stock = get_stock_from_cache(ts_code)
+            if cached_stock:
+                current_date = datetime.now().strftime('%Y%m%d')
+                cache_date = cached_stock.get('last_update', '')
+                if cache_date == current_date and cached_stock.get('net_mf_amount') is not None:
+                    print(f"从缓存获取{ts_code}的净流入数据: {cached_stock.get('net_mf_amount')}千万元")
+        
         # 如果强制刷新，清除相关缓存
         if force_refresh:
             print(f"强制刷新股票数据: {ts_code}")
@@ -921,26 +977,57 @@ def get_stock_data(stock_code):
         # 使用fillna确保所有NaN都被替换为None
         daily_data = daily_data.where(pd.notna(daily_data), None)
         
-        # 获取资金流向数据（尝试两个接口，使用频率限制）
+        # 获取资金流向数据（优先使用缓存，然后尝试API）
         moneyflow_data = None
-        try:
-            print(f"正在获取{ts_code}的资金流向数据...")
-            # 优先尝试moneyflow_dc接口（需要5000积分，数据更详细）
-            moneyflow_data = safe_tushare_call(pro.moneyflow_dc, ts_code=ts_code, limit=1)
-            if moneyflow_data is not None and not moneyflow_data.empty:
-                print(f"成功从moneyflow_dc获取{ts_code}的资金流向数据")
-            else:
-                print(f"moneyflow_dc接口无{ts_code}数据，尝试moneyflow接口...")
-                # 如果moneyflow_dc没有数据，尝试moneyflow接口（需要2000积分）
-                moneyflow_data = safe_tushare_call(pro.moneyflow, ts_code=ts_code, limit=1)
-                if moneyflow_data is not None and not moneyflow_data.empty:
-                    print(f"成功从moneyflow获取{ts_code}的资金流向数据")
-                else:
-                    print(f"moneyflow接口也无{ts_code}数据")
-        except Exception as e:
-            print(f"获取{ts_code}资金流向数据失败: {e}")
-            # 如果积分不足或其他错误，继续执行但不包含资金流向数据
-            pass
+        net_mf_amount_from_cache = None
+        
+        # 如果有缓存数据且是当天的，直接使用缓存中的净流入数据
+        if cached_stock:
+            current_date = datetime.now().strftime('%Y%m%d')
+            cache_date = cached_stock.get('last_update', '')
+            if cache_date == current_date and cached_stock.get('net_mf_amount') is not None:
+                net_mf_amount_from_cache = cached_stock.get('net_mf_amount')
+                print(f"使用缓存中的净流入数据: {net_mf_amount_from_cache}千万元")
+        
+        # 如果缓存中没有当天的净流入数据，则通过API获取
+        if net_mf_amount_from_cache is None:
+            try:
+                print(f"缓存中无当天净流入数据，正在通过API获取{ts_code}的资金流向数据...")
+                
+                # 定义API调用函数，用于重试机制
+                def call_moneyflow_dc():
+                    return safe_tushare_call(pro.moneyflow_dc, ts_code=ts_code, limit=1)
+                
+                def call_moneyflow():
+                    return safe_tushare_call(pro.moneyflow, ts_code=ts_code, limit=1)
+                
+                # 优先尝试moneyflow_dc接口（需要5000积分，数据更详细）
+                try:
+                    moneyflow_data = retry_api_call_with_rate_limit(call_moneyflow_dc)
+                    if moneyflow_data is not None and not moneyflow_data.empty:
+                        print(f"成功从moneyflow_dc获取{ts_code}的资金流向数据")
+                    else:
+                        print(f"moneyflow_dc接口无{ts_code}数据，尝试moneyflow接口...")
+                        # 如果moneyflow_dc没有数据，尝试moneyflow接口（需要2000积分）
+                        moneyflow_data = retry_api_call_with_rate_limit(call_moneyflow)
+                        if moneyflow_data is not None and not moneyflow_data.empty:
+                            print(f"成功从moneyflow获取{ts_code}的资金流向数据")
+                        else:
+                            print(f"moneyflow接口也无{ts_code}数据")
+                except Exception as e:
+                    print(f"API调用失败: {e}")
+                    # 如果重试后仍然失败，尝试另一个接口
+                    try:
+                        moneyflow_data = retry_api_call_with_rate_limit(call_moneyflow)
+                        if moneyflow_data is not None and not moneyflow_data.empty:
+                            print(f"备用接口成功获取{ts_code}的资金流向数据")
+                    except Exception as e2:
+                        print(f"备用接口也失败: {e2}")
+                        
+            except Exception as e:
+                print(f"获取{ts_code}资金流向数据失败: {e}")
+                # 如果积分不足或其他错误，继续执行但不包含资金流向数据
+                pass
         
         # 计算当天涨幅
         latest_close = safe_float(daily_data.iloc[-1]['close'])
@@ -975,8 +1062,16 @@ def get_stock_data(stock_code):
             'kline_data': daily_data.to_dict('records')
         }
         
-        # 添加资金流向数据（如果可用）
-        if moneyflow_data is not None and not moneyflow_data.empty:
+        # 添加资金流向数据（优先使用缓存数据）
+        if net_mf_amount_from_cache is not None:
+            # 使用缓存中的净流入数据
+            stock_info['net_mf_amount'] = net_mf_amount_from_cache
+            stock_info['moneyflow'] = {
+                'data_source': 'cache',
+                'net_amount': net_mf_amount_from_cache * 1000  # 转换回万元用于显示
+            }
+            print(f"使用缓存数据，设置net_mf_amount为: {stock_info['net_mf_amount']}千万元")
+        elif moneyflow_data is not None and not moneyflow_data.empty:
             print(f"资金流向原始数据: {moneyflow_data.iloc[0].to_dict()}")
             # 检查是否是moneyflow_dc接口的数据（包含net_amount字段）
             if 'net_amount' in moneyflow_data.columns:
