@@ -485,8 +485,8 @@
             document.getElementById('amount').textContent = formatNumber(data.amount * 1000);
             
             // 显示净流入额
-            if (data.moneyflow && data.moneyflow.net_amount !== undefined && data.moneyflow.net_amount !== null) {
-                const netMfAmount = data.moneyflow.net_amount;
+            if (data.net_mf_amount !== undefined && data.net_mf_amount !== null) {
+                const netMfAmount = data.net_mf_amount; // 已经是千万元单位
                 const netMfElement = document.getElementById('netMfAmount');
                 netMfElement.textContent = netMfAmount.toFixed(2) + '千万元';
                 // 根据正负值设置颜色

@@ -924,13 +924,21 @@ def get_stock_data(stock_code):
         # 获取资金流向数据（尝试两个接口，使用频率限制）
         moneyflow_data = None
         try:
+            print(f"正在获取{ts_code}的资金流向数据...")
             # 优先尝试moneyflow_dc接口（需要5000积分，数据更详细）
             moneyflow_data = safe_tushare_call(pro.moneyflow_dc, ts_code=ts_code, limit=1)
-            if moneyflow_data.empty:
+            if moneyflow_data is not None and not moneyflow_data.empty:
+                print(f"成功从moneyflow_dc获取{ts_code}的资金流向数据")
+            else:
+                print(f"moneyflow_dc接口无{ts_code}数据，尝试moneyflow接口...")
                 # 如果moneyflow_dc没有数据，尝试moneyflow接口（需要2000积分）
                 moneyflow_data = safe_tushare_call(pro.moneyflow, ts_code=ts_code, limit=1)
+                if moneyflow_data is not None and not moneyflow_data.empty:
+                    print(f"成功从moneyflow获取{ts_code}的资金流向数据")
+                else:
+                    print(f"moneyflow接口也无{ts_code}数据")
         except Exception as e:
-            print(f"获取资金流向数据失败: {e}")
+            print(f"获取{ts_code}资金流向数据失败: {e}")
             # 如果积分不足或其他错误，继续执行但不包含资金流向数据
             pass
         
@@ -971,8 +979,9 @@ def get_stock_data(stock_code):
         if moneyflow_data is not None and not moneyflow_data.empty:
             # 检查是否是moneyflow_dc接口的数据（包含net_amount字段）
             if 'net_amount' in moneyflow_data.columns:
+                net_amount_wan = safe_float(moneyflow_data.iloc[0]['net_amount'])  # 万元
                 stock_info['moneyflow'] = {
-                    'net_amount': safe_float(moneyflow_data.iloc[0]['net_amount']),  # 主力净流入额（万元）
+                    'net_amount': net_amount_wan,  # 主力净流入额（万元）
                     'net_amount_rate': safe_float(moneyflow_data.iloc[0]['net_amount_rate']),  # 主力净流入净占比
                     'buy_elg_amount': safe_float(moneyflow_data.iloc[0]['buy_elg_amount']),  # 超大单净流入额
                     'buy_lg_amount': safe_float(moneyflow_data.iloc[0]['buy_lg_amount']),  # 大单净流入额
@@ -980,18 +989,24 @@ def get_stock_data(stock_code):
                     'buy_sm_amount': safe_float(moneyflow_data.iloc[0]['buy_sm_amount']),  # 小单净流入额
                     'data_source': 'moneyflow_dc'
                 }
+                # 设置net_mf_amount字段（转换为千万元，与列表页面保持一致）
+                stock_info['net_mf_amount'] = round(net_amount_wan / 1000, 2)
             # 检查是否是moneyflow接口的数据（包含net_mf_amount字段）
             elif 'net_mf_amount' in moneyflow_data.columns:
+                net_mf_amount_wan = safe_float(moneyflow_data.iloc[0]['net_mf_amount'])  # 万元
                 stock_info['moneyflow'] = {
-                    'net_amount': safe_float(moneyflow_data.iloc[0]['net_mf_amount']),  # 净流入额（万元）
+                    'net_amount': net_mf_amount_wan,  # 净流入额（万元）
                     'buy_elg_amount': safe_float(moneyflow_data.iloc[0]['buy_elg_amount']),  # 特大单买入金额
                     'sell_elg_amount': safe_float(moneyflow_data.iloc[0]['sell_elg_amount']),  # 特大单卖出金额
                     'buy_lg_amount': safe_float(moneyflow_data.iloc[0]['buy_lg_amount']),  # 大单买入金额
                     'sell_lg_amount': safe_float(moneyflow_data.iloc[0]['sell_lg_amount']),  # 大单卖出金额
                     'data_source': 'moneyflow'
                 }
+                # 设置net_mf_amount字段（转换为千万元，与列表页面保持一致）
+                stock_info['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)
         else:
             stock_info['moneyflow'] = None
+            stock_info['net_mf_amount'] = 0  # 如果没有资金流向数据，设置为0
         
         return jsonify(stock_info)
     
