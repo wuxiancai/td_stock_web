@@ -377,10 +377,11 @@
                     </div>
                     <button onclick="triggerAutoSync()" style="padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🚀 立即增量同步</button>
                     <button onclick="updateAllData()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">📈 更新全部数据</button>
+                    <button onclick="triggerMoneyflowUpdate()" style="padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">💰 更新资金流向</button>
                     <button onclick="refreshSchedulerStatus()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新状态</button>
                 </div>
                 <div style="margin-top: 10px; font-size: 10px; color: #ccc;">
-                    💡 系统将在每个工作日下午5点自动同步所有A股数据，包括创业板、沪A、深A、科创板和北交所
+                    💡 系统将在每个工作日下午5点自动同步所有A股数据，工作日晚上7点自动更新资金流向数据，每天晚上6点自动筛选股票
                 </div>
             </div>
         </div>
@@ -1501,6 +1502,32 @@
              .catch(error => {
                  console.error('更新全部数据失败:', error);
                  alert('更新失败：网络错误');
+             })
+             .finally(() => {
+                 updateBtn.textContent = originalText;
+                 updateBtn.disabled = false;
+             });
+     }
+     
+     function triggerMoneyflowUpdate() {
+         const updateBtn = event.target;
+         const originalText = updateBtn.textContent;
+         
+         updateBtn.textContent = '更新中...';
+         updateBtn.disabled = true;
+         
+         fetch('/api/scheduler/trigger_moneyflow', { method: 'POST' })
+             .then(response => response.json())
+             .then(data => {
+                 if (data.status === 'success') {
+                     alert('资金流向数据更新任务已启动！\n\n系统将使用专用的API频率限制器（每分钟2次）来获取所有股票的资金流向数据。\n\n更新过程可能需要较长时间，请耐心等待。更新完成后可刷新页面查看最新数据。');
+                 } else {
+                     alert('资金流向数据更新失败：' + (data.message || '未知错误'));
+                 }
+             })
+             .catch(error => {
+                 console.error('触发资金流向数据更新失败:', error);
+                 alert('资金流向数据更新失败：网络错误');
              })
              .finally(() => {
                  updateBtn.textContent = originalText;

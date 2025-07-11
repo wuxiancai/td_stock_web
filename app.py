@@ -1433,6 +1433,184 @@ def force_refresh_market(market):
         return jsonify({'error': str(e)}), 500
 
 # 定时任务功能
+def auto_update_moneyflow_data():
+    """自动更新资金流向数据到缓存 - 工作日晚上7点执行"""
+    try:
+        now = datetime.now()
+        print(f"开始自动更新资金流向数据 - {now.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # 获取所有市场的股票数据
+        all_stocks = []
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        
+        for market in markets:
+            try:
+                market_data = cache_manager.load_cache_data(market)
+                if market_data and 'stocks' in market_data:
+                    all_stocks.extend([(stock, market) for stock in market_data['stocks']])
+            except Exception as e:
+                print(f"获取市场 {market} 数据失败: {e}")
+                continue
+        
+        if not all_stocks:
+            print("没有找到股票数据，跳过资金流向数据更新")
+            return
+        
+        print(f"找到 {len(all_stocks)} 只股票，开始更新资金流向数据")
+        
+        # 创建专用的资金流向API频率限制器（每分钟2次）
+        moneyflow_rate_limiter = RateLimiter(max_requests=2, time_window=60)
+        
+        # 获取当前交易日期
+        current_trade_date = datetime.now().strftime('%Y%m%d')
+        
+        # 分批处理股票，每批处理完后等待足够时间
+        batch_size = 2  # 每批处理2只股票（对应API限制）
+        total_batches = (len(all_stocks) + batch_size - 1) // batch_size
+        
+        updated_count = 0
+        failed_count = 0
+        
+        for batch_idx in range(total_batches):
+            start_idx = batch_idx * batch_size
+            end_idx = min(start_idx + batch_size, len(all_stocks))
+            batch_stocks = all_stocks[start_idx:end_idx]
+            
+            print(f"处理第 {batch_idx + 1}/{total_batches} 批，股票 {start_idx + 1}-{end_idx}")
+            
+            # 处理当前批次的股票
+            for stock_info, market in batch_stocks:
+                try:
+                    ts_code = stock_info['ts_code']
+                    print(f"更新 {ts_code} 的资金流向数据")
+                    
+                    # 使用专用频率限制器获取资金流向数据
+                    moneyflow_data = None
+                    
+                    # 首先尝试 moneyflow_dc 接口
+                    try:
+                        moneyflow_rate_limiter.wait_if_needed()
+                        moneyflow_data = pro.moneyflow_dc(ts_code=ts_code, trade_date=current_trade_date)
+                        if moneyflow_data.empty:
+                            raise Exception("moneyflow_dc 返回空数据")
+                        print(f"使用 moneyflow_dc 接口获取 {ts_code} 数据成功")
+                    except Exception as e:
+                        print(f"moneyflow_dc 接口失败: {e}，尝试 moneyflow 接口")
+                        try:
+                            moneyflow_rate_limiter.wait_if_needed()
+                            moneyflow_data = pro.moneyflow(ts_code=ts_code, trade_date=current_trade_date)
+                            if moneyflow_data.empty:
+                                raise Exception("moneyflow 返回空数据")
+                            print(f"使用 moneyflow 接口获取 {ts_code} 数据成功")
+                        except Exception as e2:
+                            print(f"moneyflow 接口也失败: {e2}")
+                            failed_count += 1
+                            continue
+                    
+                    # 更新股票的资金流向数据
+                    if moneyflow_data is not None and not moneyflow_data.empty:
+                        row = moneyflow_data.iloc[0]
+                        
+                        # 更新各种资金流向字段
+                        if 'net_mf_amount' in row:
+                            net_mf_amount_wan = safe_float(row['net_mf_amount'])
+                            stock_info['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)
+                        
+                        if 'buy_elg_amount' in row:
+                            buy_elg_amount_wan = safe_float(row['buy_elg_amount'])
+                            stock_info['buy_elg_amount'] = round(buy_elg_amount_wan / 1000, 2)
+                        
+                        if 'buy_lg_amount' in row:
+                            buy_lg_amount_wan = safe_float(row['buy_lg_amount'])
+                            stock_info['buy_lg_amount'] = round(buy_lg_amount_wan / 1000, 2)
+                        
+                        if 'buy_md_amount' in row:
+                            buy_md_amount_wan = safe_float(row['buy_md_amount'])
+                            stock_info['buy_md_amount'] = round(buy_md_amount_wan / 1000, 2)
+                        
+                        if 'buy_sm_amount' in row:
+                            buy_sm_amount_wan = safe_float(row['buy_sm_amount'])
+                            stock_info['buy_sm_amount'] = round(buy_sm_amount_wan / 1000, 2)
+                        
+                        if 'sell_elg_amount' in row:
+                            sell_elg_amount_wan = safe_float(row['sell_elg_amount'])
+                            stock_info['sell_elg_amount'] = round(sell_elg_amount_wan / 1000, 2)
+                        
+                        if 'sell_lg_amount' in row:
+                            sell_lg_amount_wan = safe_float(row['sell_lg_amount'])
+                            stock_info['sell_lg_amount'] = round(sell_lg_amount_wan / 1000, 2)
+                        
+                        if 'sell_md_amount' in row:
+                            sell_md_amount_wan = safe_float(row['sell_md_amount'])
+                            stock_info['sell_md_amount'] = round(sell_md_amount_wan / 1000, 2)
+                        
+                        if 'sell_sm_amount' in row:
+                            sell_sm_amount_wan = safe_float(row['sell_sm_amount'])
+                            stock_info['sell_sm_amount'] = round(sell_sm_amount_wan / 1000, 2)
+                        
+                        if 'net_amount' in row:
+                            net_amount_wan = safe_float(row['net_amount'])
+                            stock_info['net_amount'] = round(net_amount_wan / 1000, 2)
+                        
+                        # 更新数据时间戳
+                        stock_info['moneyflow_last_update'] = current_trade_date
+                        stock_info['last_update'] = datetime.now().strftime('%Y-%m-%d')
+                        
+                        updated_count += 1
+                        print(f"成功更新 {ts_code} 的资金流向数据")
+                    else:
+                        failed_count += 1
+                        print(f"未能获取 {ts_code} 的资金流向数据")
+                        
+                except Exception as e:
+                    failed_count += 1
+                    print(f"更新 {stock_info.get('ts_code', 'unknown')} 资金流向数据失败: {e}")
+                    continue
+            
+            # 批次处理完成后，如果不是最后一批，等待足够时间避免API限制
+            if batch_idx < total_batches - 1:
+                wait_time = 35  # 等待35秒，确保不超过每分钟2次的限制
+                print(f"批次 {batch_idx + 1} 完成，等待 {wait_time} 秒后处理下一批...")
+                time.sleep(wait_time)
+        
+        # 更新完成后，重新保存所有市场的缓存数据
+        markets_updated = set()
+        for stock_info, market in all_stocks:
+            if market not in markets_updated:
+                try:
+                    # 获取该市场的所有股票数据
+                    market_stocks = [s for s, m in all_stocks if m == market]
+                    
+                    # 构建缓存数据
+                    cache_data = {
+                        'stocks': market_stocks,
+                        'last_update_date': datetime.now().strftime('%Y-%m-%d'),
+                        'total': len(market_stocks),
+                        'progress': {
+                            'completed': len(market_stocks),
+                            'total': len(market_stocks),
+                            'current_stock': 'moneyflow_update_completed'
+                        },
+                        'data_status': 'complete',
+                        'moneyflow_update_time': datetime.now().isoformat()
+                    }
+                    
+                    # 保存缓存
+                    cache_manager.save_cache_data(market, cache_data)
+                    markets_updated.add(market)
+                    print(f"已更新 {market} 市场缓存数据")
+                    
+                except Exception as e:
+                    print(f"保存 {market} 市场缓存失败: {e}")
+        
+        print(f"资金流向数据更新完成！成功: {updated_count}, 失败: {failed_count}")
+        print(f"更新了 {len(markets_updated)} 个市场的缓存数据")
+        
+    except Exception as e:
+        print(f"自动更新资金流向数据失败: {e}")
+        import traceback
+        traceback.print_exc()
+
 def auto_filter_stocks():
     """自动筛选符合条件的股票并保存结果"""
     try:
@@ -1646,10 +1824,18 @@ def start_scheduler():
     schedule.every().thursday.at("17:00").do(auto_sync_all_markets)
     schedule.every().friday.at("17:00").do(auto_sync_all_markets)
     
+    # 设置定时任务：工作日晚上7点执行资金流向数据更新
+    schedule.every().monday.at("19:00").do(auto_update_moneyflow_data)
+    schedule.every().tuesday.at("19:00").do(auto_update_moneyflow_data)
+    schedule.every().wednesday.at("19:00").do(auto_update_moneyflow_data)
+    schedule.every().thursday.at("19:00").do(auto_update_moneyflow_data)
+    schedule.every().friday.at("19:00").do(auto_update_moneyflow_data)
+    
     # 设置定时任务：每天晚上6点执行股票筛选
     schedule.every().day.at("18:00").do(auto_filter_stocks)
     
     print("定时任务已设置：工作日下午5点自动同步所有A股数据")
+    print("定时任务已设置：工作日晚上7点自动更新资金流向数据")
     print("定时任务已设置：每天晚上6点自动筛选符合条件的股票")
     
     # 在后台线程中运行调度器
@@ -1694,6 +1880,24 @@ def trigger_auto_sync():
         return jsonify({
             'status': 'success',
             'message': '手动同步任务已启动'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/scheduler/trigger_moneyflow', methods=['POST'])
+def trigger_moneyflow_update():
+    """手动触发资金流向数据更新任务"""
+    try:
+        # 在后台线程中执行资金流向数据更新任务
+        moneyflow_thread = threading.Thread(target=auto_update_moneyflow_data, daemon=True)
+        moneyflow_thread.start()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '资金流向数据更新任务已启动'
         })
     except Exception as e:
         return jsonify({
