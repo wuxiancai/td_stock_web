@@ -292,28 +292,40 @@
                     <h3 style="margin: 20px 0 10px 0; color: #333; font-size: 1.0em;">资金流向</h3>
                     <div class="stock-info">
                         <div class="info-item">
-                            <div class="info-label">主力净流入</div>
-                            <div class="info-value" id="netAmount"></div>
+                            <div class="info-label">净流入额</div>
+                            <div class="info-value" id="netMfAmount"></div>
                         </div>
                         <div class="info-item">
-                            <div class="info-label">净流入占比</div>
-                            <div class="info-value" id="netAmountRate"></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">超大单净流入</div>
+                            <div class="info-label">特大单买入金额</div>
                             <div class="info-value" id="buyElgAmount"></div>
                         </div>
                         <div class="info-item">
-                            <div class="info-label">大单净流入</div>
+                            <div class="info-label">特大单卖出金额</div>
+                            <div class="info-value" id="sellElgAmount"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">大单买入金额</div>
                             <div class="info-value" id="buyLgAmount"></div>
                         </div>
                         <div class="info-item">
-                            <div class="info-label">中单净流入</div>
+                            <div class="info-label">大单卖出金额</div>
+                            <div class="info-value" id="sellLgAmount"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">中单买入金额</div>
                             <div class="info-value" id="buyMdAmount"></div>
                         </div>
                         <div class="info-item">
-                            <div class="info-label">小单净流入</div>
+                            <div class="info-label">中单卖出金额</div>
+                            <div class="info-value" id="sellMdAmount"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">小单买入金额</div>
                             <div class="info-value" id="buySmAmount"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">小单卖出金额</div>
+                            <div class="info-value" id="sellSmAmount"></div>
                         </div>
                     </div>
                 </div>
@@ -527,11 +539,10 @@
             if (data.moneyflow && data.moneyflow !== null) {
                 document.getElementById('moneyflowSection').style.display = 'block';
                 
-                // 格式化资金流向数值的函数
-                function formatMoneyflow(value) {
+                // 格式化资金流向数值的函数（万元单位）
+                function formatMoneyflowAmount(value) {
                     if (value === 0 || value === null || value === undefined) return '-';
                     const absValue = Math.abs(value);
-                    const sign = value >= 0 ? '+' : '-';
                     let formatted;
                     
                     if (absValue >= 10000) {
@@ -540,62 +551,77 @@
                         formatted = absValue.toFixed(2) + '万';
                     }
                     
-                    return sign + formatted;
+                    return formatted;
                 }
                 
-                // 设置颜色样式的函数
-                function setMoneyflowStyle(elementId, value) {
+                // 设置买入金额颜色（红色）
+                function setBuyAmountStyle(elementId) {
+                    const element = document.getElementById(elementId);
+                    element.style.color = '#ff4444'; // 红色表示买入
+                }
+                
+                // 设置卖出金额颜色（绿色）
+                function setSellAmountStyle(elementId) {
+                    const element = document.getElementById(elementId);
+                    element.style.color = '#44aa44'; // 绿色表示卖出
+                }
+                
+                // 设置净流入额颜色（根据正负值）
+                function setNetAmountStyle(elementId, value) {
                     const element = document.getElementById(elementId);
                     if (value > 0) {
-                        element.style.color = '#ff4444'; // 红色表示流入
+                        element.style.color = '#ff4444'; // 红色表示净流入
                     } else if (value < 0) {
-                        element.style.color = '#44aa44'; // 绿色表示流出
+                        element.style.color = '#44aa44'; // 绿色表示净流出
                     } else {
                         element.style.color = '#666'; // 灰色表示无变化
                     }
                 }
                 
-                // 显示主力净流入
-                const netAmount = data.moneyflow.net_amount || 0;
-                document.getElementById('netAmount').textContent = formatMoneyflow(netAmount);
-                setMoneyflowStyle('netAmount', netAmount);
+                // 显示净流入额
+                const netMfAmount = data.net_mf_amount || 0;
+                document.getElementById('netMfAmount').textContent = netMfAmount.toFixed(2) + '千万元';
+                setNetAmountStyle('netMfAmount', netMfAmount);
                 
-                // 显示净流入占比（如果有）
-                if (data.moneyflow.net_amount_rate !== undefined) {
-                    const rate = data.moneyflow.net_amount_rate || 0;
-                    document.getElementById('netAmountRate').textContent = rate.toFixed(2) + '%';
-                    setMoneyflowStyle('netAmountRate', rate);
-                } else {
-                    document.getElementById('netAmountRate').textContent = '-';
-                }
-                
-                // 显示超大单净流入
+                // 显示特大单买入金额
                 const buyElgAmount = data.moneyflow.buy_elg_amount || 0;
-                document.getElementById('buyElgAmount').textContent = formatMoneyflow(buyElgAmount);
-                setMoneyflowStyle('buyElgAmount', buyElgAmount);
+                document.getElementById('buyElgAmount').textContent = formatMoneyflowAmount(buyElgAmount);
+                setBuyAmountStyle('buyElgAmount');
                 
-                // 显示大单净流入
+                // 显示特大单卖出金额
+                const sellElgAmount = data.moneyflow.sell_elg_amount || 0;
+                document.getElementById('sellElgAmount').textContent = formatMoneyflowAmount(sellElgAmount);
+                setSellAmountStyle('sellElgAmount');
+                
+                // 显示大单买入金额
                 const buyLgAmount = data.moneyflow.buy_lg_amount || 0;
-                document.getElementById('buyLgAmount').textContent = formatMoneyflow(buyLgAmount);
-                setMoneyflowStyle('buyLgAmount', buyLgAmount);
+                document.getElementById('buyLgAmount').textContent = formatMoneyflowAmount(buyLgAmount);
+                setBuyAmountStyle('buyLgAmount');
                 
-                // 显示中单净流入（如果有）
-                if (data.moneyflow.buy_md_amount !== undefined) {
-                    const buyMdAmount = data.moneyflow.buy_md_amount || 0;
-                    document.getElementById('buyMdAmount').textContent = formatMoneyflow(buyMdAmount);
-                    setMoneyflowStyle('buyMdAmount', buyMdAmount);
-                } else {
-                    document.getElementById('buyMdAmount').textContent = '-';
-                }
+                // 显示大单卖出金额
+                const sellLgAmount = data.moneyflow.sell_lg_amount || 0;
+                document.getElementById('sellLgAmount').textContent = formatMoneyflowAmount(sellLgAmount);
+                setSellAmountStyle('sellLgAmount');
                 
-                // 显示小单净流入（如果有）
-                if (data.moneyflow.buy_sm_amount !== undefined) {
-                    const buySmAmount = data.moneyflow.buy_sm_amount || 0;
-                    document.getElementById('buySmAmount').textContent = formatMoneyflow(buySmAmount);
-                    setMoneyflowStyle('buySmAmount', buySmAmount);
-                } else {
-                    document.getElementById('buySmAmount').textContent = '-';
-                }
+                // 显示中单买入金额
+                const buyMdAmount = data.moneyflow.buy_md_amount || 0;
+                document.getElementById('buyMdAmount').textContent = formatMoneyflowAmount(buyMdAmount);
+                setBuyAmountStyle('buyMdAmount');
+                
+                // 显示中单卖出金额
+                const sellMdAmount = data.moneyflow.sell_md_amount || 0;
+                document.getElementById('sellMdAmount').textContent = formatMoneyflowAmount(sellMdAmount);
+                setSellAmountStyle('sellMdAmount');
+                
+                // 显示小单买入金额
+                const buySmAmount = data.moneyflow.buy_sm_amount || 0;
+                document.getElementById('buySmAmount').textContent = formatMoneyflowAmount(buySmAmount);
+                setBuyAmountStyle('buySmAmount');
+                
+                // 显示小单卖出金额
+                const sellSmAmount = data.moneyflow.sell_sm_amount || 0;
+                document.getElementById('sellSmAmount').textContent = formatMoneyflowAmount(sellSmAmount);
+                setSellAmountStyle('sellSmAmount');
             } else {
                 // 如果没有资金流向数据，隐藏该部分
                 document.getElementById('moneyflowSection').style.display = 'none';

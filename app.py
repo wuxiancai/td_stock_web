@@ -1108,10 +1108,14 @@ def get_stock_data(stock_code):
                 print(f"moneyflow接口 - net_mf_amount原始值: {net_mf_amount_wan}万元")
                 stock_info['moneyflow'] = {
                     'net_amount': net_mf_amount_wan,  # 净流入额（万元）
-                    'buy_elg_amount': safe_float(moneyflow_data.iloc[0]['buy_elg_amount']),  # 特大单买入金额
-                    'sell_elg_amount': safe_float(moneyflow_data.iloc[0]['sell_elg_amount']),  # 特大单卖出金额
-                    'buy_lg_amount': safe_float(moneyflow_data.iloc[0]['buy_lg_amount']),  # 大单买入金额
-                    'sell_lg_amount': safe_float(moneyflow_data.iloc[0]['sell_lg_amount']),  # 大单卖出金额
+                    'buy_elg_amount': safe_float(moneyflow_data.iloc[0]['buy_elg_amount']),  # 特大单买入金额（万元）
+                    'sell_elg_amount': safe_float(moneyflow_data.iloc[0]['sell_elg_amount']),  # 特大单卖出金额（万元）
+                    'buy_lg_amount': safe_float(moneyflow_data.iloc[0]['buy_lg_amount']),  # 大单买入金额（万元）
+                    'sell_lg_amount': safe_float(moneyflow_data.iloc[0]['sell_lg_amount']),  # 大单卖出金额（万元）
+                    'buy_md_amount': safe_float(moneyflow_data.iloc[0]['buy_md_amount']),  # 中单买入金额（万元）
+                    'sell_md_amount': safe_float(moneyflow_data.iloc[0]['sell_md_amount']),  # 中单卖出金额（万元）
+                    'buy_sm_amount': safe_float(moneyflow_data.iloc[0]['buy_sm_amount']),  # 小单买入金额（万元）
+                    'sell_sm_amount': safe_float(moneyflow_data.iloc[0]['sell_sm_amount']),  # 小单卖出金额（万元）
                     'data_source': 'moneyflow'
                 }
                 # 设置net_mf_amount字段（转换为千万元，与列表页面保持一致）
@@ -1511,46 +1515,56 @@ def auto_update_moneyflow_data():
                     if moneyflow_data is not None and not moneyflow_data.empty:
                         row = moneyflow_data.iloc[0]
                         
-                        # 更新各种资金流向字段
-                        if 'net_mf_amount' in row:
-                            net_mf_amount_wan = safe_float(row['net_mf_amount'])
-                            stock_info['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)
-                        
-                        if 'buy_elg_amount' in row:
-                            buy_elg_amount_wan = safe_float(row['buy_elg_amount'])
-                            stock_info['buy_elg_amount'] = round(buy_elg_amount_wan / 1000, 2)
-                        
-                        if 'buy_lg_amount' in row:
-                            buy_lg_amount_wan = safe_float(row['buy_lg_amount'])
-                            stock_info['buy_lg_amount'] = round(buy_lg_amount_wan / 1000, 2)
-                        
-                        if 'buy_md_amount' in row:
-                            buy_md_amount_wan = safe_float(row['buy_md_amount'])
-                            stock_info['buy_md_amount'] = round(buy_md_amount_wan / 1000, 2)
-                        
-                        if 'buy_sm_amount' in row:
-                            buy_sm_amount_wan = safe_float(row['buy_sm_amount'])
-                            stock_info['buy_sm_amount'] = round(buy_sm_amount_wan / 1000, 2)
-                        
-                        if 'sell_elg_amount' in row:
-                            sell_elg_amount_wan = safe_float(row['sell_elg_amount'])
-                            stock_info['sell_elg_amount'] = round(sell_elg_amount_wan / 1000, 2)
-                        
-                        if 'sell_lg_amount' in row:
-                            sell_lg_amount_wan = safe_float(row['sell_lg_amount'])
-                            stock_info['sell_lg_amount'] = round(sell_lg_amount_wan / 1000, 2)
-                        
-                        if 'sell_md_amount' in row:
-                            sell_md_amount_wan = safe_float(row['sell_md_amount'])
-                            stock_info['sell_md_amount'] = round(sell_md_amount_wan / 1000, 2)
-                        
-                        if 'sell_sm_amount' in row:
-                            sell_sm_amount_wan = safe_float(row['sell_sm_amount'])
-                            stock_info['sell_sm_amount'] = round(sell_sm_amount_wan / 1000, 2)
-                        
-                        if 'net_amount' in row:
-                            net_amount_wan = safe_float(row['net_amount'])
-                            stock_info['net_amount'] = round(net_amount_wan / 1000, 2)
+                        # 更新各种资金流向字段（按照Tushare官方文档字段）
+                    # 净流入额（万元）
+                    if 'net_mf_amount' in row:
+                        net_mf_amount_wan = safe_float(row['net_mf_amount'])
+                        stock_info['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)  # 转换为千万元
+                    
+                    # 特大单买入金额（万元）
+                    if 'buy_elg_amount' in row:
+                        buy_elg_amount_wan = safe_float(row['buy_elg_amount'])
+                        stock_info['buy_elg_amount'] = round(buy_elg_amount_wan / 1000, 2)  # 转换为千万元
+                    
+                    # 特大单卖出金额（万元）
+                    if 'sell_elg_amount' in row:
+                        sell_elg_amount_wan = safe_float(row['sell_elg_amount'])
+                        stock_info['sell_elg_amount'] = round(sell_elg_amount_wan / 1000, 2)  # 转换为千万元
+                    
+                    # 大单买入金额（万元）
+                    if 'buy_lg_amount' in row:
+                        buy_lg_amount_wan = safe_float(row['buy_lg_amount'])
+                        stock_info['buy_lg_amount'] = round(buy_lg_amount_wan / 1000, 2)  # 转换为千万元
+                    
+                    # 大单卖出金额（万元）
+                    if 'sell_lg_amount' in row:
+                        sell_lg_amount_wan = safe_float(row['sell_lg_amount'])
+                        stock_info['sell_lg_amount'] = round(sell_lg_amount_wan / 1000, 2)  # 转换为千万元
+                    
+                    # 中单买入金额（万元）
+                    if 'buy_md_amount' in row:
+                        buy_md_amount_wan = safe_float(row['buy_md_amount'])
+                        stock_info['buy_md_amount'] = round(buy_md_amount_wan / 1000, 2)  # 转换为千万元
+                    
+                    # 中单卖出金额（万元）
+                    if 'sell_md_amount' in row:
+                        sell_md_amount_wan = safe_float(row['sell_md_amount'])
+                        stock_info['sell_md_amount'] = round(sell_md_amount_wan / 1000, 2)  # 转换为千万元
+                    
+                    # 小单买入金额（万元）
+                    if 'buy_sm_amount' in row:
+                        buy_sm_amount_wan = safe_float(row['buy_sm_amount'])
+                        stock_info['buy_sm_amount'] = round(buy_sm_amount_wan / 1000, 2)  # 转换为千万元
+                    
+                    # 小单卖出金额（万元）
+                    if 'sell_sm_amount' in row:
+                        sell_sm_amount_wan = safe_float(row['sell_sm_amount'])
+                        stock_info['sell_sm_amount'] = round(sell_sm_amount_wan / 1000, 2)  # 转换为千万元
+                    
+                    # 主力净流入额（万元）- 如果有的话
+                    if 'net_amount' in row:
+                        net_amount_wan = safe_float(row['net_amount'])
+                        stock_info['net_amount'] = round(net_amount_wan / 1000, 2)  # 转换为千万元
                         
                         # 更新数据时间戳
                         stock_info['moneyflow_last_update'] = current_trade_date
