@@ -1017,24 +1017,24 @@ def get_stock_data(stock_code):
                 def call_moneyflow():
                     return safe_tushare_call(pro.moneyflow, ts_code=ts_code, limit=1)
                 
-                # 优先尝试moneyflow_dc接口（需要5000积分，数据更详细）
+                # 优先尝试moneyflow接口（需要2000积分）
                 try:
-                    moneyflow_data = retry_api_call_with_rate_limit(call_moneyflow_dc)
+                    moneyflow_data = retry_api_call_with_rate_limit(call_moneyflow)
                     if moneyflow_data is not None and not moneyflow_data.empty:
-                        print(f"成功从moneyflow_dc获取{ts_code}的资金流向数据")
+                        print(f"成功从moneyflow获取{ts_code}的资金流向数据")
                     else:
-                        print(f"moneyflow_dc接口无{ts_code}数据，尝试moneyflow接口...")
-                        # 如果moneyflow_dc没有数据，尝试moneyflow接口（需要2000积分）
-                        moneyflow_data = retry_api_call_with_rate_limit(call_moneyflow)
+                        print(f"moneyflow接口无{ts_code}数据，尝试moneyflow_dc接口...")
+                        # 如果moneyflow没有数据，尝试moneyflow_dc接口（需要5000积分，数据更详细）
+                        moneyflow_data = retry_api_call_with_rate_limit(call_moneyflow_dc)
                         if moneyflow_data is not None and not moneyflow_data.empty:
-                            print(f"成功从moneyflow获取{ts_code}的资金流向数据")
+                            print(f"成功从moneyflow_dc获取{ts_code}的资金流向数据")
                         else:
-                            print(f"moneyflow接口也无{ts_code}数据")
+                            print(f"moneyflow_dc接口也无{ts_code}数据")
                 except Exception as e:
                     print(f"API调用失败: {e}")
                     # 如果重试后仍然失败，尝试另一个接口
                     try:
-                        moneyflow_data = retry_api_call_with_rate_limit(call_moneyflow)
+                        moneyflow_data = retry_api_call_with_rate_limit(call_moneyflow_dc)
                         if moneyflow_data is not None and not moneyflow_data.empty:
                             print(f"备用接口成功获取{ts_code}的资金流向数据")
                     except Exception as e2:
@@ -1491,23 +1491,23 @@ def auto_update_moneyflow_data():
                     # 使用专用频率限制器获取资金流向数据
                     moneyflow_data = None
                     
-                    # 首先尝试 moneyflow_dc 接口
+                    # 首先尝试 moneyflow 接口（需要2000积分）
                     try:
                         moneyflow_rate_limiter.wait_if_needed()
-                        moneyflow_data = pro.moneyflow_dc(ts_code=ts_code, trade_date=current_trade_date)
+                        moneyflow_data = pro.moneyflow(ts_code=ts_code, trade_date=current_trade_date)
                         if moneyflow_data.empty:
-                            raise Exception("moneyflow_dc 返回空数据")
-                        print(f"使用 moneyflow_dc 接口获取 {ts_code} 数据成功")
+                            raise Exception("moneyflow 返回空数据")
+                        print(f"使用 moneyflow 接口获取 {ts_code} 数据成功")
                     except Exception as e:
-                        print(f"moneyflow_dc 接口失败: {e}，尝试 moneyflow 接口")
+                        print(f"moneyflow 接口失败: {e}，尝试 moneyflow_dc 接口")
                         try:
                             moneyflow_rate_limiter.wait_if_needed()
-                            moneyflow_data = pro.moneyflow(ts_code=ts_code, trade_date=current_trade_date)
+                            moneyflow_data = pro.moneyflow_dc(ts_code=ts_code, trade_date=current_trade_date)
                             if moneyflow_data.empty:
-                                raise Exception("moneyflow 返回空数据")
-                            print(f"使用 moneyflow 接口获取 {ts_code} 数据成功")
+                                raise Exception("moneyflow_dc 返回空数据")
+                            print(f"使用 moneyflow_dc 接口获取 {ts_code} 数据成功")
                         except Exception as e2:
-                            print(f"moneyflow 接口也失败: {e2}")
+                            print(f"moneyflow_dc 接口也失败: {e2}")
                             failed_count += 1
                             continue
                     
