@@ -887,7 +887,7 @@ def get_indices_realtime():
             'sh000001': '上证指数',
             'sz399001': '深证成指', 
             'sz399006': '创业板指',
-            'sh000688': '科创50'
+            'sh000688': '科创板'
         }
         
         # 获取所有指数数据
@@ -914,8 +914,8 @@ def get_indices_realtime():
                             index_row = sh_data[sh_data['名称'].str.contains('深证成指', na=False)]
                         elif name == '创业板指':
                             index_row = sh_data[sh_data['名称'].str.contains('创业板指', na=False)]
-                        elif name == '科创50':
-                            index_row = sh_data[sh_data['名称'].str.contains('科创50', na=False)]
+                        elif name == '科创板':
+                            index_row = sh_data[sh_data['名称'].str.contains('科创板', na=False)]
                         
                         if index_row is not None and not index_row.empty:
                             latest = index_row.iloc[0]
