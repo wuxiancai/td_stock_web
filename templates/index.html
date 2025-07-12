@@ -67,7 +67,7 @@
         }
         
         .search-input {
-            width: 200px;
+            width: 140px;
             padding: 8px 15px;
             font-size: 14px;
             border: 2px solid #ddd;
@@ -99,29 +99,88 @@
         
         .market-buttons {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .button-group {
+            display: flex;
             flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .button-group-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #555;
+            margin-right: 10px;
+            min-width: 80px;
+            text-align: right;
         }
         
         .market-btn {
-            padding: 8px 18px;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            padding: 6px 12px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 15px;
-            font-size: 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
-            min-width: 84px;
+            min-width: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .market-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
         
         .market-btn.active {
             background: linear-gradient(45deg, #2ecc71, #27ae60);
+        }
+        
+        /* 不同类型按钮的颜色主题 */
+        .btn-market {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        
+        .btn-market:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a4190);
+        }
+        
+        .btn-special {
+            background: linear-gradient(45deg, #28a745, #20c997);
+        }
+        
+        .btn-special:hover {
+            background: linear-gradient(45deg, #218838, #1ca085);
+        }
+        
+        .btn-tool {
+            background: linear-gradient(45deg, #17a2b8, #138496);
+        }
+        
+        .btn-tool:hover {
+            background: linear-gradient(45deg, #138496, #0f6674);
+        }
+        
+        .btn-filter {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+        
+        .btn-filter:hover {
+            background: linear-gradient(45deg, #c0392b, #a93226);
+        }
+        
+        .btn-action {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+        }
+        
+        .btn-action:hover {
+            background: linear-gradient(45deg, #e67e22, #d35400);
         }
         
         .stocks-section {
@@ -309,11 +368,48 @@
             
             .market-buttons {
                 width: 100%;
-                justify-content: flex-start;
+                gap: 15px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                width: 100%;
+            }
+            
+            .button-group-title {
+                text-align: left;
+                min-width: auto;
+                margin-right: 0;
+                margin-bottom: 5px;
+                font-size: 12px;
+            }
+            
+            .market-btn {
+                min-width: 80px;
+                padding: 8px 16px;
+                font-size: 12px;
             }
             
             .stocks-table {
                 font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .button-group {
+                gap: 6px;
+            }
+            
+            .market-btn {
+                min-width: 70px;
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+            
+            .button-group-title {
+                font-size: 11px;
             }
         }
     </style>
@@ -329,24 +425,22 @@
             <div class="datetime-display" id="currentDateTime">2025年1月17日 19:29:30</div>
             
             <div class="search-and-controls">
-                <div class="search-box">
-                    <input type="text" class="search-input" id="stockInput" placeholder="请输入6位股票代码" maxlength="6">
-                    <button class="search-btn" onclick="searchStock()">查询股票</button>
-                </div>
-                
                 <div class="market-buttons">
-                    <button class="market-btn" onclick="loadMarketStocks('cyb')">创业板</button>
-                    <button class="market-btn" onclick="loadMarketStocks('hu')">沪A</button>
-                    <button class="market-btn" onclick="loadMarketStocks('zxb')">深A</button>
-                    <button class="market-btn" onclick="loadMarketStocks('kcb')">科创板</button>
-                    <button class="market-btn" onclick="loadMarketStocks('bj')">北交所</button>
-                    <button class="market-btn" onclick="syncAllMarkets()" style="background: linear-gradient(45deg, #28a745, #20c997);">A股</button>
-                    <button class="market-btn" onclick="openWatchlist()" style="background: linear-gradient(45deg, #ffc107, #fd7e14);">⭐ 自选股</button>
-                    <button class="market-btn" onclick="openCacheMonitor()" style="background: linear-gradient(45deg, #17a2b8, #138496);">🔧 缓存监控</button>
-                    <button class="market-btn" onclick="openRedFilter()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">红 5-6</button>
-                    <button class="market-btn" onclick="openGreenFilter()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">绿 9</button>
-                    <button class="market-btn" onclick="openTopList()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">🏆 龙虎榜</button>
-                    <button class="market-btn" onclick="triggerFilterTask()" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);">🎯 执行筛选</button>
+                    <!-- 市场板块 -->
+                    <div class="button-group">
+                        <span class="button-group-title">📈 市场板块</span>
+                        <button class="market-btn btn-market" onclick="loadMarketStocks('hu')">🏛️ 沪A</button>
+                        <button class="market-btn btn-market" onclick="loadMarketStocks('zxb')">🏢 深A</button>
+                        <button class="market-btn btn-market" onclick="loadMarketStocks('cyb')">🚀 创业板</button>
+                        <button class="market-btn btn-market" onclick="loadMarketStocks('kcb')">🔬 科创板</button>
+                        <button class="market-btn btn-market" onclick="loadMarketStocks('bj')">🏛️ 北交所</button>
+                        <button class="market-btn btn-special" onclick="syncAllMarkets()">📊 全部A股</button>
+                        <button class="market-btn btn-special" onclick="openWatchlist()">⭐ 自选股</button>
+                        <button class="market-btn btn-tool" onclick="openCacheMonitor()">🔧 缓存监控</button>
+                        <button class="market-btn btn-action" onclick="openTopList()">🏆 龙虎榜</button>
+                    </div>
+                    
+
                 </div>
             </div>
             
@@ -357,31 +451,34 @@
             
             <!-- 定时任务状态面板 -->
             <div class="scheduler-section" style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2);">
-                <h4 style="margin: 0 0 10px 0; color: #fff; font-size: 14px;">📅 定时同步任务</h4>
                 <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                     <div style="display: flex; flex-direction: column; gap: 5px;">
                         <span style="font-size: 10px; color: #ccc;">任务状态</span>
                         <span id="schedulerStatus" style="font-size: 12px; color: #28a745;">🟢 运行中</span>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 5px;">
-                        <span style="font-size: 10px; color: #ccc;">下次执行</span>
-                        <span id="nextRunTime" style="font-size: 12px; color: #fff;">加载中...</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 5px;">
                         <span style="font-size: 10px; color: #ccc;">倒计时</span>
                         <span id="countdown" style="font-size: 12px; color: #ffc107;">--:--:--</span>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 5px;">
-                        <span style="font-size: 10px; color: #ccc;">执行时间</span>
-                        <span style="font-size: 12px; color: #fff;">工作日 17:00</span>
-                    </div>
                     <button onclick="triggerAutoSync()" style="padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🚀 立即增量同步</button>
-                    <button onclick="updateAllData()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">📈 更新全部数据</button>
                     <button onclick="triggerMoneyflowUpdate()" style="padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">💰 更新资金流向</button>
-                    <button onclick="refreshSchedulerStatus()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新状态</button>
+                    <button onclick="refreshIndicesData()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新指数数据</button>
+                    <button onclick="openRedFilter()" style="padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔴 红 5-6</button>
+                    <button onclick="openGreenFilter()" style="padding: 8px 16px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🟢 绿 9</button>
+                    <button onclick="triggerFilterTask()" style="padding: 8px 16px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🎯 执行筛选</button>
+                    <div class="search-box" style="margin-left: 15px;">
+                        <input type="text" class="search-input" id="stockInput" placeholder="请输入6位股票代码" maxlength="6">
+                    </div>
                 </div>
                 <div style="margin-top: 10px; font-size: 10px; color: #ccc;">
                     💡 系统将在每个工作日下午5点自动同步所有A股数据，工作日晚上7点自动更新资金流向数据，每天晚上6点自动筛选股票
+                </div>
+            </div>
+            
+            <!-- 指数实时数据面板 -->
+            <div class="indices-section" style="margin-top: 10px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+                <div id="indicesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <!-- 指数数据将通过JavaScript动态填充 -->
                 </div>
             </div>
         </div>
@@ -1638,6 +1735,72 @@
          return sign + formatted;
      }
      
+     // 获取指数实时数据
+     function refreshIndicesData() {
+         fetch('/api/indices/realtime')
+             .then(response => response.json())
+             .then(data => {
+                 if (data.success) {
+                     displayIndicesData(data.data);
+                     document.getElementById('indicesUpdateTime').textContent = `更新时间: ${data.fetch_time.split(' ')[1]}`;
+                 } else {
+                     console.error('获取指数数据失败:', data.error);
+                 }
+             })
+             .catch(error => {
+                 console.error('获取指数数据异常:', error);
+             });
+     }
+     
+     // 显示指数数据
+     function displayIndicesData(indicesData) {
+         const container = document.getElementById('indicesContainer');
+         container.innerHTML = '';
+         
+         // 定义指数顺序
+         const indexOrder = ['sh000001', 'sz399001', 'sz399006', 'sh000688'];
+         
+         indexOrder.forEach(code => {
+             if (indicesData[code]) {
+                 const index = indicesData[code];
+                 const changeClass = index.change_pct >= 0 ? 'price-positive' : 'price-negative';
+                 const changeSymbol = index.change_pct >= 0 ? '+' : '';
+                 
+                 // 格式化成交额
+                 let volumeText = '0';
+                 if (index.volume > 0) {
+                     if (index.volume >= 100000000) {
+                         volumeText = (index.volume / 100000000).toFixed(2) + '亿';
+                     } else if (index.volume >= 10000) {
+                         volumeText = (index.volume / 10000).toFixed(2) + '万';
+                     } else {
+                         volumeText = index.volume.toFixed(2);
+                     }
+                 }
+                 
+                 const indexCard = document.createElement('div');
+                 indexCard.style.cssText = `
+                     background: rgba(255, 255, 255, 0.9);
+                     border-radius: 8px;
+                     padding: 12px;
+                     text-align: center;
+                     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                 `;
+                 
+                 indexCard.innerHTML = `
+                     <div style="font-weight: bold; font-size: 14px; color: #333; margin-bottom: 8px;">${index.name}</div>
+                     <div style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 4px;">${index.current_price.toFixed(2)}</div>
+                     <div class="${changeClass}" style="font-size: 12px; margin-bottom: 4px;">
+                         ${changeSymbol}${index.change_amount.toFixed(2)} (${changeSymbol}${index.change_pct.toFixed(2)}%)
+                     </div>
+                     <div style="font-size: 10px; color: #666;">成交额: ${volumeText}</div>
+                 `;
+                 
+                 container.appendChild(indexCard);
+             }
+         });
+     }
+     
      // 页面加载完成后初始化
      document.addEventListener('DOMContentLoaded', function() {
          // 初始化时间显示
@@ -1652,6 +1815,11 @@
          refreshSchedulerStatus();
          // 每30秒自动刷新一次状态
          setInterval(refreshSchedulerStatus, 30000);
+         
+         // 初始化指数数据
+         refreshIndicesData();
+         // 每30秒自动刷新指数数据
+         setInterval(refreshIndicesData, 30000);
      });
 </script>
 </body>

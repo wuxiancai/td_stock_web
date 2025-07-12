@@ -188,9 +188,8 @@
             <div id="errorDiv" class="error" style="display: none;"></div>
             
             <div id="stockInfo" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-                    <button class="back-btn" onclick="history.back()">← 返回</button>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: flex-end; align-items: flex-start; margin-bottom: 20px;">
+                    <div style="display: flex; flex-direction: row; gap: 10px; align-items: center;">
                         <div style="position: relative; display: inline-block;">
                             <select id="addToWatchlistSelect" onchange="addToWatchlistWithPriority(this.value)" style="
                                 background: linear-gradient(45deg, #ffc107, #fd7e14);
@@ -210,6 +209,8 @@
                                 background-repeat: no-repeat;
                                 background-position: right 10px center;
                                 background-size: 12px;
+                                min-width: 120px;
+                                height: 40px;
                             ">
                                 <option value="" disabled selected>⭐ 加入自选股</option>
                                 <option value="purple" style="background-color: #8e44ad; color: white;">🟣 可立即买入</option>
@@ -230,8 +231,22 @@
                             font-weight: bold;
                             transition: all 0.3s ease;
                             display: none;
+                            min-width: 120px;
+                            height: 40px;
                         ">🗑️ 删除自选</button>
-                        <button class="back-btn" id="refreshDataBtn" onclick="refreshStockData()" style="background: linear-gradient(45deg, #28a745, #20c997);">🔄 刷新数据</button>
+                        <button id="refreshDataBtn" onclick="refreshStockData()" style="
+                            background: linear-gradient(45deg, #28a745, #20c997);
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 20px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            font-weight: bold;
+                            transition: all 0.3s ease;
+                            min-width: 120px;
+                            height: 40px;
+                        ">🔄 刷新数据</button>
                     </div>
                 </div>
                 <div class="stock-title">
@@ -324,6 +339,58 @@
                             <div class="info-label">小单卖出金额</div>
                             <div class="info-value" id="sellSmAmount"></div>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- 实时数据信息 -->
+                <div class="realtime-section" id="realtimeSection" style="display: none;">
+                    <h3 style="margin: 20px 0 10px 0; color: #333; font-size: 1.0em;">实时数据</h3>
+                    <div class="stock-info">
+                        <div class="info-item">
+                            <div class="info-label">实时价格</div>
+                            <div class="info-value" id="realtimePrice">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">涨跌百分比</div>
+                            <div class="info-value" id="realtimeChangePercent">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">成交额</div>
+                            <div class="info-value" id="realtimeAmount">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">换手率</div>
+                            <div class="info-value" id="realtimeTurnover">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">量比</div>
+                            <div class="info-value" id="realtimeVolumeRatio">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">净流入额</div>
+                            <div class="info-value" id="realtimeNetInflow">-</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 实时分时图 -->
+                    <div class="chart-container" style="margin-top: 20px;">
+                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时分时图</h4>
+                        <div id="realtimeMinuteChart" style="width: 100%; height: 300px;"></div>
+                    </div>
+                    
+                    <!-- 实时K线图 -->
+                    <div class="chart-container" style="margin-top: 20px;">
+                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时K线图 (最近90天)</h4>
+                        <div id="realtimeKlineChart" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;">
+                        <div style="margin-bottom: 10px;">
+                            <button id="autoRefreshBtn" onclick="toggleRealtimeAutoRefresh()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9em; margin-right: 10px; min-width: 140px; height: 40px;">▶️ 开始自动刷新</button>
+                            <button onclick="loadRealtimeData()" style="background: linear-gradient(45deg, #007bff, #0056b3); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em; min-width: 120px; height: 40px;">🔄 手动刷新</button>
+                        </div>
+                        <div id="lastRefreshTime" style="font-size: 0.8em; color: #666; margin-top: 5px;">点击开始自动刷新</div>
+                        <div style="font-size: 0.75em; color: #999; margin-top: 3px;">自动刷新间隔: 10秒 (符合AKShare官方建议)</div>
                     </div>
                 </div>
             </div>
@@ -637,6 +704,563 @@
                 // 如果没有资金流向数据，隐藏该部分
                 document.getElementById('moneyflowSection').style.display = 'none';
             }
+            
+            // 加载实时数据
+            loadRealtimeData();
+        }
+        
+        // 实时数据自动刷新相关变量
+        let realtimeRefreshInterval = null;
+        let isRealtimeAutoRefresh = false;
+        
+        // 加载实时数据函数
+        function loadRealtimeData() {
+            fetch(`/api/stock/${stockCode}/realtime`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('加载实时数据失败:', data.error);
+                        return;
+                    }
+                    
+                    displayRealtimeData(data);
+                    
+                    // 更新最后刷新时间
+                    updateLastRefreshTime();
+                })
+                .catch(error => {
+                    console.error('加载实时数据失败:', error);
+                });
+        }
+        
+        // 开始自动刷新实时数据
+        function startRealtimeAutoRefresh() {
+            if (realtimeRefreshInterval) {
+                clearInterval(realtimeRefreshInterval);
+            }
+            
+            isRealtimeAutoRefresh = true;
+            // 根据AKShare官方建议，设置10秒刷新间隔，避免频繁访问导致的错误
+            realtimeRefreshInterval = setInterval(() => {
+                if (isRealtimeAutoRefresh) {
+                    loadRealtimeData();
+                }
+            }, 10000); // 10秒刷新一次
+            
+            // 更新按钮状态
+            updateAutoRefreshButton(true);
+        }
+        
+        // 停止自动刷新实时数据
+        function stopRealtimeAutoRefresh() {
+            if (realtimeRefreshInterval) {
+                clearInterval(realtimeRefreshInterval);
+                realtimeRefreshInterval = null;
+            }
+            
+            isRealtimeAutoRefresh = false;
+            
+            // 更新按钮状态
+            updateAutoRefreshButton(false);
+        }
+        
+        // 切换自动刷新状态
+        function toggleRealtimeAutoRefresh() {
+            if (isRealtimeAutoRefresh) {
+                stopRealtimeAutoRefresh();
+            } else {
+                startRealtimeAutoRefresh();
+            }
+        }
+        
+        // 更新自动刷新按钮状态
+        function updateAutoRefreshButton(isActive) {
+            const button = document.getElementById('autoRefreshBtn');
+            if (button) {
+                if (isActive) {
+                    button.textContent = '⏸️ 停止自动刷新';
+                    button.style.backgroundColor = '#e74c3c';
+                } else {
+                    button.textContent = '▶️ 开始自动刷新';
+                    button.style.backgroundColor = '#27ae60';
+                }
+            }
+        }
+        
+        // 更新最后刷新时间
+        function updateLastRefreshTime() {
+            const timeElement = document.getElementById('lastRefreshTime');
+            if (timeElement) {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+                timeElement.textContent = `最后更新: ${timeStr}`;
+            }
+        }
+        
+        // 显示实时数据函数
+        function displayRealtimeData(data) {
+            // 显示实时数据部分
+            document.getElementById('realtimeSection').style.display = 'block';
+            
+            // 显示实时价格和涨跌幅
+            if (data.realtime_quote) {
+                const quote = data.realtime_quote;
+                document.getElementById('realtimePrice').textContent = '¥' + (quote.price || '-');
+                
+                const changePercent = quote.change_percent || 0;
+                const changeElement = document.getElementById('realtimeChangePercent');
+                changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent + '%';
+                changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#44aa44';
+                
+                document.getElementById('realtimeAmount').textContent = formatNumber((quote.amount || 0) * 1000);
+                document.getElementById('realtimeTurnover').textContent = (quote.turnover_rate || 0) + '%';
+                document.getElementById('realtimeVolumeRatio').textContent = quote.volume_ratio || '-';
+            }
+            
+            // 显示实时资金流向
+            if (data.realtime_moneyflow) {
+                const netInflow = data.realtime_moneyflow.net_inflow || 0;
+                const netElement = document.getElementById('realtimeNetInflow');
+                netElement.textContent = formatNumber(netInflow * 10000);
+                netElement.style.color = netInflow >= 0 ? '#ff4444' : '#44aa44';
+            }
+            
+            // 绘制实时分时图
+            if (data.minute_data && data.minute_data.length > 0) {
+                drawRealtimeMinuteChart(data.minute_data);
+            }
+            
+            // 绘制实时K线图
+            if (data.kline_data && data.kline_data.length > 0) {
+                drawRealtimeKlineChart(data.kline_data);
+            }
+        }
+        
+        // 绘制实时分时图
+        function drawRealtimeMinuteChart(minuteData) {
+            const chart = echarts.init(document.getElementById('realtimeMinuteChart'));
+            
+            const times = minuteData.map(item => item.time);
+            const prices = minuteData.map(item => parseFloat(item.price));
+            const volumes = minuteData.map(item => parseFloat(item.volume));
+            
+            const option = {
+                animation: false,
+                grid: [{
+                    left: '10%',
+                    right: '8%',
+                    height: '60%'
+                }, {
+                    left: '10%',
+                    right: '8%',
+                    top: '75%',
+                    height: '16%'
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: times,
+                    scale: true,
+                    boundaryGap: false,
+                    axisLine: { onZero: false },
+                    splitLine: { show: false },
+                    splitNumber: 20,
+                    min: 'dataMin',
+                    max: 'dataMax'
+                }, {
+                    type: 'category',
+                    gridIndex: 1,
+                    data: times,
+                    scale: true,
+                    boundaryGap: false,
+                    axisLine: { onZero: false },
+                    axisTick: { show: false },
+                    splitLine: { show: false },
+                    axisLabel: { show: false },
+                    splitNumber: 20,
+                    min: 'dataMin',
+                    max: 'dataMax'
+                }],
+                yAxis: [{
+                    scale: true,
+                    splitArea: { show: true }
+                }, {
+                    scale: true,
+                    gridIndex: 1,
+                    splitNumber: 2,
+                    axisLabel: { show: false },
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    splitLine: { show: false }
+                }],
+                dataZoom: [{
+                    type: 'inside',
+                    xAxisIndex: [0, 1],
+                    start: 0,
+                    end: 100
+                }],
+                series: [{
+                    name: '分时价格',
+                    type: 'line',
+                    data: prices,
+                    smooth: true,
+                    lineStyle: {
+                        opacity: 0.5
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                            offset: 0,
+                            color: 'rgba(128, 255, 165)'
+                        }, {
+                            offset: 1,
+                            color: 'rgba(1, 191, 236)'
+                        }])
+                    }
+                }, {
+                    name: '成交量',
+                    type: 'bar',
+                    xAxisIndex: 1,
+                    yAxisIndex: 1,
+                    data: volumes
+                }]
+            };
+            
+            chart.setOption(option);
+        }
+        
+        // 绘制实时K线图
+        function drawRealtimeKlineChart(klineData) {
+            const chart = echarts.init(document.getElementById('realtimeKlineChart'));
+            
+            const candlestickData = klineData.map(item => [
+                safeParseFloat(item.open),
+                safeParseFloat(item.close),
+                safeParseFloat(item.low),
+                safeParseFloat(item.high)
+            ]);
+            
+            const dates = klineData.map(item => formatDate(item.trade_date || item.date));
+            const volumes = klineData.map(item => safeParseFloat(item.vol || item.volume));
+            
+            // 卖出Setup数据 - 1-9数字，红色，K线上方
+            const nineTurnUp = klineData.map((item, index) => {
+                return item.nine_turn_up > 0 ? [
+                    index, // x坐标：数据索引
+                    safeParseFloat(item.high) + (safeParseFloat(item.high) * 0.02), // y坐标：K线最高价上方2%
+                    item.nine_turn_up // 显示的数值（1-9）
+                ] : null;
+            }).filter(item => item !== null);
+            
+            // 买入Setup数据 - 1-9数字，绿色，K线下方
+            const nineTurnDown = klineData.map((item, index) => {
+                return item.nine_turn_down > 0 ? [
+                    index, // x坐标：数据索引
+                    safeParseFloat(item.low) - (safeParseFloat(item.low) * 0.02), // y坐标：K线最低价下方2%
+                    item.nine_turn_down // 显示的数值（1-9）
+                ] : null;
+            }).filter(item => item !== null);
+            
+            // 卖出Countdown数据 - 1-13数字，紫色，卖出Setup上方
+            const countdownUp = klineData.map((item, index) => {
+                return item.countdown_up > 0 ? [
+                    index, // x坐标：数据索引
+                    safeParseFloat(item.high) + (safeParseFloat(item.high) * 0.05), // y坐标：K线最高价上方5%（卖出Setup上方）
+                    item.countdown_up // 显示的数值（1-13）
+                ] : null;
+            }).filter(item => item !== null);
+            
+            // 买入Countdown数据 - 1-13数字，蓝色，买入Setup下方
+            const countdownDown = klineData.map((item, index) => {
+                return item.countdown_down > 0 ? [
+                    index, // x坐标：数据索引
+                    safeParseFloat(item.low) - (safeParseFloat(item.low) * 0.05), // y坐标：K线最低价下方5%（买入Setup下方）
+                    item.countdown_down // 显示的数值（1-13）
+                ] : null;
+            }).filter(item => item !== null);
+            
+            // 提取BOLL数据，保留null值让ECharts正确处理
+            const bollUpper = klineData.map(item => item.boll_upper === null || item.boll_upper === undefined ? null : parseFloat(item.boll_upper));
+            const bollMid = klineData.map(item => item.boll_mid === null || item.boll_mid === undefined ? null : parseFloat(item.boll_mid));
+            const bollLower = klineData.map(item => item.boll_lower === null || item.boll_lower === undefined ? null : parseFloat(item.boll_lower));
+            
+            // 找到最高价和最低价的位置
+            let highestIndex = -1;
+            let lowestIndex = -1;
+            let maxHigh = -1;
+            let minLow = Number.MAX_VALUE;
+            
+            // 遍历所有数据找到真正的最高价和最低价位置
+            klineData.forEach((item, index) => {
+                const high = safeParseFloat(item.high);
+                const low = safeParseFloat(item.low);
+                
+                if (high > maxHigh) {
+                    maxHigh = high;
+                    highestIndex = index;
+                }
+                
+                if (low < minLow) {
+                    minLow = low;
+                    lowestIndex = index;
+                }
+            });
+            
+            const option = {
+                animation: false,
+                legend: {
+                    bottom: 10,
+                    left: 'center',
+                    data: ['实时K线', '成交量', '卖出Setup', '买入Setup', '卖出Countdown', '买入Countdown', 'BOLL上轨', 'BOLL中轨', 'BOLL下轨']
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                    backgroundColor: 'rgba(245, 245, 245, 0.8)',
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    textStyle: {
+                        color: '#000'
+                    }
+                },
+                grid: [{
+                    left: '10%',
+                    right: '8%',
+                    height: '50%'
+                }, {
+                    left: '10%',
+                    right: '8%',
+                    top: '63%',
+                    height: '16%'
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: dates,
+                    boundaryGap: false,
+                    axisLine: { onZero: false },
+                    splitLine: { show: false },
+                    min: 'dataMin',
+                    max: 'dataMax',
+                    axisPointer: {
+                        z: 100
+                    }
+                }, {
+                    type: 'category',
+                    gridIndex: 1,
+                    data: dates,
+                    boundaryGap: false,
+                    axisLine: { onZero: false },
+                    axisTick: { show: false },
+                    splitLine: { show: false },
+                    axisLabel: { show: false },
+                    min: 'dataMin',
+                    max: 'dataMax'
+                }],
+                yAxis: [{
+                    scale: true,
+                    splitArea: { show: true }
+                }, {
+                    scale: true,
+                    gridIndex: 1,
+                    splitNumber: 2,
+                    axisLabel: { show: false },
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    splitLine: { show: false }
+                }],
+                dataZoom: [{
+                    type: 'inside',
+                    xAxisIndex: [0, 1],
+                    start: 0,
+                    end: 100
+                }],
+                series: [{
+                    name: '实时K线',
+                    type: 'candlestick',
+                    data: candlestickData,
+                    itemStyle: {
+                        color: '#ef232a',
+                        color0: '#14b143',
+                        borderColor: '#ef232a',
+                        borderColor0: '#14b143'
+                    },
+                    markPoint: {
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        label: {
+                            show: true,
+                            position: 'left',
+                            formatter: function (param) {
+                                return param.value ? param.value.toFixed(2) : '';
+                            },
+                            color: '#000000',
+                            backgroundColor: 'rgba(255,255,255,0.9)',
+                            borderWidth: 1,
+                            borderColor: '#cccccc',
+                            borderRadius: 3,
+                            padding: [2, 4],
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                        },
+                        data: [
+                            {
+                                name: '最高价',
+                                coord: [highestIndex, maxHigh],
+                                value: maxHigh,
+                                itemStyle: {
+                                    color: '#ff4444'
+                                }
+                            },
+                            {
+                                name: '最低价',
+                                coord: [lowestIndex, minLow],
+                                value: minLow,
+                                itemStyle: {
+                                    color: '#44ff44'
+                                }
+                            }
+                        ].filter(item => item.coord[0] >= 0), // 过滤掉无效的索引
+                        tooltip: {
+                            formatter: function (param) {
+                                return param.name + '<br>¥' + (param.data.coord ? param.data.coord[1].toFixed(2) : '');
+                            }
+                        }
+                    }
+                }, {
+                    name: '成交量',
+                    type: 'bar',
+                    xAxisIndex: 1,
+                    yAxisIndex: 1,
+                    data: volumes,
+                    itemStyle: {
+                        color: function(params) {
+                            const dataIndex = params.dataIndex;
+                            if (dataIndex === 0) return '#14b143';
+                            return candlestickData[dataIndex][1] > candlestickData[dataIndex][0] ? '#ef232a' : '#14b143';
+                        }
+                    }
+                }, {
+                    name: '卖出Setup',
+                    type: 'scatter',
+                    data: nineTurnUp,
+                    symbolSize: 0, // 隐藏散点符号
+                    itemStyle: {
+                        color: 'transparent'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        color: '#ef232a', // 红色数字
+                        fontWeight: 'bold',
+                        fontSize: 14,
+                        backgroundColor: 'rgba(255,255,255,0.8)',
+                        borderRadius: 3,
+                        padding: [2, 4],
+                        formatter: function(param) {
+                            return param.data[2]; // 数组的第三个元素是数值（1-9）
+                        }
+                    }
+                }, {
+                    name: '买入Setup',
+                    type: 'scatter',
+                    data: nineTurnDown,
+                    symbolSize: 0, // 隐藏散点符号
+                    itemStyle: {
+                        color: 'transparent'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        color: '#00aa00', // 绿色数字
+                        fontWeight: 'bold',
+                        fontSize: 14,
+                        backgroundColor: 'rgba(255,255,255,0.8)',
+                        borderRadius: 3,
+                        padding: [2, 4],
+                        formatter: function(param) {
+                            return param.data[2]; // 数组的第三个元素是数值（1-9）
+                        }
+                    }
+                }, {
+                    name: '卖出Countdown',
+                    type: 'scatter',
+                    data: countdownUp,
+                    symbolSize: 0, // 隐藏散点符号
+                    itemStyle: {
+                        color: 'transparent'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        color: '#8A2BE2', // 紫色数字 - 卖出信号
+                        fontWeight: 'bold',
+                        fontSize: 14,
+                        backgroundColor: 'rgba(255,255,255,0.8)',
+                        borderRadius: 3,
+                        padding: [2, 4],
+                        formatter: function(param) {
+                            return param.data[2]; // 数组的第三个元素是数值（1-13）
+                        }
+                    }
+                }, {
+                    name: '买入Countdown',
+                    type: 'scatter',
+                    data: countdownDown,
+                    symbolSize: 0, // 隐藏散点符号
+                    itemStyle: {
+                        color: 'transparent'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        color: '#1E90FF', // 蓝色数字 - 买入信号
+                        fontWeight: 'bold',
+                        fontSize: 14,
+                        backgroundColor: 'rgba(255,255,255,0.8)',
+                        borderRadius: 3,
+                        padding: [2, 4],
+                        formatter: function(param) {
+                            return param.data[2]; // 数组的第三个元素是数值（1-13）
+                        }
+                    }
+                }, {
+                    name: 'BOLL上轨',
+                    type: 'line',
+                    data: bollUpper,
+                    lineStyle: {
+                        color: '#1E90FF',
+                        width: 1
+                    },
+                    symbol: 'none',
+                    smooth: true
+                }, {
+                    name: 'BOLL中轨',
+                    type: 'line',
+                    data: bollMid,
+                    lineStyle: {
+                        color: '#1E90FF',
+                        width: 1
+                    },
+                    symbol: 'none',
+                    smooth: true
+                }, {
+                    name: 'BOLL下轨',
+                    type: 'line',
+                    data: bollLower,
+                    lineStyle: {
+                        color: '#1E90FF',
+                        width: 1
+                    },
+                    symbol: 'none',
+                    smooth: true
+                }]
+            };
+            
+            chart.setOption(option);
+            
+            window.addEventListener('resize', function() {
+                chart.resize();
+            });
         }
         
         function drawKlineChart(data) {
@@ -1679,6 +2303,13 @@
         
         // 页面加载时获取股票数据
         loadStockData();
+        
+        // 页面加载完成后，延迟启动实时数据自动刷新
+        setTimeout(() => {
+            if (typeof startRealtimeAutoRefresh === 'function') {
+                startRealtimeAutoRefresh();
+            }
+        }, 2000); // 延迟2秒启动，确保页面完全加载
     </script>
 </body>
 </html>

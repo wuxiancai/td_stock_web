@@ -455,9 +455,9 @@
                             } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
                                 return `<span style="color: green; font-weight: bold;">${stock.nine_turn_down}</span>`;
                             } else if (stock.countdown_up && stock.countdown_up > 0) {
-                                return `<span style="color: red; font-weight: bold;">倒${stock.countdown_up}</span>`;
+                                return `<span style="color: red; font-weight: bold;">${stock.countdown_up}</span>`;
                             } else if (stock.countdown_down && stock.countdown_down > 0) {
-                                return `<span style="color: green; font-weight: bold;">倒${stock.countdown_down}</span>`;
+                                return `<span style="color: green; font-weight: bold;">${stock.countdown_down}</span>`;
                             } else {
                                 return '-';
                             }
