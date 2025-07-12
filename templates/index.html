@@ -468,16 +468,14 @@
                         <button class="market-btn btn-special" onclick="openWatchlist()">⭐ 自选股</button>
                         <button class="market-btn btn-tool" onclick="openCacheMonitor()">🔧 缓存监控</button>
                         <button class="market-btn btn-action" onclick="openTopList()">🏆 龙虎榜</button>
+                        <button class="market-btn btn-action" id="refreshBtn" onclick="forceRefreshMarket()" style="display: none;">🔄 强制刷新数据</button>
                     </div>
                     
 
                 </div>
             </div>
             
-            <div class="refresh-section" id="refreshSection" style="display: none;">
-                <button class="refresh-btn" onclick="forceRefreshMarket()">🔄 强制刷新数据</button>
-                <span class="refresh-tip">如果数据显示异常，可点击强制刷新重新获取最新数据</span>
-            </div>
+
             
             <!-- 定时任务状态面板 -->
             <div class="scheduler-section" style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2);">
@@ -677,7 +675,7 @@
             document.getElementById('progressDiv').style.display = 'none';
             document.getElementById('errorDiv').style.display = 'none';
             document.getElementById('stocksTable').style.display = 'none';
-            document.getElementById('refreshSection').style.display = 'block';
+            document.getElementById('refreshBtn').style.display = 'inline-block';
             
             const marketNames = {
                 'cyb': '创业板',
@@ -1406,7 +1404,7 @@
              document.getElementById('errorDiv').style.display = 'none';
              document.getElementById('stocksTable').style.display = 'none';
              document.getElementById('filterSection').style.display = 'none';
-             document.getElementById('refreshSection').style.display = 'block';
+             document.getElementById('refreshBtn').style.display = 'inline-block';
              
              document.getElementById('sectionTitle').textContent = 'A股数据加载中...';
              document.getElementById('loadingDiv').innerHTML = '<div style="text-align: center; padding: 40px; font-size: 16px; color: #666;">正在加载所有A股市场数据，请稍候...</div>';
