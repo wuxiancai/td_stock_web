@@ -83,8 +83,8 @@
         
         .search-btn {
             padding: 8px 20px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
+            background: #667eea;
+            color: black;
             border: none;
             border-radius: 20px;
             font-size: 12px;
@@ -95,6 +95,7 @@
         .search-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            background: #5a6fd8;
         }
         
         .market-buttons {
@@ -121,8 +122,8 @@
         
         .market-btn {
             padding: 6px 12px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
+            background: #667eea;
+            color: black;
             border: none;
             border-radius: 20px;
             font-size: 13px;
@@ -136,51 +137,57 @@
         .market-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            background: #5a6fd8;
         }
         
         .market-btn.active {
-            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            background: #5a6fd8;
         }
         
         /* 不同类型按钮的颜色主题 */
         .btn-market {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: #667eea;
+            color: black;
         }
         
         .btn-market:hover {
-            background: linear-gradient(45deg, #5a6fd8, #6a4190);
+            background: #5a6fd8;
         }
         
         .btn-special {
-            background: linear-gradient(45deg, #28a745, #20c997);
+            background: #667eea;
+            color: black;
         }
         
         .btn-special:hover {
-            background: linear-gradient(45deg, #218838, #1ca085);
+            background: #5a6fd8;
         }
         
         .btn-tool {
-            background: linear-gradient(45deg, #17a2b8, #138496);
+            background: #667eea;
+            color: black;
         }
         
         .btn-tool:hover {
-            background: linear-gradient(45deg, #138496, #0f6674);
+            background: #5a6fd8;
         }
         
         .btn-filter {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            background: #667eea;
+            color: black;
         }
         
         .btn-filter:hover {
-            background: linear-gradient(45deg, #c0392b, #a93226);
+            background: #5a6fd8;
         }
         
         .btn-action {
-            background: linear-gradient(45deg, #f39c12, #e67e22);
+            background: #667eea;
+            color: black;
         }
         
         .btn-action:hover {
-            background: linear-gradient(45deg, #e67e22, #d35400);
+            background: #5a6fd8;
         }
         
         .stocks-section {
@@ -243,8 +250,9 @@
         
         .page-btn {
             padding: 8px 15px;
-            background: #f8f9fa;
-            border: 1px solid #ddd;
+            background: #F9FAFB;
+            color: #6B7280;
+            border: 1px solid #E5E7EB;
             border-radius: 5px;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -252,8 +260,9 @@
         
         .page-btn:hover,
         .page-btn.active {
-            background: #667eea;
+            background: #1E3A8A;
             color: white;
+            border-color: #1E3A8A;
         }
         
         .loading {
@@ -315,7 +324,7 @@
         }
         
         .refresh-btn {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            background: #1E3A8A;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -328,7 +337,8 @@
         
         .refresh-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+            box-shadow: 0 5px 15px rgba(30, 58, 138, 0.4);
+            background: #60A5FA;
         }
         
         .refresh-tip {
@@ -460,12 +470,12 @@
                         <span style="font-size: 10px; color: #ccc;">倒计时</span>
                         <span id="countdown" style="font-size: 12px; color: #ffc107;">--:--:--</span>
                     </div>
-                    <button onclick="triggerAutoSync()" style="padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🚀 立即增量同步</button>
-                    <button onclick="triggerMoneyflowUpdate()" style="padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">💰 更新资金流向</button>
-                    <button onclick="refreshIndicesData()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新指数数据</button>
-                    <button onclick="openRedFilter()" style="padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔴 红 5-6</button>
-                    <button onclick="openGreenFilter()" style="padding: 8px 16px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🟢 绿 9</button>
-                    <button onclick="triggerFilterTask()" style="padding: 8px 16px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🎯 执行筛选</button>
+                    <button onclick="triggerAutoSync()" style="padding: 8px 16px; background: #60A5FA; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🚀 立即增量同步</button>
+                    <button onclick="triggerMoneyflowUpdate()" style="padding: 8px 16px; background: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">💰 更新资金流向</button>
+                    <button onclick="refreshIndicesData()" style="padding: 8px 16px; background: #16A34A; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新指数数据</button>
+                    <button onclick="openRedFilter()" style="padding: 8px 16px; background: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔴 红 5-6</button>
+                    <button onclick="openGreenFilter()" style="padding: 8px 16px; background: #16A34A; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🟢 绿 9</button>
+                    <button onclick="triggerFilterTask()" style="padding: 8px 16px; background: #6B7280; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🎯 执行筛选</button>
                     <div class="search-box" style="margin-left: 15px;">
                         <input type="text" class="search-input" id="stockInput" placeholder="请输入6位股票代码" maxlength="6">
                     </div>
