@@ -357,6 +357,27 @@
             font-weight: bold;
         }
         
+        /* 定时任务状态样式 */
+        .status-running {
+            color: #28a745 !important;
+            font-weight: bold;
+        }
+        
+        .status-stopped {
+            color: #dc3545 !important;
+            font-weight: bold;
+        }
+        
+        .status-unknown {
+            color: #ffc107 !important;
+            font-weight: bold;
+        }
+        
+        .status-error {
+            color: #dc3545 !important;
+            font-weight: bold;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -464,6 +485,10 @@
                     <div style="display: flex; flex-direction: column; gap: 5px;">
                         <span style="font-size: 10px; color: #ccc;">任务状态</span>
                         <span id="schedulerStatus" style="font-size: 12px; color: #28a745;">🟢 运行中</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <span style="font-size: 10px; color: #ccc;">下次执行</span>
+                        <span id="nextRunTime" style="font-size: 12px; color: #17a2b8;">获取中...</span>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 5px;">
                         <span style="font-size: 10px; color: #ccc;">倒计时</span>
@@ -1523,17 +1548,25 @@
      // 定时任务相关函数
      function refreshSchedulerStatus() {
          fetch('/api/scheduler/status')
-             .then(response => response.json())
+             .then(response => {
+                 if (!response.ok) {
+                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                 }
+                 return response.json();
+             })
              .then(data => {
                  const statusElement = document.getElementById('schedulerStatus');
                  const nextRunElement = document.getElementById('nextRunTime');
                  
                  if (data.status === 'running') {
-                     statusElement.textContent = '运行中';
+                     statusElement.textContent = '🟢 运行中';
                      statusElement.className = 'status-running';
-                 } else {
-                     statusElement.textContent = '已停止';
+                 } else if (data.status === 'stopped') {
+                     statusElement.textContent = '🔴 已停止';
                      statusElement.className = 'status-stopped';
+                 } else {
+                     statusElement.textContent = '⚠️ 状态未知';
+                     statusElement.className = 'status-unknown';
                  }
                  
                  if (data.next_run) {
@@ -1544,8 +1577,9 @@
              })
              .catch(error => {
                  console.error('获取定时任务状态失败:', error);
-                 document.getElementById('schedulerStatus').textContent = '获取失败';
+                 document.getElementById('schedulerStatus').textContent = '❌ 获取失败';
                  document.getElementById('schedulerStatus').className = 'status-error';
+                 document.getElementById('nextRunTime').textContent = '无法获取';
              });
      }
      
