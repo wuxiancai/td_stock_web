@@ -1,15 +1,40 @@
 from flask import Flask, jsonify
 from datetime import datetime, timedelta
-import akshare as ak
-import tushare as ts
 import pandas as pd
+
+# 尝试导入akshare
+try:
+    import akshare as ak
+    AKSHARE_AVAILABLE = True
+    print("AkShare导入成功")
+except ImportError as e:
+    print(f"AkShare导入失败: {e}")
+    AKSHARE_AVAILABLE = False
+    ak = None
+
+# 尝试导入tushare
+try:
+    import tushare as ts
+    TUSHARE_AVAILABLE = True
+    print("Tushare导入成功")
+except ImportError as e:
+    print(f"Tushare导入失败: {e}")
+    TUSHARE_AVAILABLE = False
+    ts = None
 
 # 全局变量用于重试机制
 last_retry_time = None
 retry_interval = 30  # 30秒重试间隔
 
 # 初始化tushare
-pro = ts.pro_api('your_tushare_token')  # 请替换为实际的token
+pro = None
+if TUSHARE_AVAILABLE and ts is not None:
+    try:
+        pro = ts.pro_api('your_tushare_token')  # 请替换为实际的token
+        print("Tushare Pro API初始化成功")
+    except Exception as e:
+        print(f"Tushare Pro API初始化失败: {e}")
+        pro = None
 
 def get_indices_realtime():
     """获取主要指数实时数据 - 智能重试机制"""
@@ -77,6 +102,10 @@ def get_indices_realtime():
 
 def get_indices_from_akshare(indices):
     """使用AkShare获取指数数据"""
+    if not AKSHARE_AVAILABLE or ak is None:
+        print("AkShare不可用，跳过AkShare获取")
+        return None
+        
     indices_data = {}
     
     try:
@@ -170,6 +199,10 @@ def get_indices_from_akshare(indices):
 
 def get_indices_from_tushare(indices):
     """使用Tushare获取指数数据"""
+    if not TUSHARE_AVAILABLE or ts is None or pro is None:
+        print("Tushare不可用，跳过Tushare获取")
+        return None
+        
     indices_data = {}
     
     try:
