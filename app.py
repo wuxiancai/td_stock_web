@@ -1,4 +1,12 @@
-import tushare as ts
+try:
+    import tushare as ts
+    TUSHARE_AVAILABLE = True
+    print("Tushare库已成功导入")
+except ImportError:
+    ts = None
+    TUSHARE_AVAILABLE = False
+    print("警告：Tushare库未安装，部分数据功能将不可用")
+
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 import pandas as pd
@@ -90,12 +98,18 @@ class TushareRateLimiter:
 rate_limiter = TushareRateLimiter(max_requests_per_minute=199)
 
 # Tushare配置
-ts.set_token('68a7f380e45182b216eb63a9666c277ee96e68e3754476976adc5019')
-pro = ts.pro_api()
+if TUSHARE_AVAILABLE:
+    ts.set_token('68a7f380e45182b216eb63a9666c277ee96e68e3754476976adc5019')
+    pro = ts.pro_api()
+else:
+    pro = None
 
 # 包装tushare API调用的函数
 def safe_tushare_call(func, *args, **kwargs):
     """安全的tushare API调用，自动处理频率限制"""
+    if not TUSHARE_AVAILABLE:
+        raise Exception("Tushare库未安装")
+    
     rate_limiter.wait_if_needed()
     try:
         result = func(*args, **kwargs)
