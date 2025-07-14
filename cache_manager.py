@@ -22,7 +22,13 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
 from collections import OrderedDict
-import fcntl
+# 处理fcntl库的兼容性问题（Windows系统不支持fcntl）
+try:
+    import fcntl
+    FCNTL_AVAILABLE = True
+except ImportError:
+    FCNTL_AVAILABLE = False
+    
 import tempfile
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -74,9 +80,14 @@ class FileLockManager:
         self.lock_timeout = lock_timeout
         self.locks = {}
         self.lock_mutex = threading.Lock()
+        self.simple_locks = {}  # 用于简单锁机制
     
     def acquire_lock(self, file_path: str) -> Optional[object]:
         """获取文件锁"""
+        if not FCNTL_AVAILABLE:
+            # 在不支持fcntl的系统上使用简单的文件锁机制
+            return self._acquire_simple_lock(file_path)
+            
         lock_file = f"{file_path}.lock"
         
         try:
@@ -109,6 +120,10 @@ class FileLockManager:
     
     def release_lock(self, lock_fd: object, file_path: str):
         """释放文件锁"""
+        if not FCNTL_AVAILABLE:
+            # 在不支持fcntl的系统上使用简单的文件锁机制
+            return self._release_simple_lock(lock_fd, file_path)
+            
         try:
             if lock_fd:
                 fcntl.flock(lock_fd, fcntl.LOCK_UN)
@@ -122,6 +137,65 @@ class FileLockManager:
                 logger.debug(f"成功释放文件锁: {file_path}")
         except Exception as e:
             logger.error(f"释放文件锁失败: {file_path}, 错误: {e}")
+    
+    def _acquire_simple_lock(self, file_path: str) -> Optional[str]:
+        """简单文件锁实现（用于不支持fcntl的系统）"""
+        lock_file = f"{file_path}.lock"
+        
+        with self.lock_mutex:
+            # 检查是否已经有锁
+            if lock_file in self.simple_locks:
+                logger.warning(f"文件已被锁定: {file_path}")
+                return None
+            
+            try:
+                # 确保锁文件目录存在
+                lock_dir = os.path.dirname(lock_file)
+                if lock_dir and not os.path.exists(lock_dir):
+                    os.makedirs(lock_dir, exist_ok=True)
+                
+                # 创建锁文件
+                if os.path.exists(lock_file):
+                    # 检查锁文件是否过期（超过锁定超时时间）
+                    lock_age = time.time() - os.path.getmtime(lock_file)
+                    if lock_age < self.lock_timeout:
+                        logger.warning(f"文件锁未过期: {file_path}")
+                        return None
+                    else:
+                        # 删除过期的锁文件
+                        os.remove(lock_file)
+                
+                # 创建新的锁文件
+                with open(lock_file, 'w') as f:
+                    f.write(str(os.getpid()))
+                
+                self.simple_locks[lock_file] = time.time()
+                logger.debug(f"成功获取简单文件锁: {file_path}")
+                return lock_file
+                
+            except Exception as e:
+                logger.error(f"获取简单文件锁失败: {file_path}, 错误: {e}")
+                return None
+    
+    def _release_simple_lock(self, lock_file: str, file_path: str):
+        """释放简单文件锁"""
+        if not lock_file:
+            return
+            
+        with self.lock_mutex:
+            try:
+                # 删除锁文件
+                if os.path.exists(lock_file):
+                    os.remove(lock_file)
+                
+                # 从锁记录中移除
+                if lock_file in self.simple_locks:
+                    del self.simple_locks[lock_file]
+                
+                logger.debug(f"成功释放简单文件锁: {file_path}")
+                
+            except Exception as e:
+                logger.error(f"释放简单文件锁失败: {file_path}, 错误: {e}")
 
 class DataValidator:
     """数据校验器"""
