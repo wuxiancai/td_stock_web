@@ -6,7 +6,7 @@ import pandas as pd
 
 # 全局变量用于重试机制
 last_retry_time = None
-retry_interval = 120  # 2分钟重试间隔
+retry_interval = 30  # 30秒重试间隔
 
 # 初始化tushare
 pro = ts.pro_api('your_tushare_token')  # 请替换为实际的token
