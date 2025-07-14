@@ -3593,7 +3593,7 @@ if __name__ == '__main__':
     
     # 从环境变量获取配置，支持生产环境部署
     host = os.environ.get('HOST', '0.0.0.0')
-    port = int(os.environ.get('PORT', 8083))
+    port = int(os.environ.get('PORT', 8080))
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
     print(f"服务器启动配置: host={host}, port={port}, debug={debug_mode}")
