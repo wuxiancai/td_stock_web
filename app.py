@@ -1869,32 +1869,32 @@ def get_realtime_stock_data(stock_code):
             else:
                 spot_data = safe_akshare_call(ak.stock_zh_a_spot_em, f"spot_data_{stock_code}")
                 if not spot_data.empty:
-                     # 查找对应股票的实时数据
-                     stock_spot = spot_data[spot_data['代码'] == stock_code[:6]]
-                     if not stock_spot.empty:
-                         stock_info = stock_spot.iloc[0]
-                         realtime_data['spot'] = {
-                             'name': stock_info['名称'],
-                             'latest_price': float(stock_info['最新价']),
-                             'change_percent': float(stock_info['涨跌幅']),
-                             'change_amount': float(stock_info['涨跌额']),
-                             'volume': float(stock_info['成交量']),
-                             'amount': float(stock_info['成交额']),
-                             'turnover_rate': float(stock_info['换手率']),
-                             'volume_ratio': float(stock_info['量比']),
-                             'pe_ratio': float(stock_info['市盈率-动态']) if stock_info['市盈率-动态'] != '-' else None,
-                             'market_cap': float(stock_info['总市值']),
-                             'open': float(stock_info['今开']),
-                             'high': float(stock_info['最高']),
-                             'low': float(stock_info['最低']),
-                             'pre_close': float(stock_info['昨收']),
-                             'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                         }
-                         print(f"成功获取{symbol}实时行情数据")
-                     else:
-                         print(f"未找到{symbol}的实时行情数据")
-                 else:
-                     print(f"获取实时行情数据失败")
+                    # 查找对应股票的实时数据
+                    stock_spot = spot_data[spot_data['代码'] == stock_code[:6]]
+                    if not stock_spot.empty:
+                        stock_info = stock_spot.iloc[0]
+                        realtime_data['spot'] = {
+                            'name': stock_info['名称'],
+                            'latest_price': float(stock_info['最新价']),
+                            'change_percent': float(stock_info['涨跌幅']),
+                            'change_amount': float(stock_info['涨跌额']),
+                            'volume': float(stock_info['成交量']),
+                            'amount': float(stock_info['成交额']),
+                            'turnover_rate': float(stock_info['换手率']),
+                            'volume_ratio': float(stock_info['量比']),
+                            'pe_ratio': float(stock_info['市盈率-动态']) if stock_info['市盈率-动态'] != '-' else None,
+                            'market_cap': float(stock_info['总市值']),
+                            'open': float(stock_info['今开']),
+                            'high': float(stock_info['最高']),
+                            'low': float(stock_info['最低']),
+                            'pre_close': float(stock_info['昨收']),
+                            'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        }
+                        print(f"成功获取{symbol}实时行情数据")
+                    else:
+                        print(f"未找到{symbol}的实时行情数据")
+                else:
+                    print(f"获取实时行情数据失败")
         except Exception as e:
             print(f"获取实时行情数据失败: {e}")
             realtime_data['spot'] = None

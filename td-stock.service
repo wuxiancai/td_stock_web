@@ -5,7 +5,8 @@ After=network.target
 [Service]
 User=ubuntu
 WorkingDirectory=/home/ubuntu/td_stock_web
-ExecStart=/usr/bin/python3 app.py
+ExecStart=/home/ubuntu/td_stock_web/venv/bin/python app.py
+Environment=PATH=/home/ubuntu/td_stock_web/venv/bin
 Restart=always
 
 [Install]
