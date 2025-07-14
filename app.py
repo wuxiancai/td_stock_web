@@ -19,14 +19,15 @@ import threading
 import time
 import schedule
 from collections import deque
-try:
-    import akshare as ak
-    AKSHARE_AVAILABLE = True
-    print("AKShare库已成功导入")
-except ImportError:
-    ak = None
-    AKSHARE_AVAILABLE = False
-    print("警告：AKShare库未安装，实时数据功能将不可用")
+# AkShare 相关功能已移除
+# try:
+#     import akshare as ak
+#     AKSHARE_AVAILABLE = True
+#     print("AKShare库已成功导入")
+# except ImportError:
+#     ak = None
+#     AKSHARE_AVAILABLE = False
+#     print("警告：AKShare库未安装，实时数据功能将不可用")
 
 app = Flask(__name__)
 CORS(app)
@@ -145,48 +146,7 @@ def safe_tushare_call(func, *args, **kwargs):
         # 其他类型的错误直接抛出
         raise e
 
-def safe_akshare_call(func, request_key, *args, **kwargs):
-    """安全的AkShare API调用，带重试机制"""
-    if not AKSHARE_AVAILABLE:
-        raise Exception("AkShare库未安装")
-    
-    # 检查是否应该重试
-    if not akshare_retry_manager.should_retry(request_key):
-        retry_status = akshare_retry_manager.get_retry_status()
-        failed_request = next((req for req in retry_status['failed_requests'] if req['request_key'] == request_key), None)
-        if failed_request:
-            remaining_time = failed_request['next_retry_in_seconds']
-            raise Exception(f"AkShare接口 {request_key} 暂时不可用，{remaining_time}秒后可重试")
-    
-    try:
-        result = func(*args, **kwargs)
-        
-        # 检查结果是否有效
-        if hasattr(result, 'empty') and result.empty:
-            error_msg = f"AkShare接口 {request_key} 返回空数据"
-            akshare_retry_manager.record_failure(request_key, error_msg)
-            raise Exception(error_msg)
-        
-        # 成功获取数据，清除失败记录
-        akshare_retry_manager.record_success(request_key)
-        return result
-        
-    except Exception as e:
-        error_msg = str(e)
-        
-        # 检查是否为网络相关错误
-        network_errors = ["proxy", "connection", "timeout", "network", "dns", "ssl", "certificate", "连接", "网络", "超时"]
-        is_network_error = any(keyword in error_msg.lower() for keyword in network_errors)
-        
-        if is_network_error:
-            print(f"检测到网络错误，将在{akshare_retry_manager.retry_interval}秒后重试: {error_msg}")
-            akshare_retry_manager.record_failure(request_key, error_msg)
-        else:
-            print(f"AkShare API调用失败: {error_msg}")
-            # 非网络错误也记录，但可能需要不同的处理策略
-            akshare_retry_manager.record_failure(request_key, error_msg)
-        
-        raise e
+# safe_akshare_call函数已删除，不再使用AkShare
 
 def find_available_port(start_port=8080):
     """查找可用端口"""
@@ -223,94 +183,7 @@ def get_trading_days_between(start_date, end_date):
 # 全局变量存储更新状态
 update_status = {}
 
-# AkShare重试管理器
-class AkShareRetryManager:
-    """AkShare接口重试管理器，处理网络错误和数据获取失败的重试机制"""
-    
-    def __init__(self, retry_interval=300):  # 默认5分钟重试间隔
-        self.retry_interval = retry_interval  # 重试间隔（秒）
-        self.failed_requests = {}  # 存储失败的请求信息
-        self.lock = threading.Lock()
-        
-    def should_retry(self, request_key):
-        """检查是否应该重试某个请求"""
-        with self.lock:
-            if request_key not in self.failed_requests:
-                return True
-            
-            last_attempt = self.failed_requests[request_key]['last_attempt']
-            return time.time() - last_attempt >= self.retry_interval
-    
-    def record_failure(self, request_key, error_msg):
-        """记录失败的请求"""
-        with self.lock:
-            current_time = time.time()
-            if request_key not in self.failed_requests:
-                self.failed_requests[request_key] = {
-                    'first_failure': current_time,
-                    'failure_count': 0,
-                    'last_error': ''
-                }
-            
-            self.failed_requests[request_key].update({
-                'last_attempt': current_time,
-                'failure_count': self.failed_requests[request_key]['failure_count'] + 1,
-                'last_error': error_msg
-            })
-            
-            print(f"记录AkShare请求失败: {request_key}, 失败次数: {self.failed_requests[request_key]['failure_count']}, 错误: {error_msg}")
-    
-    def record_success(self, request_key):
-        """记录成功的请求，清除失败记录"""
-        with self.lock:
-            if request_key in self.failed_requests:
-                failure_count = self.failed_requests[request_key]['failure_count']
-                del self.failed_requests[request_key]
-                print(f"AkShare请求恢复成功: {request_key}, 之前失败次数: {failure_count}")
-    
-    def get_retry_status(self):
-        """获取重试状态信息"""
-        with self.lock:
-            current_time = time.time()
-            status = {
-                'total_failed_requests': len(self.failed_requests),
-                'retry_interval_minutes': self.retry_interval / 60,
-                'failed_requests': []
-            }
-            
-            for request_key, info in self.failed_requests.items():
-                next_retry_time = info['last_attempt'] + self.retry_interval
-                time_until_retry = max(0, next_retry_time - current_time)
-                
-                status['failed_requests'].append({
-                    'request_key': request_key,
-                    'failure_count': info['failure_count'],
-                    'last_error': info['last_error'],
-                    'first_failure_time': datetime.fromtimestamp(info['first_failure']).strftime('%Y-%m-%d %H:%M:%S'),
-                    'last_attempt_time': datetime.fromtimestamp(info['last_attempt']).strftime('%Y-%m-%d %H:%M:%S'),
-                    'next_retry_in_seconds': int(time_until_retry),
-                    'can_retry_now': time_until_retry == 0
-                })
-            
-            return status
-    
-    def cleanup_old_failures(self, max_age_hours=24):
-        """清理超过指定时间的失败记录"""
-        with self.lock:
-            current_time = time.time()
-            max_age_seconds = max_age_hours * 3600
-            
-            keys_to_remove = []
-            for request_key, info in self.failed_requests.items():
-                if current_time - info['first_failure'] > max_age_seconds:
-                    keys_to_remove.append(request_key)
-            
-            for key in keys_to_remove:
-                del self.failed_requests[key]
-                print(f"清理过期的失败记录: {key}")
-
-# 创建全局重试管理器实例
-akshare_retry_manager = AkShareRetryManager(retry_interval=300)  # 5分钟重试间隔
+# AkShare重试管理器已删除，不再使用AkShare
 
 def get_real_time_stock_data(ts_code, name, industry, current_date):
     """获取单只股票的实时数据"""
@@ -1103,12 +976,44 @@ def test_tushare_indices():
             'source': 'tushare_test'
         }), 500
 
+def is_market_open():
+    """检查A股是否在开盘时间"""
+    now = datetime.now()
+    
+    # 检查是否为工作日（周一到周五）
+    if now.weekday() >= 5:  # 周六=5, 周日=6
+        return False
+    
+    current_time = now.time()
+    
+    # A股开盘时间：
+    # 上午：9:30-11:30
+    # 下午：13:00-15:00
+    morning_start = datetime.strptime('09:30', '%H:%M').time()
+    morning_end = datetime.strptime('11:30', '%H:%M').time()
+    afternoon_start = datetime.strptime('13:00', '%H:%M').time()
+    afternoon_end = datetime.strptime('15:00', '%H:%M').time()
+    
+    is_morning_session = morning_start <= current_time <= morning_end
+    is_afternoon_session = afternoon_start <= current_time <= afternoon_end
+    
+    return is_morning_session or is_afternoon_session
+
 @app.route('/api/indices/realtime')
 def get_indices_realtime():
-    """获取主要指数实时数据 - 智能重试机制"""
-    global last_retry_time
-    
+    """获取主要指数实时数据 - 仅在开盘时间获取"""
     try:
+        # 检查是否在开盘时间
+        if not is_market_open():
+            print("[指数数据] 当前非开盘时间，返回缓存数据")
+            # 返回固定的收盘数据
+            return get_fallback_indices_data({
+                'sh000001': '上证指数',
+                'sz399001': '深证成指', 
+                'sz399006': '创业板指',
+                'sh000688': '科创板'
+            })
+        
         # 定义要获取的指数代码和名称
         indices = {
             'sh000001': '上证指数',
@@ -1117,52 +1022,12 @@ def get_indices_realtime():
             'sh000688': '科创板'
         }
         
-        # 策略1: 优先使用AkShare获取实时数据
-        current_time = datetime.now()
-        akshare_success = False
-        indices_data = None
+        print("[指数数据] 开盘时间，使用Tushare获取实时数据...")
+        indices_data = get_indices_from_tushare(indices)
         
-        # 检查是否在重试间隔内，如果是则跳过AkShare直接尝试Tushare
-        skip_akshare = False
-        if last_retry_time and (current_time - last_retry_time).total_seconds() < retry_interval:
-            remaining_time = retry_interval - (current_time - last_retry_time).total_seconds()
-            print(f"距离AkShare重试还有 {remaining_time:.0f} 秒，跳过AkShare直接尝试Tushare")
-            skip_akshare = True
-        
-        if not skip_akshare:
-            try:
-                print("[策略1] 尝试使用AkShare获取指数实时数据...")
-                indices_data = get_indices_from_akshare(indices)
-                if indices_data:
-                    akshare_success = True
-                    print("[策略1] AkShare获取成功")
-                else:
-                    print("[策略1] AkShare返回空数据")
-            except Exception as e:
-                print(f"[策略1] AkShare获取失败: {e}")
-        
-        # 策略2: AkShare失败或跳过时使用Tushare备用
-        if not akshare_success:
-            try:
-                if skip_akshare:
-                    print("[策略2] 跳过AkShare，直接使用Tushare获取数据...")
-                else:
-                    print("[策略2] AkShare失败，尝试使用Tushare获取数据...")
-                indices_data = get_indices_from_tushare(indices)
-                if indices_data:
-                    print("[策略2] Tushare获取成功")
-                else:
-                    print("[策略2] Tushare也返回空数据")
-                    raise Exception("Tushare返回空数据")
-            except Exception as e:
-                print(f"[策略2] Tushare也失败: {e}")
-                # 两个接口都失败，记录重试时间
-                last_retry_time = current_time
-                print(f"[重试机制] 两个接口都失败，将在 {retry_interval} 秒后重试")
-                return get_fallback_indices_data(indices)
-        
-        # 成功获取数据，重置重试时间
-        last_retry_time = None
+        if not indices_data:
+            print("[指数数据] Tushare获取失败，返回备用数据")
+            return get_fallback_indices_data(indices)
         
         # 转换数据格式以匹配前端期望
         formatted_data = {}
@@ -1176,177 +1041,65 @@ def get_indices_realtime():
                 'update_time': datetime.now().strftime('%H:%M:%S')
             }
         
+        # 保存数据到缓存
+        fetch_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        save_indices_cache(formatted_data, fetch_time)
+        
         return jsonify({
             'success': True,
             'data': formatted_data,
-            'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'fetch_time': fetch_time
         })
         
     except Exception as e:
         print(f"获取指数数据异常: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-def get_indices_from_akshare(indices):
-    """使用AkShare获取指数数据"""
-    if not AKSHARE_AVAILABLE:
-        print("[AkShare] AkShare不可用，跳过AkShare获取")
-        return None
-        
-    if 'ak' not in globals() or ak is None:
-        print("[AkShare] akshare模块未正确导入，跳过AkShare获取")
-        return None
-        
-    indices_data = {}
-    current_date = datetime.now().strftime('%Y-%m-%d')
-    current_time = datetime.now().strftime('%H:%M:%S')
-    
-    print(f"[AkShare] 开始获取 {current_date} {current_time} 的实时指数数据")
-    
+# 指数数据缓存管理函数
+def load_indices_cache():
+    """加载指数数据缓存"""
     try:
-        # 方法1: 使用新浪财经实时指数数据接口
-        try:
-            print("[AkShare方法1] 尝试使用新浪财经实时指数数据...")
-            if 'ak' not in globals() or ak is None:
-                print("[AkShare方法1] AkShare未正确导入，跳过新浪财经数据获取")
-                realtime_data = None
-            else:
-                realtime_data = ak.stock_zh_index_spot_sina()
-            if realtime_data is not None and not realtime_data.empty:
-                print(f"[AkShare方法1] 成功获取新浪实时数据，共{len(realtime_data)}条记录")
-                result = process_akshare_data(realtime_data, indices)
-                if result:
-                    return result
-            else:
-                print("[AkShare方法1] 新浪实时数据返回空")
-                
-        except Exception as e1:
-            print(f"[AkShare方法1] 新浪实时数据获取失败: {e1}")
-        
-        # 方法2: 获取沪深重要指数
-        try:
-            print("[AkShare方法2] 尝试获取沪深重要指数...")
-            if 'ak' not in globals() or ak is None:
-                print("[AkShare方法2] AkShare未正确导入，跳过沪深重要指数获取")
-                sh_data = None
-            else:
-                sh_data = ak.stock_zh_index_spot_em(symbol="沪深重要指数")
-            if sh_data is not None and not sh_data.empty:
-                print(f"[AkShare方法2] 成功获取沪深重要指数数据，共{len(sh_data)}条记录")
-                return process_akshare_data(sh_data, indices)
-        except Exception as e2:
-            print(f"[AkShare方法2] 沪深重要指数获取失败: {e2}")
-            
-        # 方法3: 获取上证系列指数
-        try:
-            print("[AkShare方法3] 尝试获取上证系列指数...")
-            if 'ak' not in globals() or ak is None:
-                print("[AkShare方法3] AkShare未正确导入，跳过上证系列指数获取")
-                sh_data = None
-            else:
-                sh_data = ak.stock_zh_index_spot_em(symbol="上证系列指数")
-            if sh_data is not None and not sh_data.empty:
-                print(f"[AkShare方法3] 成功获取上证系列指数数据，共{len(sh_data)}条记录")
-                return process_akshare_data(sh_data, indices)
-        except Exception as e3:
-            print(f"[AkShare方法3] 上证系列指数获取失败: {e3}")
-        
-        # 方法4: 分别获取2025年7月14日历史数据作为备用
-        try:
-            print("[AkShare方法4] 尝试分别获取各指数2025年7月14日数据...")
-            current_date_str = '20250714'  # 固定获取2025年7月14日的收盘数据
-            indices_list = []
-            
-            for code, name in indices.items():
-                try:
-                    if 'ak' not in globals() or ak is None:
-                        print(f"[AkShare方法4] AkShare未正确导入，跳过{name}数据获取")
-                        data = None
-                    elif name == '上证指数':
-                        data = ak.index_zh_a_hist(symbol="000001", period="daily", start_date=current_date_str, end_date=current_date_str)
-                    elif name == '深证成指':
-                        data = ak.index_zh_a_hist(symbol="399001", period="daily", start_date=current_date_str, end_date=current_date_str)
-                    elif name == '创业板指':
-                        data = ak.index_zh_a_hist(symbol="399006", period="daily", start_date=current_date_str, end_date=current_date_str)
-                    elif name == '科创板':
-                        data = ak.index_zh_a_hist(symbol="000688", period="daily", start_date=current_date_str, end_date=current_date_str)
-                    else:
-                        data = None
-                    
-                    if data is not None and not data.empty:
-                        latest = data.iloc[-1]
-                        indices_list.append({
-                            '名称': name,
-                            '代码': code,
-                            '最新价': latest['收盘'],
-                            '涨跌额': latest['涨跌额'] if '涨跌额' in latest else latest['收盘'] - latest['开盘'],
-                            '涨跌幅': latest['涨跌幅'] if '涨跌幅' in latest else ((latest['收盘'] - latest['开盘']) / latest['开盘'] * 100),
-                            '成交额': latest['成交额'] if '成交额' in latest else 0
-                        })
-                        print(f"[AkShare] 获取{name}当日数据成功")
-                except Exception as e:
-                    print(f"[AkShare] 获取{name}当日数据失败: {e}")
-            
-            if indices_list:
-                sh_data = pd.DataFrame(indices_list)
-                print(f"[AkShare方法4] 成功获取 {len(indices_list)} 个指数的当日数据")
-                return process_akshare_data(sh_data, indices)
-        except Exception as e4:
-            print(f"[AkShare方法4] 当日数据获取失败: {e4}")
-        
-        print("[AkShare] 所有方法都失败，返回空数据")
+        cache_file = os.path.join('cache', 'indices_cache.json')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                cached_data = json.load(f)
+                # 检查缓存是否是当天的数据
+                cache_date = cached_data.get('cache_date', '')
+                current_date = datetime.now().strftime('%Y-%m-%d')
+                if cache_date == current_date:
+                    return cached_data
+                else:
+                    print(f"指数缓存数据过期: 缓存日期={cache_date}, 当前日期={current_date}")
         return None
-                
     except Exception as e:
-        print(f"[AkShare] 获取异常: {e}")
+        print(f"加载指数缓存失败: {e}")
         return None
 
-def process_akshare_data(sh_data, indices):
-    """处理AkShare返回的数据"""
-    indices_data = {}
-    
+def save_indices_cache(data, fetch_time):
+    """保存指数数据到缓存"""
     try:
-        print(f"[AkShare] 开始处理数据，共{len(sh_data)}条记录")
-        print(f"[AkShare] 数据列名: {list(sh_data.columns)}")
+        cache_dir = 'cache'
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
         
-        # 处理获取到的数据
-        for index, row in sh_data.iterrows():
-            name = row.get('名称', '')
-            code = row.get('代码', '')
-            
-            print(f"[AkShare] 处理行数据: 名称={name}, 代码={code}")
-            
-            # 匹配指数名称
-            matched_key = None
-            for key, index_name in indices.items():
-                if index_name in name or name in index_name or code.replace('sh', '').replace('sz', '') in key:
-                    matched_key = key
-                    break
-            
-            if matched_key:
-                # 获取成交额，注意单位转换（新浪数据单位是元，需要转换为亿元）
-                volume_raw = row.get('成交额', 0)
-                volume = float(volume_raw) / 100000000 if pd.notna(volume_raw) and volume_raw != 0 else 0  # 转换为亿元
-                
-                indices_data[matched_key] = {
-                    'name': indices[matched_key],
-                    'code': code,
-                    'price': float(row['最新价']),
-                    'change': float(row['涨跌额']),
-                    'change_percent': float(row['涨跌幅']),
-                    'volume': volume
-                }
-                print(f"[AkShare] 处理{indices[matched_key]}数据成功: 价格={row['最新价']}, 涨跌幅={row['涨跌幅']}%, 成交额={volume:.2f}亿元")
-            else:
-                print(f"[AkShare] 未匹配到指数: {name} ({code})")
+        cache_file = os.path.join(cache_dir, 'indices_cache.json')
+        cache_data = {
+            'data': data,
+            'fetch_time': fetch_time,
+            'cache_date': datetime.now().strftime('%Y-%m-%d'),
+            'cache_time': datetime.now().strftime('%H:%M:%S')
+        }
         
-        print(f"[AkShare] 成功处理 {len(indices_data)} 个指数数据")
-        return indices_data if indices_data else None
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(cache_data, f, ensure_ascii=False, indent=2)
         
+        print(f"指数数据已保存到缓存: {cache_file}")
+        return True
     except Exception as e:
-        print(f"[AkShare] 数据处理异常: {e}")
-        import traceback
-        print(f"[AkShare] 异常详情: {traceback.format_exc()}")
-        return None
+        print(f"保存指数缓存失败: {e}")
+        return False
+
+# AkShare相关函数已删除，现在只使用Tushare获取指数数据
 
 def get_indices_from_tushare(indices):
     """使用Tushare获取指数数据"""
@@ -1537,10 +1290,21 @@ def get_indices_from_tushare(indices):
         return None
 
 def get_fallback_indices_data(indices):
-    """获取回退数据 - 返回全0数据表示获取失败"""
-    fallback_data = {}
+    """获取回退数据 - 优先从缓存读取，无缓存时返回全0数据"""
+    # 尝试从缓存读取指数数据
+    cached_data = load_indices_cache()
     
-    # 为每个指数返回全0数据，明确表示数据获取失败
+    if cached_data:
+        print("从缓存获取指数数据")
+        return jsonify({
+            'success': True,
+            'data': cached_data['data'],
+            'fetch_time': cached_data.get('fetch_time', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+            'source': 'cache'
+        })
+    
+    # 如果没有缓存数据，返回全0数据
+    fallback_data = {}
     for code, name in indices.items():
         fallback_data[code] = {
             'name': name,
@@ -1826,8 +1590,8 @@ def get_stock_data(stock_code):
 def get_realtime_stock_data(stock_code):
     """获取股票实时数据，包括实时价格、分时图、实时K线等"""
     try:
-        if not AKSHARE_AVAILABLE:
-            return jsonify({'error': 'AKShare库未安装，无法获取实时数据'}), 500
+        # AkShare 相关功能已移除，该接口已不再使用
+        return jsonify({'error': 'AkShare相关功能已移除，请使用其他数据源'}), 500
         
         # 确保股票代码格式正确
         if len(stock_code) == 6:
@@ -2827,14 +2591,7 @@ def auto_sync_all_markets():
     except Exception as e:
         print(f"自动同步任务执行失败: {e}")
 
-def cleanup_akshare_failures():
-    """清理过期的AkShare失败记录"""
-    try:
-        print("开始清理过期的AkShare失败记录...")
-        akshare_retry_manager.cleanup_old_failures(max_age_hours=24)
-        print("AkShare失败记录清理完成")
-    except Exception as e:
-        print(f"清理AkShare失败记录时出错: {e}")
+# cleanup_akshare_failures函数已删除，不再使用AkShare
 
 def start_scheduler():
     """启动定时调度器"""
@@ -2855,13 +2612,11 @@ def start_scheduler():
     # 设置定时任务：每天晚上6点执行股票筛选
     schedule.every().day.at("18:00").do(auto_filter_stocks)
     
-    # 设置定时任务：每天凌晨2点清理过期的AkShare失败记录
-    schedule.every().day.at("02:00").do(cleanup_akshare_failures)
+    # AkShare清理任务已删除，不再使用AkShare
     
     print("定时任务已设置：工作日下午5点自动同步所有A股数据")
     print("定时任务已设置：工作日晚上7点自动更新资金流向数据")
     print("定时任务已设置：每天晚上6点自动筛选符合条件的股票")
-    print("定时任务已设置：每天凌晨2点清理过期的AkShare失败记录")
     
     # 在后台线程中运行调度器
     def run_scheduler():
@@ -2873,20 +2628,7 @@ def start_scheduler():
     scheduler_thread.start()
     print("定时调度器已启动")
 
-@app.route('/api/akshare/retry_status')
-def get_akshare_retry_status():
-    """获取AkShare重试状态"""
-    try:
-        status = akshare_retry_manager.get_retry_status()
-        return jsonify({
-            'success': True,
-            'data': status
-        })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+# get_akshare_retry_status路由已删除，不再使用AkShare
 
 @app.route('/api/scheduler/status')
 def get_scheduler_status():
@@ -3851,14 +3593,15 @@ if __name__ == '__main__':
     
     # 从环境变量获取配置，支持生产环境部署
     host = os.environ.get('HOST', '0.0.0.0')
-    port = int(os.environ.get('PORT', 8080))
+    port = int(os.environ.get('PORT', 8083))
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
     print(f"服务器启动配置: host={host}, port={port}, debug={debug_mode}")
     print(f"Tushare API频率限制器已启用: 每分钟最多{rate_limiter.max_requests}次请求")
     print("可通过 /api/rate_limiter/status 查看API使用状态")
-    print(f"AkShare重试机制已启用: 失败后{akshare_retry_manager.retry_interval}秒重试间隔")
-    print("可通过 /api/akshare/retry_status 查看重试状态")
+    # AkShare 相关功能已移除
+    # print(f"AkShare重试机制已启用: 失败后{akshare_retry_manager.retry_interval}秒重试间隔")
+    # print("可通过 /api/akshare/retry_status 查看重试状态")
     
     try:
         app.run(debug=debug_mode, host=host, port=port)
