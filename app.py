@@ -16,6 +16,7 @@ try:
     AKSHARE_AVAILABLE = True
     print("AKShare库已成功导入")
 except ImportError:
+    ak = None
     AKSHARE_AVAILABLE = False
     print("警告：AKShare库未安装，实时数据功能将不可用")
 
