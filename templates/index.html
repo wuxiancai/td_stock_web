@@ -1776,8 +1776,59 @@
          return sign + formatted;
      }
      
-     // 获取指数实时数据
+     // 检查市场开盘状态
+     function checkMarketStatus() {
+         return fetch('/api/market/status')
+             .then(response => response.json())
+             .then(data => {
+                 if (data.success) {
+                     return data.is_market_open;
+                 }
+                 return false;
+             })
+             .catch(error => {
+                 console.error('检查市场状态失败:', error);
+                 return false;
+             });
+     }
+     
+     // 指数数据刷新定时器ID
+     let indicesRefreshTimer = null;
+     
+     // 获取指数实时数据（带开盘时间检查）
      function refreshIndicesData() {
+         checkMarketStatus().then(isMarketOpen => {
+             if (isMarketOpen) {
+                 console.log('市场开盘中，刷新指数数据');
+                 fetchIndicesData();
+                 // 开盘时间，设置10秒刷新一次
+                 if (!indicesRefreshTimer) {
+                     indicesRefreshTimer = setInterval(() => {
+                         checkMarketStatus().then(stillOpen => {
+                             if (stillOpen) {
+                                 fetchIndicesData();
+                             } else {
+                                 console.log('市场已收盘，停止自动刷新指数数据');
+                                 clearInterval(indicesRefreshTimer);
+                                 indicesRefreshTimer = null;
+                             }
+                         });
+                     }, 10000);
+                 }
+             } else {
+                 console.log('市场非开盘时间，获取缓存数据并停止自动刷新');
+                 fetchIndicesData(); // 获取一次缓存数据用于显示
+                 // 清除定时器，停止自动刷新
+                 if (indicesRefreshTimer) {
+                     clearInterval(indicesRefreshTimer);
+                     indicesRefreshTimer = null;
+                 }
+             }
+         });
+     }
+     
+     // 实际获取指数数据的函数
+     function fetchIndicesData() {
          fetch('/api/indices/realtime')
              .then(response => response.json())
              .then(data => {
@@ -1861,10 +1912,20 @@
          // 每30秒自动刷新一次状态
          setInterval(refreshSchedulerStatus, 30000);
          
-         // 初始化指数数据
+         // 初始化指数数据（会根据开盘状态自动设置刷新策略）
          refreshIndicesData();
-         // 每10秒自动刷新指数数据
-         setInterval(refreshIndicesData, 10000);
+         
+         // 每5分钟检查一次市场状态，以便在开盘时间开始时自动启动刷新
+         setInterval(() => {
+             if (!indicesRefreshTimer) {
+                 checkMarketStatus().then(isMarketOpen => {
+                     if (isMarketOpen) {
+                         console.log('检测到市场开盘，启动指数数据自动刷新');
+                         refreshIndicesData();
+                     }
+                 });
+             }
+         }, 300000); // 5分钟检查一次
      });
 </script>
 </body>

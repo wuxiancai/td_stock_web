@@ -1020,6 +1020,19 @@ def is_market_open():
     
     return is_morning_session or is_afternoon_session
 
+@app.route('/api/market/status')
+def get_market_status():
+    """获取市场开盘状态"""
+    try:
+        is_open = is_market_open()
+        return jsonify({
+            'success': True,
+            'is_market_open': is_open,
+            'current_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/indices/realtime')
 def get_indices_realtime():
     """获取主要指数实时数据 - 仅在开盘时间获取"""
