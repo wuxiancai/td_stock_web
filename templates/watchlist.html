@@ -681,6 +681,8 @@
                     return parseFloat(stock.amount || 0);
                 case 'total_mv':
                     return parseFloat(stock.total_mv || 0);
+                case 'net_mf_amount':
+                    return parseFloat(stock.net_mf_amount || 0);
                 case 'nine_turn':
                     // 九转买入优先，然后是九转卖出
                     if (stock.nine_turn_up && stock.nine_turn_up > 0) {
