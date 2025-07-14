@@ -1177,6 +1177,10 @@ def get_indices_from_akshare(indices):
         print("[AkShare] AkShare不可用，跳过AkShare获取")
         return None
         
+    if 'ak' not in globals() or ak is None:
+        print("[AkShare] akshare模块未正确导入，跳过AkShare获取")
+        return None
+        
     indices_data = {}
     current_date = datetime.now().strftime('%Y-%m-%d')
     current_time = datetime.now().strftime('%H:%M:%S')
@@ -1187,7 +1191,11 @@ def get_indices_from_akshare(indices):
         # 方法1: 使用新浪财经实时指数数据接口
         try:
             print("[AkShare方法1] 尝试使用新浪财经实时指数数据...")
-            realtime_data = ak.stock_zh_index_spot_sina()
+            if 'ak' not in globals() or ak is None:
+                print("[AkShare方法1] AkShare未正确导入，跳过新浪财经数据获取")
+                realtime_data = None
+            else:
+                realtime_data = ak.stock_zh_index_spot_sina()
             if realtime_data is not None and not realtime_data.empty:
                 print(f"[AkShare方法1] 成功获取新浪实时数据，共{len(realtime_data)}条记录")
                 result = process_akshare_data(realtime_data, indices)
@@ -1202,7 +1210,11 @@ def get_indices_from_akshare(indices):
         # 方法2: 获取沪深重要指数
         try:
             print("[AkShare方法2] 尝试获取沪深重要指数...")
-            sh_data = ak.stock_zh_index_spot_em(symbol="沪深重要指数")
+            if 'ak' not in globals() or ak is None:
+                print("[AkShare方法2] AkShare未正确导入，跳过沪深重要指数获取")
+                sh_data = None
+            else:
+                sh_data = ak.stock_zh_index_spot_em(symbol="沪深重要指数")
             if sh_data is not None and not sh_data.empty:
                 print(f"[AkShare方法2] 成功获取沪深重要指数数据，共{len(sh_data)}条记录")
                 return process_akshare_data(sh_data, indices)
@@ -1212,7 +1224,11 @@ def get_indices_from_akshare(indices):
         # 方法3: 获取上证系列指数
         try:
             print("[AkShare方法3] 尝试获取上证系列指数...")
-            sh_data = ak.stock_zh_index_spot_em(symbol="上证系列指数")
+            if 'ak' not in globals() or ak is None:
+                print("[AkShare方法3] AkShare未正确导入，跳过上证系列指数获取")
+                sh_data = None
+            else:
+                sh_data = ak.stock_zh_index_spot_em(symbol="上证系列指数")
             if sh_data is not None and not sh_data.empty:
                 print(f"[AkShare方法3] 成功获取上证系列指数数据，共{len(sh_data)}条记录")
                 return process_akshare_data(sh_data, indices)
@@ -1227,7 +1243,10 @@ def get_indices_from_akshare(indices):
             
             for code, name in indices.items():
                 try:
-                    if name == '上证指数':
+                    if 'ak' not in globals() or ak is None:
+                        print(f"[AkShare方法4] AkShare未正确导入，跳过{name}数据获取")
+                        data = None
+                    elif name == '上证指数':
                         data = ak.index_zh_a_hist(symbol="000001", period="daily", start_date=current_date_str, end_date=current_date_str)
                     elif name == '深证成指':
                         data = ak.index_zh_a_hist(symbol="399001", period="daily", start_date=current_date_str, end_date=current_date_str)
@@ -1235,6 +1254,8 @@ def get_indices_from_akshare(indices):
                         data = ak.index_zh_a_hist(symbol="399006", period="daily", start_date=current_date_str, end_date=current_date_str)
                     elif name == '科创板':
                         data = ak.index_zh_a_hist(symbol="000688", period="daily", start_date=current_date_str, end_date=current_date_str)
+                    else:
+                        data = None
                     
                     if data is not None and not data.empty:
                         latest = data.iloc[-1]
@@ -1842,34 +1863,38 @@ def get_realtime_stock_data(stock_code):
         try:
             # 1. 获取实时行情数据
             print(f"正在获取{symbol}的实时行情数据...")
-            spot_data = safe_akshare_call(ak.stock_zh_a_spot_em, f"spot_data_{stock_code}")
-            if not spot_data.empty:
-                # 查找对应股票的实时数据
-                stock_spot = spot_data[spot_data['代码'] == stock_code[:6]]
-                if not stock_spot.empty:
-                    stock_info = stock_spot.iloc[0]
-                    realtime_data['spot'] = {
-                        'name': stock_info['名称'],
-                        'latest_price': float(stock_info['最新价']),
-                        'change_percent': float(stock_info['涨跌幅']),
-                        'change_amount': float(stock_info['涨跌额']),
-                        'volume': float(stock_info['成交量']),
-                        'amount': float(stock_info['成交额']),
-                        'turnover_rate': float(stock_info['换手率']),
-                        'volume_ratio': float(stock_info['量比']),
-                        'pe_ratio': float(stock_info['市盈率-动态']) if stock_info['市盈率-动态'] != '-' else None,
-                        'market_cap': float(stock_info['总市值']),
-                        'open': float(stock_info['今开']),
-                        'high': float(stock_info['最高']),
-                        'low': float(stock_info['最低']),
-                        'pre_close': float(stock_info['昨收']),
-                        'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    }
-                    print(f"成功获取{symbol}实时行情数据")
-                else:
-                    print(f"未找到{symbol}的实时行情数据")
+            if 'ak' not in globals() or ak is None:
+                print("AkShare未正确导入，跳过实时行情数据获取")
+                realtime_data['spot'] = None
             else:
-                print(f"获取实时行情数据失败")
+                spot_data = safe_akshare_call(ak.stock_zh_a_spot_em, f"spot_data_{stock_code}")
+                if not spot_data.empty:
+                     # 查找对应股票的实时数据
+                     stock_spot = spot_data[spot_data['代码'] == stock_code[:6]]
+                     if not stock_spot.empty:
+                         stock_info = stock_spot.iloc[0]
+                         realtime_data['spot'] = {
+                             'name': stock_info['名称'],
+                             'latest_price': float(stock_info['最新价']),
+                             'change_percent': float(stock_info['涨跌幅']),
+                             'change_amount': float(stock_info['涨跌额']),
+                             'volume': float(stock_info['成交量']),
+                             'amount': float(stock_info['成交额']),
+                             'turnover_rate': float(stock_info['换手率']),
+                             'volume_ratio': float(stock_info['量比']),
+                             'pe_ratio': float(stock_info['市盈率-动态']) if stock_info['市盈率-动态'] != '-' else None,
+                             'market_cap': float(stock_info['总市值']),
+                             'open': float(stock_info['今开']),
+                             'high': float(stock_info['最高']),
+                             'low': float(stock_info['最低']),
+                             'pre_close': float(stock_info['昨收']),
+                             'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                         }
+                         print(f"成功获取{symbol}实时行情数据")
+                     else:
+                         print(f"未找到{symbol}的实时行情数据")
+                 else:
+                     print(f"获取实时行情数据失败")
         except Exception as e:
             print(f"获取实时行情数据失败: {e}")
             realtime_data['spot'] = None
@@ -1877,31 +1902,35 @@ def get_realtime_stock_data(stock_code):
         try:
             # 2. 获取分时图数据
             print(f"正在获取{symbol}的分时图数据...")
-            # 使用akshare获取分时数据
-            minute_data = safe_akshare_call(ak.stock_zh_a_minute, f"minute_data_{stock_code}", symbol=symbol, period='1', adjust="")
-            if not minute_data.empty:
-                # 只取今天的数据
-                today = datetime.now().strftime('%Y-%m-%d')
-                today_data = minute_data[minute_data['day'].str.startswith(today)]
-                if not today_data.empty:
-                    # 转换为前端期望的格式：对象数组，每个对象包含time、price、volume
-                    minute_list = []
-                    for _, row in today_data.iterrows():
-                        minute_item = {
-                            'time': row['day'],
-                            'price': float(row['close']),
-                            'volume': float(row['volume'])
-                        }
-                        minute_list.append(minute_item)
-                    
-                    realtime_data['minute_data'] = minute_list
-                    print(f"成功获取{symbol}分时图数据，共{len(minute_list)}个数据点")
-                else:
-                    print(f"今日暂无{symbol}分时数据")
-                    realtime_data['minute_data'] = None
-            else:
-                print(f"获取{symbol}分时数据失败")
+            if 'ak' not in globals() or ak is None:
+                print("AkShare未正确导入，跳过分时图数据获取")
                 realtime_data['minute_data'] = None
+            else:
+                # 使用akshare获取分时数据
+                minute_data = safe_akshare_call(ak.stock_zh_a_minute, f"minute_data_{stock_code}", symbol=symbol, period='1', adjust="")
+                if not minute_data.empty:
+                    # 只取今天的数据
+                    today = datetime.now().strftime('%Y-%m-%d')
+                    today_data = minute_data[minute_data['day'].str.startswith(today)]
+                    if not today_data.empty:
+                        # 转换为前端期望的格式：对象数组，每个对象包含time、price、volume
+                        minute_list = []
+                        for _, row in today_data.iterrows():
+                            minute_item = {
+                                'time': row['day'],
+                                'price': float(row['close']),
+                                'volume': float(row['volume'])
+                            }
+                            minute_list.append(minute_item)
+                        
+                        realtime_data['minute_data'] = minute_list
+                        print(f"成功获取{symbol}分时图数据，共{len(minute_list)}个数据点")
+                    else:
+                        print(f"今日暂无{symbol}分时数据")
+                        realtime_data['minute_data'] = None
+                else:
+                    print(f"获取{symbol}分时数据失败")
+                    realtime_data['minute_data'] = None
         except Exception as e:
             print(f"获取分时图数据失败: {e}")
             realtime_data['minute_data'] = None
@@ -1930,7 +1959,11 @@ def get_realtime_stock_data(stock_code):
                 end_date = datetime.now().strftime('%Y%m%d')
                 start_date = (datetime.now() - timedelta(days=5)).strftime('%Y%m%d')  # 只获取最近5天
                 
-                akshare_kline = safe_akshare_call(ak.stock_zh_a_hist, f"kline_data_{stock_code}", symbol=stock_code[:6], period="daily", start_date=start_date, end_date=end_date, adjust="")
+                if 'ak' not in globals() or ak is None:
+                    print("AkShare未正确导入，跳过K线数据获取")
+                    akshare_kline = pd.DataFrame()  # 空DataFrame
+                else:
+                    akshare_kline = safe_akshare_call(ak.stock_zh_a_hist, f"kline_data_{stock_code}", symbol=stock_code[:6], period="daily", start_date=start_date, end_date=end_date, adjust="")
                 
                 if cached_kline and not akshare_kline.empty:
                     # 合并缓存数据和最新数据
@@ -2035,7 +2068,7 @@ def get_realtime_stock_data(stock_code):
                     realtime_data['kline_data'] = cached_kline
                     print(f"回退使用缓存{symbol}K线数据，共{len(cached_kline)}天")
                 else:
-                     realtime_data['kline_data'] = None
+                    realtime_data['kline_data'] = None
         except Exception as e:
             print(f"获取实时K线数据失败: {e}")
             realtime_data['kline_data'] = None
@@ -2043,29 +2076,33 @@ def get_realtime_stock_data(stock_code):
         try:
             # 4. 获取实时资金流向数据
             print(f"正在获取{symbol}的资金流向数据...")
-            # 使用akshare获取个股资金流向
-            money_flow = safe_akshare_call(ak.stock_individual_fund_flow, f"money_flow_{stock_code}", stock=stock_code[:6], market="sh" if symbol.startswith('sh') else "sz")
-            if not money_flow.empty:
-                latest_flow = money_flow.iloc[-1]
-                realtime_data['money_flow'] = {
-                    'date': latest_flow['日期'],
-                    'close_price': float(latest_flow['收盘价']),
-                    'change_percent': float(latest_flow['涨跌幅']),
-                    'main_net_inflow': float(latest_flow['主力净流入-净额']),
-                    'main_net_inflow_rate': float(latest_flow['主力净流入-净占比']),
-                    'super_large_net_inflow': float(latest_flow['超大单净流入-净额']),
-                    'super_large_net_inflow_rate': float(latest_flow['超大单净流入-净占比']),
-                    'large_net_inflow': float(latest_flow['大单净流入-净额']),
-                    'large_net_inflow_rate': float(latest_flow['大单净流入-净占比']),
-                    'medium_net_inflow': float(latest_flow['中单净流入-净额']),
-                    'medium_net_inflow_rate': float(latest_flow['中单净流入-净占比']),
-                    'small_net_inflow': float(latest_flow['小单净流入-净额']),
-                    'small_net_inflow_rate': float(latest_flow['小单净流入-净占比'])
-                }
-                print(f"成功获取{symbol}资金流向数据")
-            else:
-                print(f"获取{symbol}资金流向数据失败")
+            if 'ak' not in globals() or ak is None:
+                print("AkShare未正确导入，跳过资金流向数据获取")
                 realtime_data['money_flow'] = None
+            else:
+                # 使用akshare获取个股资金流向
+                money_flow = safe_akshare_call(ak.stock_individual_fund_flow, f"money_flow_{stock_code}", stock=stock_code[:6], market="sh" if symbol.startswith('sh') else "sz")
+                if not money_flow.empty:
+                    latest_flow = money_flow.iloc[-1]
+                    realtime_data['money_flow'] = {
+                        'date': latest_flow['日期'],
+                        'close_price': float(latest_flow['收盘价']),
+                        'change_percent': float(latest_flow['涨跌幅']),
+                        'main_net_inflow': float(latest_flow['主力净流入-净额']),
+                        'main_net_inflow_rate': float(latest_flow['主力净流入-净占比']),
+                        'super_large_net_inflow': float(latest_flow['超大单净流入-净额']),
+                        'super_large_net_inflow_rate': float(latest_flow['超大单净流入-净占比']),
+                        'large_net_inflow': float(latest_flow['大单净流入-净额']),
+                        'large_net_inflow_rate': float(latest_flow['大单净流入-净占比']),
+                        'medium_net_inflow': float(latest_flow['中单净流入-净额']),
+                        'medium_net_inflow_rate': float(latest_flow['中单净流入-净占比']),
+                        'small_net_inflow': float(latest_flow['小单净流入-净额']),
+                        'small_net_inflow_rate': float(latest_flow['小单净流入-净占比'])
+                    }
+                    print(f"成功获取{symbol}资金流向数据")
+                else:
+                    print(f"获取{symbol}资金流向数据失败")
+                    realtime_data['money_flow'] = None
         except Exception as e:
             print(f"获取资金流向数据失败: {e}")
             realtime_data['money_flow'] = None

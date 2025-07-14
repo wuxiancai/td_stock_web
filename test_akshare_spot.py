@@ -4,7 +4,11 @@
 测试AkShare实时行情接口获取换手率和量比数据
 """
 
-import akshare as ak
+try:
+    import akshare as ak
+except ImportError:
+    print("警告: AkShare 导入失败")
+    ak = None
 import pandas as pd
 from datetime import datetime
 
@@ -12,6 +16,9 @@ def test_spot_data():
     """测试实时行情数据获取"""
     try:
         print("正在获取实时行情数据...")
+        if ak is None:
+            print("❌ AkShare未正确导入，无法获取实时行情数据")
+            return
         spot_data = ak.stock_zh_a_spot_em()
         
         if spot_data.empty:
@@ -84,6 +91,9 @@ def test_individual_stock():
         
         # 获取单只股票的实时数据
         stock_code = '000001'
+        if ak is None:
+            print("❌ AkShare未正确导入，无法获取实时行情数据")
+            return
         spot_data = ak.stock_zh_a_spot_em()
         
         if not spot_data.empty:

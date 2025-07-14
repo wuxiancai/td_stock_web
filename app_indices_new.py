@@ -114,7 +114,11 @@ def get_indices_from_akshare(indices):
         
         # 方法1: 获取沪深重要指数
         try:
-            sh_data = ak.stock_zh_index_spot_em(symbol="沪深重要指数")
+            if 'ak' not in globals() or ak is None:
+                print("AkShare未正确导入，跳过沪深重要指数获取")
+                sh_data = None
+            else:
+                sh_data = ak.stock_zh_index_spot_em(symbol="沪深重要指数")
             if sh_data is not None and not sh_data.empty:
                 print("AkShare方法1成功: 沪深重要指数")
         except Exception as e1:
@@ -122,7 +126,11 @@ def get_indices_from_akshare(indices):
             
             # 方法2: 获取上证系列指数
             try:
-                sh_data = ak.stock_zh_index_spot_em(symbol="上证系列指数")
+                if 'ak' not in globals() or ak is None:
+                    print("AkShare未正确导入，跳过上证系列指数获取")
+                    sh_data = None
+                else:
+                    sh_data = ak.stock_zh_index_spot_em(symbol="上证系列指数")
                 if sh_data is not None and not sh_data.empty:
                     print("AkShare方法2成功: 上证系列指数")
             except Exception as e2:
@@ -135,7 +143,10 @@ def get_indices_from_akshare(indices):
                     
                     for code, name in indices.items():
                         try:
-                            if name == '上证指数':
+                            if 'ak' not in globals() or ak is None:
+                                print(f"AkShare未正确导入，跳过{name}数据获取")
+                                data = None
+                            elif name == '上证指数':
                                 data = ak.index_zh_a_hist(symbol="000001", period="daily", start_date=current_date, end_date=current_date)
                             elif name == '深证成指':
                                 data = ak.index_zh_a_hist(symbol="399001", period="daily", start_date=current_date, end_date=current_date)
@@ -143,6 +154,8 @@ def get_indices_from_akshare(indices):
                                 data = ak.index_zh_a_hist(symbol="399006", period="daily", start_date=current_date, end_date=current_date)
                             elif name == '科创板':
                                 data = ak.index_zh_a_hist(symbol="000688", period="daily", start_date=current_date, end_date=current_date)
+                            else:
+                                data = None
                             
                             if data is not None and not data.empty:
                                 latest = data.iloc[-1]
