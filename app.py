@@ -160,6 +160,27 @@ def find_available_port(start_port=8080):
             continue
     return None
 
+def kill_process_on_port(port):
+    """强制结束占用指定端口的进程"""
+    import subprocess
+    try:
+        # 查找占用端口的进程
+        result = subprocess.run(['lsof', '-ti', f':{port}'], capture_output=True, text=True)
+        if result.returncode == 0 and result.stdout.strip():
+            pids = result.stdout.strip().split('\n')
+            for pid in pids:
+                if pid:
+                    print(f"正在结束占用端口{port}的进程 PID: {pid}")
+                    subprocess.run(['kill', '-9', pid], check=False)
+            print(f"已强制结束占用端口{port}的所有进程")
+            return True
+        else:
+            print(f"端口{port}未被占用")
+            return True
+    except Exception as e:
+        print(f"结束端口{port}进程时出错: {e}")
+        return False
+
 # 导入优化的缓存管理器
 from cache_manager import cache_manager, load_cache_data, save_cache_data, get_cache_file_path
 
@@ -3603,14 +3624,13 @@ if __name__ == '__main__':
     # print(f"AkShare重试机制已启用: 失败后{akshare_retry_manager.retry_interval}秒重试间隔")
     # print("可通过 /api/akshare/retry_status 查看重试状态")
     
+    # 强制使用8080端口，如果被占用则结束占用进程
+    if kill_process_on_port(port):
+        print(f"端口{port}已清理，准备启动服务器")
+        time.sleep(1)  # 等待1秒确保端口完全释放
+    
     try:
         app.run(debug=debug_mode, host=host, port=port)
     except Exception as e:
         print(f"服务器启动失败: {e}")
-        # 尝试查找可用端口
-        available_port = find_available_port()
-        if available_port:
-            print(f"尝试使用可用端口: {available_port}")
-            app.run(debug=debug_mode, host=host, port=available_port)
-        else:
-            print("无法找到可用端口")
+        print("请检查端口配置或系统权限")
