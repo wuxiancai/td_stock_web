@@ -1036,6 +1036,58 @@ def trigger_indices_failure():
         'next_retry_time': (datetime.now() + timedelta(seconds=retry_interval)).strftime('%Y-%m-%d %H:%M:%S')
     })
 
+@app.route('/api/indices/test_tushare')
+def test_tushare_indices():
+    """测试Tushare指数数据获取（强制跳过AkShare）"""
+    try:
+        # 定义要获取的指数代码和名称
+        indices = {
+            'sh000001': '上证指数',
+            'sz399001': '深证成指', 
+            'sz399006': '创业板指',
+            'sh000688': '科创板'
+        }
+        
+        print("[测试] 强制使用Tushare获取指数数据...")
+        indices_data = get_indices_from_tushare(indices)
+        
+        if indices_data:
+            print("[测试] Tushare获取成功")
+            
+            # 转换数据格式以匹配前端期望
+            formatted_data = {}
+            for code, data in indices_data.items():
+                formatted_data[code] = {
+                    'name': data['name'],
+                    'current_price': data['price'],
+                    'change_pct': data['change_percent'],
+                    'change_amount': data['change'],
+                    'volume': data['volume'],
+                    'update_time': datetime.now().strftime('%H:%M:%S')
+                }
+            
+            return jsonify({
+                'success': True,
+                'data': formatted_data,
+                'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'source': 'tushare_test'
+            })
+        else:
+            print("[测试] Tushare返回空数据")
+            return jsonify({
+                'success': False,
+                'error': 'Tushare返回空数据',
+                'source': 'tushare_test'
+            }), 500
+            
+    except Exception as e:
+        print(f"[测试] Tushare获取异常: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'source': 'tushare_test'
+        }), 500
+
 @app.route('/api/indices/realtime')
 def get_indices_realtime():
     """获取主要指数实时数据 - 智能重试机制"""
@@ -1050,31 +1102,37 @@ def get_indices_realtime():
             'sh000688': '科创板'
         }
         
-        # 检查是否需要等待重试间隔
-        current_time = datetime.now()
-        if last_retry_time and (current_time - last_retry_time).total_seconds() < retry_interval:
-            remaining_time = retry_interval - (current_time - last_retry_time).total_seconds()
-            print(f"距离下次重试还有 {remaining_time:.0f} 秒，使用缓存的模拟数据")
-            return get_fallback_indices_data(indices)
-        
         # 策略1: 优先使用AkShare获取实时数据
+        current_time = datetime.now()
         akshare_success = False
         indices_data = None
-        try:
-            print("[策略1] 尝试使用AkShare获取指数实时数据...")
-            indices_data = get_indices_from_akshare(indices)
-            if indices_data:
-                akshare_success = True
-                print("[策略1] AkShare获取成功")
-            else:
-                print("[策略1] AkShare返回空数据")
-        except Exception as e:
-            print(f"[策略1] AkShare获取失败: {e}")
         
-        # 策略2: AkShare失败时使用Tushare备用
+        # 检查是否在重试间隔内，如果是则跳过AkShare直接尝试Tushare
+        skip_akshare = False
+        if last_retry_time and (current_time - last_retry_time).total_seconds() < retry_interval:
+            remaining_time = retry_interval - (current_time - last_retry_time).total_seconds()
+            print(f"距离AkShare重试还有 {remaining_time:.0f} 秒，跳过AkShare直接尝试Tushare")
+            skip_akshare = True
+        
+        if not skip_akshare:
+            try:
+                print("[策略1] 尝试使用AkShare获取指数实时数据...")
+                indices_data = get_indices_from_akshare(indices)
+                if indices_data:
+                    akshare_success = True
+                    print("[策略1] AkShare获取成功")
+                else:
+                    print("[策略1] AkShare返回空数据")
+            except Exception as e:
+                print(f"[策略1] AkShare获取失败: {e}")
+        
+        # 策略2: AkShare失败或跳过时使用Tushare备用
         if not akshare_success:
             try:
-                print("[策略2] AkShare失败，尝试使用Tushare获取数据...")
+                if skip_akshare:
+                    print("[策略2] 跳过AkShare，直接使用Tushare获取数据...")
+                else:
+                    print("[策略2] AkShare失败，尝试使用Tushare获取数据...")
                 indices_data = get_indices_from_tushare(indices)
                 if indices_data:
                     print("[策略2] Tushare获取成功")
@@ -1300,15 +1358,20 @@ def get_indices_from_tushare(indices):
                 
                 # 查找最新的有效交易日数据
                 latest = None
+                found_expected_date = False
                 for _, row in df.iterrows():
                     if row['trade_date'] in expected_latest_dates:
                         latest = row
+                        found_expected_date = True
+                        print(f"[Tushare] 上证指数找到期望日期的数据: {row['trade_date']}")
                         break
                 
                 # 如果没有找到期望日期的数据，使用最新的数据
                 if latest is None:
                     latest = df.iloc[0]
                     print(f"[Tushare] 警告：上证指数未找到期望日期的数据，使用最新数据: {latest['trade_date']}")
+                elif not found_expected_date:
+                    print(f"[Tushare] 上证指数使用最新可用数据: {latest['trade_date']}")
                 
                 trade_date = latest['trade_date']
                 
