@@ -269,6 +269,7 @@
     <script>
         let filterData = [];
         let sortStates = {}; // 存储每个分组的排序状态
+        let watchlistData = []; // 存储自选股数据
         
         function formatNumber(num, decimals = 2) {
             if (num === 0 || num === null || num === undefined) return '-';
@@ -311,20 +312,30 @@
         }
         
         function loadFilterData() {
-            fetch('/api/red-filter')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        originalFilterData = data.data || [];
-                        filterData = [...originalFilterData];
-                        displayFilterData();
-                    } else {
-                        showError('加载筛选数据失败: ' + (data.message || '未知错误'));
-                    }
-                })
-                .catch(error => {
-                    showError('加载筛选数据失败: ' + error.message);
-                });
+            // 同时加载筛选数据和自选股数据
+            Promise.all([
+                fetch('/api/red-filter').then(response => response.json()),
+                fetch('/api/watchlist').then(response => response.json())
+            ])
+            .then(([filterResponse, watchlistResponse]) => {
+                if (filterResponse.success) {
+                    originalFilterData = filterResponse.data || [];
+                    filterData = [...originalFilterData];
+                }
+                
+                if (watchlistResponse.success) {
+                    watchlistData = watchlistResponse.data || [];
+                }
+                
+                if (filterResponse.success) {
+                    displayFilterData();
+                } else {
+                    showError('加载筛选数据失败: ' + (filterResponse.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                showError('加载筛选数据失败: ' + error.message);
+            });
         }
         
         function displayFilterData() {
@@ -400,6 +411,7 @@
                                 九转<span class="sort-indicator"></span>
                             </th>
                             <th>备注</th>
+                            <th>自选股状态</th>
                             <th>加入自选股</th>
                         </tr>
                     </thead>
@@ -458,6 +470,11 @@
                                    style="width: 100px; padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
                         </td>
                         <td>
+                            <span id="watchlist-status-${stock.ts_code}" style="font-size: 12px; font-weight: bold;">
+                                <span style="color: #999;">检查中...</span>
+                            </span>
+                        </td>
+                        <td>
                             <select onchange="addToWatchlistWithPriority('${stock.ts_code}', this.value)" style="
                                 background: linear-gradient(45deg, #ffc107, #fd7e14);
                                 color: #333;
@@ -489,6 +506,11 @@
                 updateTableSortIndicators(table, dateKey);
                 
                 contentDiv.appendChild(table);
+                
+                // 更新自选股状态
+                stocks.forEach(stock => {
+                    updateWatchlistStatus(stock.ts_code);
+                });
             });
         }
         
@@ -580,6 +602,50 @@
             localStorage.setItem('redFilterNotes', JSON.stringify(notes));
         }
         
+        function updateWatchlistStatus(tsCode) {
+            const statusElement = document.getElementById(`watchlist-status-${tsCode}`);
+            if (!statusElement) return;
+            
+            // 在自选股数据中查找该股票
+            const watchlistStock = watchlistData.find(stock => stock.ts_code === tsCode);
+            
+            if (watchlistStock) {
+                // 根据优先级显示不同的状态
+                let statusText = '';
+                let statusColor = '';
+                
+                switch (watchlistStock.priority) {
+                    case 'purple':
+                        statusText = '🟣 可立即买入';
+                        statusColor = '#8B5CF6';
+                        break;
+                    case 'red':
+                        statusText = '🔴 重点关注';
+                        statusColor = '#EF4444';
+                        break;
+                    case 'green':
+                        statusText = '🟢 观察';
+                        statusColor = '#10B981';
+                        break;
+                    case 'holding':
+                        statusText = '🟠 持仓中';
+                        statusColor = '#F59E0B';
+                        break;
+                    case 'sold':
+                        statusText = '⚫ 已卖出';
+                        statusColor = '#6B7280';
+                        break;
+                    default:
+                        statusText = '⭐ 已关注';
+                        statusColor = '#3B82F6';
+                }
+                
+                statusElement.innerHTML = `<span style="color: ${statusColor};">${statusText}</span>`;
+            } else {
+                statusElement.innerHTML = '<span style="color: #999;">未关注</span>';
+            }
+        }
+        
         function addToWatchlistWithPriority(tsCode, priority) {
             if (!priority) return;
             
@@ -597,6 +663,15 @@
             .then(data => {
                 if (data.success) {
                     alert(`股票 ${tsCode} 已成功加入自选股！`);
+                    // 重新加载自选股数据并更新状态
+                    fetch('/api/watchlist')
+                        .then(response => response.json())
+                        .then(watchlistResponse => {
+                            if (watchlistResponse.success) {
+                                watchlistData = watchlistResponse.data || [];
+                                updateWatchlistStatus(tsCode);
+                            }
+                        });
                 } else {
                     alert(`加入自选股失败: ${data.message}`);
                 }
@@ -614,7 +689,30 @@
             document.getElementById('loadingDiv').style.display = 'block';
             document.getElementById('filterContent').style.display = 'none';
             document.getElementById('emptyDiv').style.display = 'none';
-            loadFilterData();
+            // 重新加载筛选数据和自选股数据
+            Promise.all([
+                fetch('/api/red-filter').then(response => response.json()),
+                fetch('/api/watchlist').then(response => response.json())
+            ])
+            .then(([filterResponse, watchlistResponse]) => {
+                if (filterResponse.success) {
+                    originalFilterData = filterResponse.data || [];
+                    filterData = [...originalFilterData];
+                }
+                
+                if (watchlistResponse.success) {
+                    watchlistData = watchlistResponse.data || [];
+                }
+                
+                if (filterResponse.success) {
+                    displayFilterData();
+                } else {
+                    showError('加载筛选数据失败: ' + (filterResponse.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                showError('加载筛选数据失败: ' + error.message);
+            });
         }
         
         function showError(message) {
