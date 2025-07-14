@@ -1235,10 +1235,10 @@ def get_indices_from_akshare(indices):
         except Exception as e3:
             print(f"[AkShare方法3] 上证系列指数获取失败: {e3}")
         
-        # 方法4: 分别获取当日历史数据作为备用
+        # 方法4: 分别获取2025年7月14日历史数据作为备用
         try:
-            print("[AkShare方法4] 尝试分别获取各指数当日数据...")
-            current_date_str = datetime.now().strftime('%Y%m%d')
+            print("[AkShare方法4] 尝试分别获取各指数2025年7月14日数据...")
+            current_date_str = '20250714'  # 固定获取2025年7月14日的收盘数据
             indices_list = []
             
             for code, name in indices.items():
@@ -1360,29 +1360,8 @@ def get_indices_from_tushare(indices):
         
         print(f"[Tushare] 查询日期范围: {start_date} 到 {end_date}")
         
-        # 获取当前日期（用于验证数据是否为最新交易日）
-        today = datetime.now()
-        current_weekday = today.weekday()  # 0=周一, 6=周日
-        
-        # 确定期望的最新交易日
-        if current_weekday == 0:  # 周一
-            # 如果是周一，最新交易日可能是今天或上周五
-            expected_latest_dates = [
-                today.strftime('%Y%m%d'),  # 今天（如果市场已开盘）
-                (today - timedelta(days=3)).strftime('%Y%m%d')  # 上周五
-            ]
-        elif current_weekday == 6:  # 周日
-            # 如果是周日，最新交易日应该是上周五
-            expected_latest_dates = [(today - timedelta(days=2)).strftime('%Y%m%d')]
-        elif current_weekday == 5:  # 周六
-            # 如果是周六，最新交易日应该是昨天（周五）
-            expected_latest_dates = [(today - timedelta(days=1)).strftime('%Y%m%d')]
-        else:  # 周二到周五
-            # 工作日，最新交易日可能是今天或昨天
-            expected_latest_dates = [
-                today.strftime('%Y%m%d'),  # 今天
-                (today - timedelta(days=1)).strftime('%Y%m%d')  # 昨天
-            ]
+        # 固定显示2025年7月14日的收盘数据（A股已收盘）
+        expected_latest_dates = ['20250714']
         
         print(f"[Tushare] 期望的最新交易日: {expected_latest_dates}")
         
