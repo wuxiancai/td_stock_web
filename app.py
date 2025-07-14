@@ -3243,6 +3243,75 @@ def refresh_watchlist():
                     if 'vol' in latest_data.columns:
                         stock['vol'] = safe_float(latest_data.iloc[0]['vol'])
                 
+                # 获取净流入额数据
+                net_mf_amount = 0
+                try:
+                    # 优先从缓存获取净流入数据
+                    cached_stock = get_stock_from_cache(ts_code)
+                    if cached_stock:
+                        current_date = datetime.now().strftime('%Y%m%d')
+                        cache_date = cached_stock.get('last_update', '')
+                        if cache_date == current_date and cached_stock.get('net_mf_amount') is not None:
+                            net_mf_amount = safe_float(cached_stock.get('net_mf_amount', 0))
+                            print(f"从缓存获取{ts_code}的净流入数据: {net_mf_amount}千万元")
+                        else:
+                            # 缓存中没有当天数据，通过API获取
+                            print(f"缓存中无当天净流入数据，正在通过API获取{ts_code}的资金流向数据...")
+                            
+                            # 尝试获取资金流向数据
+                            moneyflow_data = None
+                            try:
+                                # 优先尝试moneyflow接口
+                                moneyflow_data = safe_tushare_call(pro.moneyflow, ts_code=ts_code, limit=1)
+                                if moneyflow_data is None or moneyflow_data.empty:
+                                    # 如果moneyflow没有数据，尝试moneyflow_dc接口
+                                    moneyflow_data = safe_tushare_call(pro.moneyflow_dc, ts_code=ts_code, limit=1)
+                            except Exception as e:
+                                print(f"获取{ts_code}资金流向数据失败: {e}")
+                            
+                            if moneyflow_data is not None and not moneyflow_data.empty:
+                                # 检查是否是moneyflow_dc接口的数据（包含net_amount字段）
+                                if 'net_amount' in moneyflow_data.columns:
+                                    net_amount_wan = safe_float(moneyflow_data.iloc[0]['net_amount'])  # 万元
+                                    net_mf_amount = round(net_amount_wan / 1000, 2)  # 转换为千万元
+                                # 检查是否是moneyflow接口的数据（包含net_mf_amount字段）
+                                elif 'net_mf_amount' in moneyflow_data.columns:
+                                    net_mf_amount_wan = safe_float(moneyflow_data.iloc[0]['net_mf_amount'])  # 万元
+                                    net_mf_amount = round(net_mf_amount_wan / 1000, 2)  # 转换为千万元
+                                
+                                print(f"API获取{ts_code}净流入额: {net_mf_amount}千万元")
+                    else:
+                        # 没有缓存数据，直接通过API获取
+                        print(f"无缓存数据，正在通过API获取{ts_code}的资金流向数据...")
+                        
+                        # 尝试获取资金流向数据
+                        moneyflow_data = None
+                        try:
+                            # 优先尝试moneyflow接口
+                            moneyflow_data = safe_tushare_call(pro.moneyflow, ts_code=ts_code, limit=1)
+                            if moneyflow_data is None or moneyflow_data.empty:
+                                # 如果moneyflow没有数据，尝试moneyflow_dc接口
+                                moneyflow_data = safe_tushare_call(pro.moneyflow_dc, ts_code=ts_code, limit=1)
+                        except Exception as e:
+                            print(f"获取{ts_code}资金流向数据失败: {e}")
+                        
+                        if moneyflow_data is not None and not moneyflow_data.empty:
+                            # 检查是否是moneyflow_dc接口的数据（包含net_amount字段）
+                            if 'net_amount' in moneyflow_data.columns:
+                                net_amount_wan = safe_float(moneyflow_data.iloc[0]['net_amount'])  # 万元
+                                net_mf_amount = round(net_amount_wan / 1000, 2)  # 转换为千万元
+                            # 检查是否是moneyflow接口的数据（包含net_mf_amount字段）
+                            elif 'net_mf_amount' in moneyflow_data.columns:
+                                net_mf_amount_wan = safe_float(moneyflow_data.iloc[0]['net_mf_amount'])  # 万元
+                                net_mf_amount = round(net_mf_amount_wan / 1000, 2)  # 转换为千万元
+                            
+                            print(f"API获取{ts_code}净流入额: {net_mf_amount}千万元")
+                except Exception as e:
+                    print(f"获取股票 {ts_code} 净流入额失败: {e}")
+                    net_mf_amount = stock.get('net_mf_amount', 0)  # 保持原值或设为0
+                
+                stock['net_mf_amount'] = net_mf_amount
+                
                 # 计算九转序列（使用正确的算法）
                 nine_turn_up = 0
                 nine_turn_down = 0
