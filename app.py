@@ -1259,18 +1259,57 @@ def get_indices_from_tushare(indices):
     print(f"[Tushare] 开始获取 {current_date} {current_time} 的指数数据")
     
     try:
-        # 获取最近5个交易日的日期范围，确保能获取到最新数据
+        # 获取最近10个交易日的日期范围，确保能获取到最新数据
         end_date = datetime.now().strftime('%Y%m%d')
-        start_date = (datetime.now() - timedelta(days=7)).strftime('%Y%m%d')
+        start_date = (datetime.now() - timedelta(days=15)).strftime('%Y%m%d')
         
         print(f"[Tushare] 查询日期范围: {start_date} 到 {end_date}")
+        
+        # 获取当前日期（用于验证数据是否为最新交易日）
+        today = datetime.now()
+        current_weekday = today.weekday()  # 0=周一, 6=周日
+        
+        # 确定期望的最新交易日
+        if current_weekday == 0:  # 周一
+            # 如果是周一，最新交易日可能是今天或上周五
+            expected_latest_dates = [
+                today.strftime('%Y%m%d'),  # 今天（如果市场已开盘）
+                (today - timedelta(days=3)).strftime('%Y%m%d')  # 上周五
+            ]
+        elif current_weekday == 6:  # 周日
+            # 如果是周日，最新交易日应该是上周五
+            expected_latest_dates = [(today - timedelta(days=2)).strftime('%Y%m%d')]
+        elif current_weekday == 5:  # 周六
+            # 如果是周六，最新交易日应该是昨天（周五）
+            expected_latest_dates = [(today - timedelta(days=1)).strftime('%Y%m%d')]
+        else:  # 周二到周五
+            # 工作日，最新交易日可能是今天或昨天
+            expected_latest_dates = [
+                today.strftime('%Y%m%d'),  # 今天
+                (today - timedelta(days=1)).strftime('%Y%m%d')  # 昨天
+            ]
+        
+        print(f"[Tushare] 期望的最新交易日: {expected_latest_dates}")
         
         # 获取上证指数
         try:
             df = safe_tushare_call(pro.index_daily, ts_code='000001.SH', start_date=start_date, end_date=end_date)
             if df is not None and not df.empty:
-                # 获取最新的交易日数据
-                latest = df.iloc[0]  # Tushare返回的数据按日期降序排列
+                # 按日期降序排序，确保最新数据在前
+                df = df.sort_values('trade_date', ascending=False)
+                
+                # 查找最新的有效交易日数据
+                latest = None
+                for _, row in df.iterrows():
+                    if row['trade_date'] in expected_latest_dates:
+                        latest = row
+                        break
+                
+                # 如果没有找到期望日期的数据，使用最新的数据
+                if latest is None:
+                    latest = df.iloc[0]
+                    print(f"[Tushare] 警告：上证指数未找到期望日期的数据，使用最新数据: {latest['trade_date']}")
+                
                 trade_date = latest['trade_date']
                 
                 indices_data['sh000001'] = {
@@ -1291,7 +1330,21 @@ def get_indices_from_tushare(indices):
         try:
             df = safe_tushare_call(pro.index_daily, ts_code='399001.SZ', start_date=start_date, end_date=end_date)
             if df is not None and not df.empty:
-                latest = df.iloc[0]
+                # 按日期降序排序，确保最新数据在前
+                df = df.sort_values('trade_date', ascending=False)
+                
+                # 查找最新的有效交易日数据
+                latest = None
+                for _, row in df.iterrows():
+                    if row['trade_date'] in expected_latest_dates:
+                        latest = row
+                        break
+                
+                # 如果没有找到期望日期的数据，使用最新的数据
+                if latest is None:
+                    latest = df.iloc[0]
+                    print(f"[Tushare] 警告：深证成指未找到期望日期的数据，使用最新数据: {latest['trade_date']}")
+                
                 trade_date = latest['trade_date']
                 
                 indices_data['sz399001'] = {
@@ -1312,7 +1365,21 @@ def get_indices_from_tushare(indices):
         try:
             df = safe_tushare_call(pro.index_daily, ts_code='399006.SZ', start_date=start_date, end_date=end_date)
             if df is not None and not df.empty:
-                latest = df.iloc[0]
+                # 按日期降序排序，确保最新数据在前
+                df = df.sort_values('trade_date', ascending=False)
+                
+                # 查找最新的有效交易日数据
+                latest = None
+                for _, row in df.iterrows():
+                    if row['trade_date'] in expected_latest_dates:
+                        latest = row
+                        break
+                
+                # 如果没有找到期望日期的数据，使用最新的数据
+                if latest is None:
+                    latest = df.iloc[0]
+                    print(f"[Tushare] 警告：创业板指未找到期望日期的数据，使用最新数据: {latest['trade_date']}")
+                
                 trade_date = latest['trade_date']
                 
                 indices_data['sz399006'] = {
@@ -1333,7 +1400,21 @@ def get_indices_from_tushare(indices):
         try:
             df = safe_tushare_call(pro.index_daily, ts_code='000688.SH', start_date=start_date, end_date=end_date)
             if df is not None and not df.empty:
-                latest = df.iloc[0]
+                # 按日期降序排序，确保最新数据在前
+                df = df.sort_values('trade_date', ascending=False)
+                
+                # 查找最新的有效交易日数据
+                latest = None
+                for _, row in df.iterrows():
+                    if row['trade_date'] in expected_latest_dates:
+                        latest = row
+                        break
+                
+                # 如果没有找到期望日期的数据，使用最新的数据
+                if latest is None:
+                    latest = df.iloc[0]
+                    print(f"[Tushare] 警告：科创板未找到期望日期的数据，使用最新数据: {latest['trade_date']}")
+                
                 trade_date = latest['trade_date']
                 
                 indices_data['sh000688'] = {
