@@ -1008,12 +1008,16 @@ def retry_api_call_with_rate_limit(api_func, max_retries=3, retry_delay=60):
                 raise e
     return None
 
+# 全局变量用于重试机制
+last_retry_time = None
+retry_interval = 120  # 2分钟重试间隔
+
 @app.route('/api/indices/realtime')
 def get_indices_realtime():
-    """获取主要指数实时数据"""
+    """获取主要指数实时数据 - 智能重试机制"""
+    global last_retry_time
+    
     try:
-        indices_data = {}
-        
         # 定义要获取的指数代码和名称
         indices = {
             'sh000001': '上证指数',
@@ -1022,114 +1026,361 @@ def get_indices_realtime():
             'sh000688': '科创板'
         }
         
-        # 获取所有指数数据
+        # 检查是否需要等待重试间隔
+        current_time = datetime.now()
+        if last_retry_time and (current_time - last_retry_time).total_seconds() < retry_interval:
+            remaining_time = retry_interval - (current_time - last_retry_time).total_seconds()
+            print(f"距离下次重试还有 {remaining_time:.0f} 秒，使用缓存的模拟数据")
+            return get_fallback_indices_data(indices)
+        
+        # 策略1: 优先使用AkShare获取实时数据
+        akshare_success = False
+        indices_data = None
         try:
-            # 尝试使用akshare获取指数数据
-            print("正在获取指数实时数据...")
-            
-            # 获取上证系列指数
-            sh_data = ak.stock_zh_index_spot_em(symbol="沪深重要指数")
-            
-            if not sh_data.empty:
-                print(f"成功获取指数数据，共{len(sh_data)}条记录")
-                print("可用指数列表:")
-                for idx, row in sh_data.iterrows():
-                    print(f"  {row.get('名称', 'N/A')} - {row.get('代码', 'N/A')}")
-                
-                for code, name in indices.items():
-                    try:
-                        # 根据指数名称查找对应的数据
-                        index_row = None
-                        if name == '上证指数':
-                            index_row = sh_data[sh_data['名称'].str.contains('上证综指|上证指数', na=False)]
-                        elif name == '深证成指':
-                            index_row = sh_data[sh_data['名称'].str.contains('深证成指', na=False)]
-                        elif name == '创业板指':
-                            index_row = sh_data[sh_data['名称'].str.contains('创业板指', na=False)]
-                        elif name == '科创板':
-                            index_row = sh_data[sh_data['名称'].str.contains('科创板', na=False)]
-                        
-                        if index_row is not None and not index_row.empty:
-                            latest = index_row.iloc[0]
-                            
-                            indices_data[code] = {
-                                'name': name,
-                                'current_price': float(latest['最新价']) if '最新价' in latest and pd.notna(latest['最新价']) else 0,
-                                'change_pct': float(latest['涨跌幅']) if '涨跌幅' in latest and pd.notna(latest['涨跌幅']) else 0,
-                                'change_amount': float(latest['涨跌额']) if '涨跌额' in latest and pd.notna(latest['涨跌额']) else 0,
-                                'volume': float(latest['成交额']) if '成交额' in latest and pd.notna(latest['成交额']) else 0,
-                                'update_time': datetime.now().strftime('%H:%M:%S')
-                            }
-                            print(f"成功获取{name}实时数据: 价格={indices_data[code]['current_price']}, 涨跌幅={indices_data[code]['change_pct']}%")
-                        else:
-                            print(f"未找到{name}的数据，使用模拟数据")
-                            # 使用模拟数据
-                            mock_data = {
-                                'sh000001': {'price': 3200.50, 'change_pct': 0.85, 'change_amount': 27.12, 'volume': 285000000000},
-                                'sz399001': {'price': 10800.25, 'change_pct': 1.25, 'change_amount': 133.45, 'volume': 195000000000},
-                                'sz399006': {'price': 2150.80, 'change_pct': -0.45, 'change_amount': -9.75, 'volume': 125000000000},
-                                'sh000688': {'price': 950.30, 'change_pct': 0.65, 'change_amount': 6.15, 'volume': 85000000000}
-                            }
-                            mock = mock_data.get(code, {'price': 0, 'change_pct': 0, 'change_amount': 0, 'volume': 0})
-                            indices_data[code] = {
-                                'name': name,
-                                'current_price': mock['price'],
-                                'change_pct': mock['change_pct'],
-                                'change_amount': mock['change_amount'],
-                                'volume': mock['volume'],
-                                'update_time': datetime.now().strftime('%H:%M:%S')
-                            }
-                    except Exception as e:
-                        print(f"处理{name}数据异常: {e}，使用模拟数据")
-                        # 使用模拟数据
-                        mock_data = {
-                            'sh000001': {'price': 3200.50, 'change_pct': 0.85, 'change_amount': 27.12, 'volume': 285000000000},
-                            'sz399001': {'price': 10800.25, 'change_pct': 1.25, 'change_amount': 133.45, 'volume': 195000000000},
-                            'sz399006': {'price': 2150.80, 'change_pct': -0.45, 'change_amount': -9.75, 'volume': 125000000000},
-                            'sh000688': {'price': 950.30, 'change_pct': 0.65, 'change_amount': 6.15, 'volume': 85000000000}
-                        }
-                        mock = mock_data.get(code, {'price': 0, 'change_pct': 0, 'change_amount': 0, 'volume': 0})
-                        indices_data[code] = {
-                            'name': name,
-                            'current_price': mock['price'],
-                            'change_pct': mock['change_pct'],
-                            'change_amount': mock['change_amount'],
-                            'volume': mock['volume'],
-                            'update_time': datetime.now().strftime('%H:%M:%S')
-                        }
+            print("[策略1] 尝试使用AkShare获取指数实时数据...")
+            indices_data = get_indices_from_akshare(indices)
+            if indices_data:
+                akshare_success = True
+                print("[策略1] AkShare获取成功")
             else:
-                print("akshare返回空数据，使用模拟数据")
-                raise Exception("akshare返回空数据")
-                
+                print("[策略1] AkShare返回空数据")
         except Exception as e:
-            print(f"获取指数数据失败: {e}，使用模拟数据")
-            # 如果获取失败，使用模拟数据
-            mock_data = {
-                'sh000001': {'price': 3200.50, 'change_pct': 0.85, 'change_amount': 27.12, 'volume': 285000000000},
-                'sz399001': {'price': 10800.25, 'change_pct': 1.25, 'change_amount': 133.45, 'volume': 195000000000},
-                'sz399006': {'price': 2150.80, 'change_pct': -0.45, 'change_amount': -9.75, 'volume': 125000000000},
-                'sh000688': {'price': 950.30, 'change_pct': 0.65, 'change_amount': 6.15, 'volume': 85000000000}
+            print(f"[策略1] AkShare获取失败: {e}")
+        
+        # 策略2: AkShare失败时使用Tushare备用
+        if not akshare_success:
+            try:
+                print("[策略2] AkShare失败，尝试使用Tushare获取数据...")
+                indices_data = get_indices_from_tushare(indices)
+                if indices_data:
+                    print("[策略2] Tushare获取成功")
+                else:
+                    print("[策略2] Tushare也返回空数据")
+                    raise Exception("Tushare返回空数据")
+            except Exception as e:
+                print(f"[策略2] Tushare也失败: {e}")
+                # 两个接口都失败，记录重试时间
+                last_retry_time = current_time
+                print(f"[重试机制] 两个接口都失败，将在 {retry_interval} 秒后重试")
+                return get_fallback_indices_data(indices)
+        
+        # 成功获取数据，重置重试时间
+        last_retry_time = None
+        
+        # 转换数据格式以匹配前端期望
+        formatted_data = {}
+        for code, data in indices_data.items():
+            formatted_data[code] = {
+                'name': data['name'],
+                'current_price': data['price'],
+                'change_pct': data['change_percent'],
+                'change_amount': data['change'],
+                'volume': data['volume'],
+                'update_time': datetime.now().strftime('%H:%M:%S')
             }
-            for code, name in indices.items():
-                mock = mock_data.get(code, {'price': 0, 'change_pct': 0, 'change_amount': 0, 'volume': 0})
-                indices_data[code] = {
-                    'name': name,
-                    'current_price': mock['price'],
-                    'change_pct': mock['change_pct'],
-                    'change_amount': mock['change_amount'],
-                    'volume': mock['volume'],
-                    'update_time': datetime.now().strftime('%H:%M:%S')
-                }
         
         return jsonify({
             'success': True,
-            'data': indices_data,
+            'data': formatted_data,
             'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         })
         
     except Exception as e:
-        print(f"获取指数数据失败: {e}")
+        print(f"获取指数数据异常: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+def get_indices_from_akshare(indices):
+    """使用AkShare获取指数数据"""
+    indices_data = {}
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    current_time = datetime.now().strftime('%H:%M:%S')
+    
+    print(f"[AkShare] 开始获取 {current_date} {current_time} 的实时指数数据")
+    
+    try:
+        # 方法1: 使用新浪财经实时指数数据接口
+        try:
+            print("[AkShare方法1] 尝试使用新浪财经实时指数数据...")
+            realtime_data = ak.stock_zh_index_spot_sina()
+            if realtime_data is not None and not realtime_data.empty:
+                print(f"[AkShare方法1] 成功获取新浪实时数据，共{len(realtime_data)}条记录")
+                result = process_akshare_data(realtime_data, indices)
+                if result:
+                    return result
+            else:
+                print("[AkShare方法1] 新浪实时数据返回空")
+                
+        except Exception as e1:
+            print(f"[AkShare方法1] 新浪实时数据获取失败: {e1}")
+        
+        # 方法2: 获取沪深重要指数
+        try:
+            print("[AkShare方法2] 尝试获取沪深重要指数...")
+            sh_data = ak.stock_zh_index_spot_em(symbol="沪深重要指数")
+            if sh_data is not None and not sh_data.empty:
+                print(f"[AkShare方法2] 成功获取沪深重要指数数据，共{len(sh_data)}条记录")
+                return process_akshare_data(sh_data, indices)
+        except Exception as e2:
+            print(f"[AkShare方法2] 沪深重要指数获取失败: {e2}")
+            
+        # 方法3: 获取上证系列指数
+        try:
+            print("[AkShare方法3] 尝试获取上证系列指数...")
+            sh_data = ak.stock_zh_index_spot_em(symbol="上证系列指数")
+            if sh_data is not None and not sh_data.empty:
+                print(f"[AkShare方法3] 成功获取上证系列指数数据，共{len(sh_data)}条记录")
+                return process_akshare_data(sh_data, indices)
+        except Exception as e3:
+            print(f"[AkShare方法3] 上证系列指数获取失败: {e3}")
+        
+        # 方法4: 分别获取当日历史数据作为备用
+        try:
+            print("[AkShare方法4] 尝试分别获取各指数当日数据...")
+            current_date_str = datetime.now().strftime('%Y%m%d')
+            indices_list = []
+            
+            for code, name in indices.items():
+                try:
+                    if name == '上证指数':
+                        data = ak.index_zh_a_hist(symbol="000001", period="daily", start_date=current_date_str, end_date=current_date_str)
+                    elif name == '深证成指':
+                        data = ak.index_zh_a_hist(symbol="399001", period="daily", start_date=current_date_str, end_date=current_date_str)
+                    elif name == '创业板指':
+                        data = ak.index_zh_a_hist(symbol="399006", period="daily", start_date=current_date_str, end_date=current_date_str)
+                    elif name == '科创板':
+                        data = ak.index_zh_a_hist(symbol="000688", period="daily", start_date=current_date_str, end_date=current_date_str)
+                    
+                    if data is not None and not data.empty:
+                        latest = data.iloc[-1]
+                        indices_list.append({
+                            '名称': name,
+                            '代码': code,
+                            '最新价': latest['收盘'],
+                            '涨跌额': latest['涨跌额'] if '涨跌额' in latest else latest['收盘'] - latest['开盘'],
+                            '涨跌幅': latest['涨跌幅'] if '涨跌幅' in latest else ((latest['收盘'] - latest['开盘']) / latest['开盘'] * 100),
+                            '成交额': latest['成交额'] if '成交额' in latest else 0
+                        })
+                        print(f"[AkShare] 获取{name}当日数据成功")
+                except Exception as e:
+                    print(f"[AkShare] 获取{name}当日数据失败: {e}")
+            
+            if indices_list:
+                sh_data = pd.DataFrame(indices_list)
+                print(f"[AkShare方法4] 成功获取 {len(indices_list)} 个指数的当日数据")
+                return process_akshare_data(sh_data, indices)
+        except Exception as e4:
+            print(f"[AkShare方法4] 当日数据获取失败: {e4}")
+        
+        print("[AkShare] 所有方法都失败，返回空数据")
+        return None
+                
+    except Exception as e:
+        print(f"[AkShare] 获取异常: {e}")
+        return None
+
+def process_akshare_data(sh_data, indices):
+    """处理AkShare返回的数据"""
+    indices_data = {}
+    
+    try:
+        print(f"[AkShare] 开始处理数据，共{len(sh_data)}条记录")
+        print(f"[AkShare] 数据列名: {list(sh_data.columns)}")
+        
+        # 处理获取到的数据
+        for index, row in sh_data.iterrows():
+            name = row.get('名称', '')
+            code = row.get('代码', '')
+            
+            print(f"[AkShare] 处理行数据: 名称={name}, 代码={code}")
+            
+            # 匹配指数名称
+            matched_key = None
+            for key, index_name in indices.items():
+                if index_name in name or name in index_name or code.replace('sh', '').replace('sz', '') in key:
+                    matched_key = key
+                    break
+            
+            if matched_key:
+                # 获取成交额，注意单位转换（新浪数据单位是元，需要转换为亿元）
+                volume_raw = row.get('成交额', 0)
+                volume = float(volume_raw) / 100000000 if pd.notna(volume_raw) and volume_raw != 0 else 0  # 转换为亿元
+                
+                indices_data[matched_key] = {
+                    'name': indices[matched_key],
+                    'code': code,
+                    'price': float(row['最新价']),
+                    'change': float(row['涨跌额']),
+                    'change_percent': float(row['涨跌幅']),
+                    'volume': volume
+                }
+                print(f"[AkShare] 处理{indices[matched_key]}数据成功: 价格={row['最新价']}, 涨跌幅={row['涨跌幅']}%, 成交额={volume:.2f}亿元")
+            else:
+                print(f"[AkShare] 未匹配到指数: {name} ({code})")
+        
+        print(f"[AkShare] 成功处理 {len(indices_data)} 个指数数据")
+        return indices_data if indices_data else None
+        
+    except Exception as e:
+        print(f"[AkShare] 数据处理异常: {e}")
+        import traceback
+        print(f"[AkShare] 异常详情: {traceback.format_exc()}")
+        return None
+
+def get_indices_from_tushare(indices):
+    """使用Tushare获取指数数据"""
+    indices_data = {}
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    current_time = datetime.now().strftime('%H:%M:%S')
+    
+    print(f"[Tushare] 开始获取 {current_date} {current_time} 的指数数据")
+    
+    try:
+        # 获取最近5个交易日的日期范围，确保能获取到最新数据
+        end_date = datetime.now().strftime('%Y%m%d')
+        start_date = (datetime.now() - timedelta(days=7)).strftime('%Y%m%d')
+        
+        print(f"[Tushare] 查询日期范围: {start_date} 到 {end_date}")
+        
+        # 获取上证指数
+        try:
+            df = safe_tushare_call(pro.index_daily, ts_code='000001.SH', start_date=start_date, end_date=end_date)
+            if df is not None and not df.empty:
+                # 获取最新的交易日数据
+                latest = df.iloc[0]  # Tushare返回的数据按日期降序排列
+                trade_date = latest['trade_date']
+                
+                indices_data['sh000001'] = {
+                    'name': '上证指数',
+                    'code': '000001.SH',
+                    'price': float(latest['close']),
+                    'change': float(latest['change']),
+                    'change_percent': float(latest['pct_chg']),
+                    'volume': float(latest['amount']) if 'amount' in latest and pd.notna(latest['amount']) else 0
+                }
+                print(f"[Tushare] 获取上证指数成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
+            else:
+                print(f"[Tushare] 上证指数无数据返回")
+        except Exception as e:
+            print(f"[Tushare] 获取上证指数失败: {e}")
+        
+        # 获取深证成指
+        try:
+            df = safe_tushare_call(pro.index_daily, ts_code='399001.SZ', start_date=start_date, end_date=end_date)
+            if df is not None and not df.empty:
+                latest = df.iloc[0]
+                trade_date = latest['trade_date']
+                
+                indices_data['sz399001'] = {
+                    'name': '深证成指',
+                    'code': '399001.SZ',
+                    'price': float(latest['close']),
+                    'change': float(latest['change']),
+                    'change_percent': float(latest['pct_chg']),
+                    'volume': float(latest['amount']) if 'amount' in latest and pd.notna(latest['amount']) else 0
+                }
+                print(f"[Tushare] 获取深证成指成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
+            else:
+                print(f"[Tushare] 深证成指无数据返回")
+        except Exception as e:
+            print(f"[Tushare] 获取深证成指失败: {e}")
+        
+        # 获取创业板指
+        try:
+            df = safe_tushare_call(pro.index_daily, ts_code='399006.SZ', start_date=start_date, end_date=end_date)
+            if df is not None and not df.empty:
+                latest = df.iloc[0]
+                trade_date = latest['trade_date']
+                
+                indices_data['sz399006'] = {
+                    'name': '创业板指',
+                    'code': '399006.SZ',
+                    'price': float(latest['close']),
+                    'change': float(latest['change']),
+                    'change_percent': float(latest['pct_chg']),
+                    'volume': float(latest['amount']) if 'amount' in latest and pd.notna(latest['amount']) else 0
+                }
+                print(f"[Tushare] 获取创业板指成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
+            else:
+                print(f"[Tushare] 创业板指无数据返回")
+        except Exception as e:
+            print(f"[Tushare] 获取创业板指失败: {e}")
+        
+        # 获取科创板
+        try:
+            df = safe_tushare_call(pro.index_daily, ts_code='000688.SH', start_date=start_date, end_date=end_date)
+            if df is not None and not df.empty:
+                latest = df.iloc[0]
+                trade_date = latest['trade_date']
+                
+                indices_data['sh000688'] = {
+                     'name': '科创板',
+                     'code': '000688.SH',
+                     'price': float(latest['close']),
+                     'change': float(latest['change']),
+                     'change_percent': float(latest['pct_chg']),
+                     'volume': float(latest['amount']) if 'amount' in latest and pd.notna(latest['amount']) else 0
+                 }
+                print(f"[Tushare] 获取科创板成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
+            else:
+                print(f"[Tushare] 科创板无数据返回")
+        except Exception as e:
+            print(f"[Tushare] 获取科创板失败: {e}")
+        
+        if indices_data:
+            print(f"Tushare获取到 {len(indices_data)} 个指数数据")
+            return indices_data
+        else:
+            print("Tushare未获取到任何数据")
+            return None
+            
+    except Exception as e:
+        print(f"Tushare获取异常: {e}")
+        return None
+
+def get_fallback_indices_data(indices):
+    """获取回退的模拟数据"""
+    mock_data = {
+        'sh000001': {
+            'name': '上证指数',
+            'current_price': 3525.0,
+            'change_pct': 0.43,
+            'change_amount': 15.2,
+            'volume': 410354000000,
+            'update_time': datetime.now().strftime('%H:%M:%S')
+        },
+        'sz399001': {
+            'name': '深证成指',
+            'current_price': 11250.5,
+            'change_pct': 0.41,
+            'change_amount': 45.8,
+            'volume': 195000000000,
+            'update_time': datetime.now().strftime('%H:%M:%S')
+        },
+        'sz399006': {
+            'name': '创业板指',
+            'current_price': 2180.3,
+            'change_pct': 0.59,
+            'change_amount': 12.7,
+            'volume': 125000000000,
+            'update_time': datetime.now().strftime('%H:%M:%S')
+        },
+        'sh000688': {
+            'name': '科创板',
+            'current_price': 850.2,
+            'change_pct': 1.01,
+            'change_amount': 8.5,
+            'volume': 85000000000,
+            'update_time': datetime.now().strftime('%H:%M:%S')
+        }
+    }
+    
+    print("使用回退模拟数据")
+    return jsonify({
+        'success': True,
+        'data': mock_data,
+        'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'source': 'fallback_mock_data'
+    })
 
 @app.route('/api/stock/<stock_code>')
 def get_stock_data(stock_code):
