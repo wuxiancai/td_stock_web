@@ -1173,6 +1173,10 @@ def get_indices_realtime():
 
 def get_indices_from_akshare(indices):
     """使用AkShare获取指数数据"""
+    if not AKSHARE_AVAILABLE:
+        print("[AkShare] AkShare不可用，跳过AkShare获取")
+        return None
+        
     indices_data = {}
     current_date = datetime.now().strftime('%Y-%m-%d')
     current_time = datetime.now().strftime('%H:%M:%S')
@@ -1310,6 +1314,18 @@ def process_akshare_data(sh_data, indices):
 
 def get_indices_from_tushare(indices):
     """使用Tushare获取指数数据"""
+    if not TUSHARE_AVAILABLE:
+        print("[Tushare] Tushare不可用，跳过Tushare获取")
+        return None
+        
+    if 'ts' not in globals() or ts is None:
+        print("[Tushare] tushare模块未正确导入，跳过Tushare获取")
+        return None
+        
+    if 'pro' not in globals() or pro is None:
+        print("[Tushare] Tushare pro API未初始化，跳过Tushare获取")
+        return None
+        
     indices_data = {}
     current_date = datetime.now().strftime('%Y-%m-%d')
     current_time = datetime.now().strftime('%H:%M:%S')
