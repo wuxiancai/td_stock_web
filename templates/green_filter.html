@@ -413,7 +413,6 @@
                                 九转<span class="sort-indicator"></span>
                             </th>
                             <th>备注</th>
-                            <th>自选股状态</th>
                             <th>加入自选股</th>
                         </tr>
                     </thead>
@@ -471,11 +470,8 @@
                                    onkeypress="if(event.key==='Enter') this.blur()"
                                    style="width: 100px; padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
                         </td>
-                        <td id="watchlist-status-${stock.ts_code}" style="font-size: 12px; font-weight: bold;">
-                            <span style="color: #999;">检查中...</span>
-                        </td>
                         <td>
-                            <select onchange="addToWatchlistWithPriority('${stock.ts_code}', this.value)" style="
+                            <select id="watchlist-select-${stock.ts_code}" onchange="addToWatchlistWithPriority('${stock.ts_code}', this.value)" style="
                                 background: linear-gradient(45deg, #ffc107, #fd7e14);
                                 color: #333;
                                 border: none;
@@ -603,44 +599,46 @@
         // 更新自选股状态显示
         function updateWatchlistStatus() {
             filterData.forEach(stock => {
-                const statusElement = document.getElementById(`watchlist-status-${stock.ts_code}`);
-                if (!statusElement) return;
+                const selectElement = document.getElementById(`watchlist-select-${stock.ts_code}`);
+                if (!selectElement) return;
                 
                 const watchlistStock = watchlistData.find(w => w.ts_code === stock.ts_code);
                 
                 if (watchlistStock) {
-                    let statusText = '';
-                    let statusColor = '';
+                    // 设置下拉菜单的选中值
+                    selectElement.value = watchlistStock.priority || '';
                     
+                    // 根据优先级设置背景色
                     switch (watchlistStock.priority) {
                         case 'purple':
-                            statusText = '🟣 可立即买入';
-                            statusColor = '#8e44ad';
+                            selectElement.style.background = 'linear-gradient(45deg, #8e44ad, #9b59b6)';
+                            selectElement.style.color = 'white';
                             break;
                         case 'red':
-                            statusText = '🔴 重点关注';
-                            statusColor = '#e74c3c';
+                            selectElement.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+                            selectElement.style.color = 'white';
                             break;
                         case 'green':
-                            statusText = '🟢 观察';
-                            statusColor = '#27ae60';
+                            selectElement.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+                            selectElement.style.color = 'white';
                             break;
                         case 'holding':
-                            statusText = '🟠 持仓中';
-                            statusColor = '#f39c12';
+                            selectElement.style.background = 'linear-gradient(45deg, #f39c12, #e67e22)';
+                            selectElement.style.color = 'white';
                             break;
                         case 'sold':
-                            statusText = '⚫ 已卖出';
-                            statusColor = '#34495e';
+                            selectElement.style.background = 'linear-gradient(45deg, #34495e, #2c3e50)';
+                            selectElement.style.color = 'white';
                             break;
                         default:
-                            statusText = '⭐ 已关注';
-                            statusColor = '#3498db';
+                            selectElement.style.background = 'linear-gradient(45deg, #3498db, #2980b9)';
+                            selectElement.style.color = 'white';
                     }
-                    
-                    statusElement.innerHTML = `<span style="color: ${statusColor};">${statusText}</span>`;
                 } else {
-                    statusElement.innerHTML = '<span style="color: #999;">未关注</span>';
+                    // 未关注状态，恢复默认样式
+                    selectElement.value = '';
+                    selectElement.style.background = 'linear-gradient(45deg, #ffc107, #fd7e14)';
+                    selectElement.style.color = '#333';
                 }
             });
         }
