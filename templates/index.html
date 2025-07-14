@@ -1785,11 +1785,15 @@
                      displayIndicesData(data.data);
                      document.getElementById('indicesUpdateTime').textContent = `更新时间: ${data.fetch_time.split(' ')[1]}`;
                  } else {
+                     // 数据获取失败时显示全0数据和错误信息
+                     displayIndicesData(data.data);
+                     document.getElementById('indicesUpdateTime').textContent = `数据获取失败 - ${data.fetch_time.split(' ')[1]}`;
                      console.error('获取指数数据失败:', data.error);
                  }
              })
              .catch(error => {
                  console.error('获取指数数据异常:', error);
+                 document.getElementById('indicesUpdateTime').textContent = '网络连接失败';
              });
      }
      
@@ -1859,8 +1863,8 @@
          
          // 初始化指数数据
          refreshIndicesData();
-         // 每30秒自动刷新指数数据
-         setInterval(refreshIndicesData, 30000);
+         // 每10秒自动刷新指数数据
+         setInterval(refreshIndicesData, 10000);
      });
 </script>
 </body>

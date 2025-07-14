@@ -1012,6 +1012,30 @@ def retry_api_call_with_rate_limit(api_func, max_retries=3, retry_delay=60):
 last_retry_time = None
 retry_interval = 120  # 2分钟重试间隔
 
+@app.route('/api/indices/reset_retry')
+def reset_indices_retry():
+    """重置指数数据重试状态"""
+    global last_retry_time
+    last_retry_time = None
+    return jsonify({
+        'success': True,
+        'message': '指数数据重试状态已重置',
+        'reset_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    })
+
+@app.route('/api/indices/trigger_failure')
+def trigger_indices_failure():
+    """手动触发指数数据失败状态（用于测试）"""
+    global last_retry_time
+    last_retry_time = datetime.now()
+    
+    return jsonify({
+        'success': True,
+        'message': '已触发指数数据失败状态',
+        'trigger_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'next_retry_time': (datetime.now() + timedelta(seconds=retry_interval)).strftime('%Y-%m-%d %H:%M:%S')
+    })
+
 @app.route('/api/indices/realtime')
 def get_indices_realtime():
     """获取主要指数实时数据 - 智能重试机制"""
@@ -1338,48 +1362,27 @@ def get_indices_from_tushare(indices):
         return None
 
 def get_fallback_indices_data(indices):
-    """获取回退的模拟数据"""
-    mock_data = {
-        'sh000001': {
-            'name': '上证指数',
-            'current_price': 3525.0,
-            'change_pct': 0.43,
-            'change_amount': 15.2,
-            'volume': 410354000000,
-            'update_time': datetime.now().strftime('%H:%M:%S')
-        },
-        'sz399001': {
-            'name': '深证成指',
-            'current_price': 11250.5,
-            'change_pct': 0.41,
-            'change_amount': 45.8,
-            'volume': 195000000000,
-            'update_time': datetime.now().strftime('%H:%M:%S')
-        },
-        'sz399006': {
-            'name': '创业板指',
-            'current_price': 2180.3,
-            'change_pct': 0.59,
-            'change_amount': 12.7,
-            'volume': 125000000000,
-            'update_time': datetime.now().strftime('%H:%M:%S')
-        },
-        'sh000688': {
-            'name': '科创板',
-            'current_price': 850.2,
-            'change_pct': 1.01,
-            'change_amount': 8.5,
-            'volume': 85000000000,
+    """获取回退数据 - 返回全0数据表示获取失败"""
+    fallback_data = {}
+    
+    # 为每个指数返回全0数据，明确表示数据获取失败
+    for code, name in indices.items():
+        fallback_data[code] = {
+            'name': name,
+            'current_price': 0.0,
+            'change_pct': 0.0,
+            'change_amount': 0.0,
+            'volume': 0,
             'update_time': datetime.now().strftime('%H:%M:%S')
         }
-    }
     
-    print("使用回退模拟数据")
+    print("数据获取失败，返回全0数据")
     return jsonify({
-        'success': True,
-        'data': mock_data,
+        'success': False,
+        'error': '指数数据获取失败，请稍后重试',
+        'data': fallback_data,
         'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'source': 'fallback_mock_data'
+        'source': 'fallback_zero_data'
     })
 
 @app.route('/api/stock/<stock_code>')
