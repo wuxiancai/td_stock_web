@@ -248,6 +248,26 @@
                             <input type="number" id="nineTurnUpMax" placeholder="最大" style="width: 60px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" min="1" max="9" step="1">
                         </div>
                     </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 10px; color: #6c757d;">净流入额(万元)</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="netMfAmountMin" placeholder="最小" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" step="1000">
+                            <span style="color: #6c757d;">-</span>
+                            <input type="number" id="netMfAmountMax" placeholder="最大" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" step="1000">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 10px; color: #6c757d;">股票代码</label>
+                        <input type="text" id="stockCodeFilter" placeholder="输入股票代码" style="width: 120px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 10px; color: #6c757d;">当天涨幅(%)</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="pctChgMin" placeholder="最小" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" step="0.1">
+                            <span style="color: #6c757d;">-</span>
+                            <input type="number" id="pctChgMax" placeholder="最大" style="width: 80px; padding: 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 10px;" step="0.1">
+                        </div>
+                    </div>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="applyFilters()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">应用筛选</button>
                         <button onclick="clearFilters()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">清除筛选</button>
@@ -402,7 +422,7 @@
                                 成交额(亿)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'market_cap')" data-sort="market_cap">
-                                市值(亿)<span class="sort-indicator"></span>
+                                市值(万)<span class="sort-indicator"></span>
                             </th>
                             <th onclick="sortTable('${dateKey}', 'net_mf_amount')" data-sort="net_mf_amount">
                                 净流入额<span class="sort-indicator"></span>
@@ -456,7 +476,7 @@
                         <td>${(stock.volume_ratio || 0).toFixed(2)}</td>
                         <td>${stock.pe_ttm && stock.pe_ttm > 0 ? stock.pe_ttm.toFixed(2) : '-'}</td>
                         <td>${formatNumber((stock.amount || 0) * 1000)}</td>
-                        <td>${formatNumber(stock.market_cap || 0)}</td>
+                        <td>${(stock.market_cap || 0).toFixed(2)}万</td>
                         <td>
                             ${formatNetMfAmount(stock.net_mf_amount)}
                         </td>
@@ -728,15 +748,31 @@
             const volumeRatioMax = parseFloat(document.getElementById('volumeRatioMax').value) || Infinity;
             const nineTurnUpMin = parseInt(document.getElementById('nineTurnUpMin').value) || 0;
             const nineTurnUpMax = parseInt(document.getElementById('nineTurnUpMax').value) || 9;
+            const netMfAmountMin = parseFloat(document.getElementById('netMfAmountMin').value) || -Infinity;
+            const netMfAmountMax = parseFloat(document.getElementById('netMfAmountMax').value) || Infinity;
+            const stockCodeFilter = document.getElementById('stockCodeFilter').value.trim().toLowerCase();
+            const pctChgMin = parseFloat(document.getElementById('pctChgMin').value) || -Infinity;
+            const pctChgMax = parseFloat(document.getElementById('pctChgMax').value) || Infinity;
             
             filterData = originalFilterData.filter(stock => {
                 const turnoverRate = stock.turnover_rate || 0;
                 const volumeRatio = stock.volume_ratio || 0;
                 const nineTurnUp = stock.nine_turn_up || 0;
+                const netMfAmount = (stock.net_mf_amount || 0) * 1000; // 转换为万元
+                const stockCode = (stock.ts_code || '').toLowerCase();
+                const pctChg = stock.pct_chg || 0;
                 
-                return turnoverRate >= turnoverMin && turnoverRate <= turnoverMax &&
-                       volumeRatio >= volumeRatioMin && volumeRatio <= volumeRatioMax &&
-                       nineTurnUp >= nineTurnUpMin && nineTurnUp <= nineTurnUpMax;
+                // 基础筛选条件
+                const basicFilter = turnoverRate >= turnoverMin && turnoverRate <= turnoverMax &&
+                                  volumeRatio >= volumeRatioMin && volumeRatio <= volumeRatioMax &&
+                                  nineTurnUp >= nineTurnUpMin && nineTurnUp <= nineTurnUpMax;
+                
+                // 新增筛选条件
+                const netMfFilter = netMfAmount >= netMfAmountMin && netMfAmount <= netMfAmountMax;
+                const stockCodeFilterMatch = !stockCodeFilter || stockCode.includes(stockCodeFilter);
+                const pctChgFilter = pctChg >= pctChgMin && pctChg <= pctChgMax;
+                
+                return basicFilter && netMfFilter && stockCodeFilterMatch && pctChgFilter;
             });
             
             displayFilterData();
@@ -749,6 +785,11 @@
             document.getElementById('volumeRatioMax').value = '';
             document.getElementById('nineTurnUpMin').value = '';
             document.getElementById('nineTurnUpMax').value = '';
+            document.getElementById('netMfAmountMin').value = '';
+            document.getElementById('netMfAmountMax').value = '';
+            document.getElementById('stockCodeFilter').value = '';
+            document.getElementById('pctChgMin').value = '';
+            document.getElementById('pctChgMax').value = '';
             
             filterData = [...originalFilterData];
             displayFilterData();
