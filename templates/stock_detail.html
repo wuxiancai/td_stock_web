@@ -803,9 +803,9 @@
             document.getElementById('realtimeSection').style.display = 'block';
             
             // 显示实时价格和涨跌幅
-            if (data.realtime_quote) {
-                const quote = data.realtime_quote;
-                document.getElementById('realtimePrice').textContent = '¥' + (quote.price || '-');
+            if (data.spot) {
+                const quote = data.spot;
+                document.getElementById('realtimePrice').textContent = '¥' + (quote.latest_price || '-');
                 
                 const changePercent = quote.change_percent || 0;
                 const changeElement = document.getElementById('realtimeChangePercent');
@@ -813,16 +813,52 @@
                 changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#44aa44';
                 
                 document.getElementById('realtimeAmount').textContent = formatNumber((quote.amount || 0) * 1000);
-                document.getElementById('realtimeTurnover').textContent = (quote.turnover_rate || 0) + '%';
-                document.getElementById('realtimeVolumeRatio').textContent = quote.volume_ratio || '-';
+                document.getElementById('realtimeTurnover').textContent = quote.turnover_rate ? quote.turnover_rate + '%' : '暂无';
+                document.getElementById('realtimeVolumeRatio').textContent = quote.volume_ratio || '暂无';
+            } else {
+                // 当spot数据为空时，尝试从资金流向数据和K线数据获取信息
+                if (data.money_flow && data.money_flow.close_price) {
+                    document.getElementById('realtimePrice').textContent = '¥' + data.money_flow.close_price.toFixed(2);
+                    
+                    const changePercent = data.money_flow.change_percent || 0;
+                    const changeElement = document.getElementById('realtimeChangePercent');
+                    changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
+                    changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#44aa44';
+                    
+                    console.log('使用资金流向数据显示基本价格信息');
+                } else {
+                    // 完全无数据时的显示
+                    document.getElementById('realtimePrice').textContent = '暂无数据';
+                    document.getElementById('realtimeChangePercent').textContent = '-';
+                    console.log('实时行情数据暂时无法获取，可能是网络问题或非交易时间');
+                }
+                
+                // 尝试从K线数据获取成交额
+                if (data.kline_data && data.kline_data.length > 0) {
+                    const latestKline = data.kline_data[data.kline_data.length - 1];
+                    if (latestKline.amount) {
+                        document.getElementById('realtimeAmount').textContent = formatNumber(latestKline.amount);
+                    } else {
+                        document.getElementById('realtimeAmount').textContent = '-';
+                    }
+                } else {
+                    document.getElementById('realtimeAmount').textContent = '-';
+                }
+                
+                // 换手率和量比暂时无法从现有数据源获取
+                document.getElementById('realtimeTurnover').textContent = '暂无';
+                document.getElementById('realtimeVolumeRatio').textContent = '暂无';
             }
             
             // 显示实时资金流向
-            if (data.realtime_moneyflow) {
-                const netInflow = data.realtime_moneyflow.net_inflow || 0;
+            if (data.money_flow) {
+                const netInflow = data.money_flow.main_net_inflow || 0;
                 const netElement = document.getElementById('realtimeNetInflow');
-                netElement.textContent = formatNumber(netInflow * 10000);
+                // 后端返回的数据单位是元，需要转换为万元显示
+                netElement.textContent = formatNumber(netInflow / 10000) + '万';
                 netElement.style.color = netInflow >= 0 ? '#ff4444' : '#44aa44';
+            } else {
+                document.getElementById('realtimeNetInflow').textContent = '-';
             }
             
             // 绘制实时分时图

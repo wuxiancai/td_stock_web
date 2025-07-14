@@ -130,6 +130,49 @@ def safe_tushare_call(func, *args, **kwargs):
         # 其他类型的错误直接抛出
         raise e
 
+def safe_akshare_call(func, request_key, *args, **kwargs):
+    """安全的AkShare API调用，带重试机制"""
+    if not AKSHARE_AVAILABLE:
+        raise Exception("AkShare库未安装")
+    
+    # 检查是否应该重试
+    if not akshare_retry_manager.should_retry(request_key):
+        retry_status = akshare_retry_manager.get_retry_status()
+        failed_request = next((req for req in retry_status['failed_requests'] if req['request_key'] == request_key), None)
+        if failed_request:
+            remaining_time = failed_request['next_retry_in_seconds']
+            raise Exception(f"AkShare接口 {request_key} 暂时不可用，{remaining_time}秒后可重试")
+    
+    try:
+        result = func(*args, **kwargs)
+        
+        # 检查结果是否有效
+        if hasattr(result, 'empty') and result.empty:
+            error_msg = f"AkShare接口 {request_key} 返回空数据"
+            akshare_retry_manager.record_failure(request_key, error_msg)
+            raise Exception(error_msg)
+        
+        # 成功获取数据，清除失败记录
+        akshare_retry_manager.record_success(request_key)
+        return result
+        
+    except Exception as e:
+        error_msg = str(e)
+        
+        # 检查是否为网络相关错误
+        network_errors = ["proxy", "connection", "timeout", "network", "dns", "ssl", "certificate", "连接", "网络", "超时"]
+        is_network_error = any(keyword in error_msg.lower() for keyword in network_errors)
+        
+        if is_network_error:
+            print(f"检测到网络错误，将在{akshare_retry_manager.retry_interval}秒后重试: {error_msg}")
+            akshare_retry_manager.record_failure(request_key, error_msg)
+        else:
+            print(f"AkShare API调用失败: {error_msg}")
+            # 非网络错误也记录，但可能需要不同的处理策略
+            akshare_retry_manager.record_failure(request_key, error_msg)
+        
+        raise e
+
 def find_available_port(start_port=8080):
     """查找可用端口"""
     for port in range(start_port, start_port + 10):
@@ -164,6 +207,95 @@ def get_trading_days_between(start_date, end_date):
 
 # 全局变量存储更新状态
 update_status = {}
+
+# AkShare重试管理器
+class AkShareRetryManager:
+    """AkShare接口重试管理器，处理网络错误和数据获取失败的重试机制"""
+    
+    def __init__(self, retry_interval=300):  # 默认5分钟重试间隔
+        self.retry_interval = retry_interval  # 重试间隔（秒）
+        self.failed_requests = {}  # 存储失败的请求信息
+        self.lock = threading.Lock()
+        
+    def should_retry(self, request_key):
+        """检查是否应该重试某个请求"""
+        with self.lock:
+            if request_key not in self.failed_requests:
+                return True
+            
+            last_attempt = self.failed_requests[request_key]['last_attempt']
+            return time.time() - last_attempt >= self.retry_interval
+    
+    def record_failure(self, request_key, error_msg):
+        """记录失败的请求"""
+        with self.lock:
+            current_time = time.time()
+            if request_key not in self.failed_requests:
+                self.failed_requests[request_key] = {
+                    'first_failure': current_time,
+                    'failure_count': 0,
+                    'last_error': ''
+                }
+            
+            self.failed_requests[request_key].update({
+                'last_attempt': current_time,
+                'failure_count': self.failed_requests[request_key]['failure_count'] + 1,
+                'last_error': error_msg
+            })
+            
+            print(f"记录AkShare请求失败: {request_key}, 失败次数: {self.failed_requests[request_key]['failure_count']}, 错误: {error_msg}")
+    
+    def record_success(self, request_key):
+        """记录成功的请求，清除失败记录"""
+        with self.lock:
+            if request_key in self.failed_requests:
+                failure_count = self.failed_requests[request_key]['failure_count']
+                del self.failed_requests[request_key]
+                print(f"AkShare请求恢复成功: {request_key}, 之前失败次数: {failure_count}")
+    
+    def get_retry_status(self):
+        """获取重试状态信息"""
+        with self.lock:
+            current_time = time.time()
+            status = {
+                'total_failed_requests': len(self.failed_requests),
+                'retry_interval_minutes': self.retry_interval / 60,
+                'failed_requests': []
+            }
+            
+            for request_key, info in self.failed_requests.items():
+                next_retry_time = info['last_attempt'] + self.retry_interval
+                time_until_retry = max(0, next_retry_time - current_time)
+                
+                status['failed_requests'].append({
+                    'request_key': request_key,
+                    'failure_count': info['failure_count'],
+                    'last_error': info['last_error'],
+                    'first_failure_time': datetime.fromtimestamp(info['first_failure']).strftime('%Y-%m-%d %H:%M:%S'),
+                    'last_attempt_time': datetime.fromtimestamp(info['last_attempt']).strftime('%Y-%m-%d %H:%M:%S'),
+                    'next_retry_in_seconds': int(time_until_retry),
+                    'can_retry_now': time_until_retry == 0
+                })
+            
+            return status
+    
+    def cleanup_old_failures(self, max_age_hours=24):
+        """清理超过指定时间的失败记录"""
+        with self.lock:
+            current_time = time.time()
+            max_age_seconds = max_age_hours * 3600
+            
+            keys_to_remove = []
+            for request_key, info in self.failed_requests.items():
+                if current_time - info['first_failure'] > max_age_seconds:
+                    keys_to_remove.append(request_key)
+            
+            for key in keys_to_remove:
+                del self.failed_requests[key]
+                print(f"清理过期的失败记录: {key}")
+
+# 创建全局重试管理器实例
+akshare_retry_manager = AkShareRetryManager(retry_interval=300)  # 5分钟重试间隔
 
 def get_real_time_stock_data(ts_code, name, industry, current_date):
     """获取单只股票的实时数据"""
@@ -1296,7 +1428,7 @@ def get_realtime_stock_data(stock_code):
         try:
             # 1. 获取实时行情数据
             print(f"正在获取{symbol}的实时行情数据...")
-            spot_data = ak.stock_zh_a_spot_em()
+            spot_data = safe_akshare_call(ak.stock_zh_a_spot_em, f"spot_data_{stock_code}")
             if not spot_data.empty:
                 # 查找对应股票的实时数据
                 stock_spot = spot_data[spot_data['代码'] == stock_code[:6]]
@@ -1332,19 +1464,24 @@ def get_realtime_stock_data(stock_code):
             # 2. 获取分时图数据
             print(f"正在获取{symbol}的分时图数据...")
             # 使用akshare获取分时数据
-            minute_data = ak.stock_zh_a_minute(symbol=symbol, period='1', adjust="")
+            minute_data = safe_akshare_call(ak.stock_zh_a_minute, f"minute_data_{stock_code}", symbol=symbol, period='1', adjust="")
             if not minute_data.empty:
                 # 只取今天的数据
                 today = datetime.now().strftime('%Y-%m-%d')
                 today_data = minute_data[minute_data['day'].str.startswith(today)]
                 if not today_data.empty:
-                    realtime_data['minute_data'] = {
-                        'times': today_data['day'].tolist(),
-                        'prices': today_data['close'].tolist(),
-                        'volumes': today_data['volume'].tolist(),
-                        'avg_prices': today_data['close'].rolling(window=5).mean().fillna(today_data['close']).tolist()
-                    }
-                    print(f"成功获取{symbol}分时图数据，共{len(today_data)}个数据点")
+                    # 转换为前端期望的格式：对象数组，每个对象包含time、price、volume
+                    minute_list = []
+                    for _, row in today_data.iterrows():
+                        minute_item = {
+                            'time': row['day'],
+                            'price': float(row['close']),
+                            'volume': float(row['volume'])
+                        }
+                        minute_list.append(minute_item)
+                    
+                    realtime_data['minute_data'] = minute_list
+                    print(f"成功获取{symbol}分时图数据，共{len(minute_list)}个数据点")
                 else:
                     print(f"今日暂无{symbol}分时数据")
                     realtime_data['minute_data'] = None
@@ -1356,71 +1493,135 @@ def get_realtime_stock_data(stock_code):
             realtime_data['minute_data'] = None
         
         try:
-            # 3. 获取实时K线数据（最近30天的日K线，包含技术指标）
+            # 3. 获取实时K线数据（最近90天的日K线，包含当日数据）
             print(f"正在获取{symbol}的实时K线数据...")
             
-            # 优先从股票详情API获取包含技术指标的数据
+            # 优先从缓存获取包含技术指标的K线数据，然后补充当日数据
+            # 先从缓存获取包含技术指标的历史数据
+            stock_detail_response = get_stock_data(ts_code)
+            if hasattr(stock_detail_response, 'get_json'):
+                stock_detail_data = stock_detail_response.get_json()
+            elif isinstance(stock_detail_response, dict):
+                stock_detail_data = stock_detail_response
+            else:
+                stock_detail_data = None
+            
+            cached_kline = None
+            if stock_detail_data and 'kline_data' in stock_detail_data:
+                cached_kline = stock_detail_data['kline_data']
+                print(f"从缓存获取{symbol}K线数据，共{len(cached_kline)}天（包含技术指标）")
+            
+            # 尝试从AKShare获取最新数据以补充当日数据
             try:
-                # 调用内部股票详情API获取完整数据
-                stock_detail_response = get_stock_data(ts_code)
-                if hasattr(stock_detail_response, 'get_json'):
-                    stock_detail_data = stock_detail_response.get_json()
-                elif isinstance(stock_detail_response, dict):
-                    stock_detail_data = stock_detail_response
-                else:
-                    stock_detail_data = None
-                
-                if stock_detail_data and 'kline_data' in stock_detail_data:
-                    # 从股票详情数据中提取最近90天的K线数据（包含技术指标）
-                    kline_data = stock_detail_data['kline_data']
-                    # 取所有可用数据，最多90天
-                    if len(kline_data) > 90:
-                        kline_data = kline_data[-90:]  # 取最近90天
-                    
-                    realtime_data['kline_data'] = kline_data
-                    print(f"成功从缓存获取{symbol}实时K线数据（含技术指标），共{len(kline_data)}天")
-                else:
-                    raise Exception("无法从股票详情API获取数据")
-                    
-            except Exception as cache_error:
-                print(f"从缓存获取K线数据失败: {cache_error}，尝试从AKShare获取基础数据")
-                
-                # 如果从缓存获取失败，则从AKShare获取基础K线数据
                 end_date = datetime.now().strftime('%Y%m%d')
-                start_date = (datetime.now() - timedelta(days=120)).strftime('%Y%m%d')
-                kline_data = ak.stock_zh_a_hist(symbol=stock_code[:6], period="daily", start_date=start_date, end_date=end_date, adjust="")
-                if not kline_data.empty:
-                    # 取最近90天数据
-                    recent_kline = kline_data.tail(90)
+                start_date = (datetime.now() - timedelta(days=5)).strftime('%Y%m%d')  # 只获取最近5天
+                
+                akshare_kline = safe_akshare_call(ak.stock_zh_a_hist, f"kline_data_{stock_code}", symbol=stock_code[:6], period="daily", start_date=start_date, end_date=end_date, adjust="")
+                
+                if cached_kline and not akshare_kline.empty:
+                    # 合并缓存数据和最新数据
+                    cached_dates = {item['trade_date'] for item in cached_kline}
+                    new_data_added = False
                     
-                    # 转换为与股票详情API相同的格式
-                    kline_list = []
-                    for _, row in recent_kline.iterrows():
-                        kline_item = {
-                            'trade_date': row['日期'].strftime('%Y%m%d'),
-                            'open': float(row['开盘']),
-                            'high': float(row['最高']),
-                            'low': float(row['最低']),
-                            'close': float(row['收盘']),
-                            'vol': float(row['成交量']),
-                            'amount': float(row['成交额']),
-                            # 基础数据没有技术指标，设置为默认值
-                            'nine_turn_up': 0,
-                            'nine_turn_down': 0,
-                            'countdown_up': 0,
-                            'countdown_down': 0,
-                            'boll_upper': None,
-                            'boll_mid': None,
-                            'boll_lower': None
-                        }
-                        kline_list.append(kline_item)
+                    # 添加缓存中没有的新数据
+                    for _, row in akshare_kline.iterrows():
+                        trade_date = row['日期'].strftime('%Y%m%d')
+                        if trade_date not in cached_dates:
+                            new_kline_item = {
+                                'trade_date': trade_date,
+                                'open': float(row['开盘']),
+                                'high': float(row['最高']),
+                                'low': float(row['最低']),
+                                'close': float(row['收盘']),
+                                'vol': float(row['成交量']),
+                                'amount': float(row['成交额']),
+                                # 新数据没有技术指标，设置为默认值
+                                'nine_turn_up': 0,
+                                'nine_turn_down': 0,
+                                'countdown_up': 0,
+                                'countdown_down': 0,
+                                'boll_upper': None,
+                                'boll_mid': None,
+                                'boll_lower': None
+                            }
+                            cached_kline.append(new_kline_item)
+                            new_data_added = True
+                            print(f"添加新交易日数据: {trade_date}")
                     
-                    realtime_data['kline_data'] = kline_list
-                    print(f"成功获取{symbol}实时K线基础数据，共{len(kline_list)}天（无技术指标）")
+                    # 按日期排序并取最近90天
+                    cached_kline.sort(key=lambda x: x['trade_date'])
+                    if len(cached_kline) > 90:
+                        cached_kline = cached_kline[-90:]
+                    
+                    # 如果添加了新数据，重新计算九转序列
+                    if new_data_added:
+                        print(f"检测到新数据，重新计算{symbol}的九转序列...")
+                        # 转换为DataFrame进行计算
+                        import pandas as pd
+                        df_kline = pd.DataFrame(cached_kline)
+                        df_kline['close'] = df_kline['close'].astype(float)
+                        df_kline['high'] = df_kline['high'].astype(float)
+                        df_kline['low'] = df_kline['low'].astype(float)
+                        
+                        # 重新计算九转序列
+                        df_kline = calculate_nine_turn(df_kline)
+                        
+                        # 转换回字典列表
+                        cached_kline = df_kline.to_dict('records')
+                        print(f"九转序列重新计算完成")
+                    
+                    realtime_data['kline_data'] = cached_kline
+                    latest_date = cached_kline[-1]['trade_date'] if cached_kline else 'N/A'
+                    print(f"成功合并{symbol}K线数据，共{len(cached_kline)}天，最新交易日: {latest_date}")
+                
+                elif cached_kline:
+                    # 只有缓存数据，取最近90天
+                    if len(cached_kline) > 90:
+                        cached_kline = cached_kline[-90:]
+                    realtime_data['kline_data'] = cached_kline
+                    latest_date = cached_kline[-1]['trade_date'] if cached_kline else 'N/A'
+                    print(f"使用缓存{symbol}K线数据，共{len(cached_kline)}天，最新交易日: {latest_date}")
+                
                 else:
-                    print(f"获取{symbol}K线数据失败")
-                    realtime_data['kline_data'] = None
-                    
+                    # 只有AKShare数据，没有技术指标
+                    if not akshare_kline.empty:
+                        recent_kline = akshare_kline.tail(90)
+                        kline_list = []
+                        for _, row in recent_kline.iterrows():
+                            kline_item = {
+                                'trade_date': row['日期'].strftime('%Y%m%d'),
+                                'open': float(row['开盘']),
+                                'high': float(row['最高']),
+                                'low': float(row['最低']),
+                                'close': float(row['收盘']),
+                                'vol': float(row['成交量']),
+                                'amount': float(row['成交额']),
+                                'nine_turn_up': 0,
+                                'nine_turn_down': 0,
+                                'countdown_up': 0,
+                                'countdown_down': 0,
+                                'boll_upper': None,
+                                'boll_mid': None,
+                                'boll_lower': None
+                            }
+                            kline_list.append(kline_item)
+                        
+                        realtime_data['kline_data'] = kline_list
+                        latest_date = kline_list[-1]['trade_date'] if kline_list else 'N/A'
+                        print(f"仅从AKShare获取{symbol}K线数据，共{len(kline_list)}天，最新交易日: {latest_date}（无技术指标）")
+                    else:
+                        realtime_data['kline_data'] = None
+                        print(f"无法获取{symbol}K线数据")
+            
+            except Exception as akshare_error:
+                print(f"从AKShare获取最新K线数据失败: {akshare_error}")
+                if cached_kline:
+                    if len(cached_kline) > 90:
+                        cached_kline = cached_kline[-90:]
+                    realtime_data['kline_data'] = cached_kline
+                    print(f"回退使用缓存{symbol}K线数据，共{len(cached_kline)}天")
+                else:
+                     realtime_data['kline_data'] = None
         except Exception as e:
             print(f"获取实时K线数据失败: {e}")
             realtime_data['kline_data'] = None
@@ -1429,7 +1630,7 @@ def get_realtime_stock_data(stock_code):
             # 4. 获取实时资金流向数据
             print(f"正在获取{symbol}的资金流向数据...")
             # 使用akshare获取个股资金流向
-            money_flow = ak.stock_individual_fund_flow(stock=stock_code[:6], market="sh" if symbol.startswith('sh') else "sz")
+            money_flow = safe_akshare_call(ak.stock_individual_fund_flow, f"money_flow_{stock_code}", stock=stock_code[:6], market="sh" if symbol.startswith('sh') else "sz")
             if not money_flow.empty:
                 latest_flow = money_flow.iloc[-1]
                 realtime_data['money_flow'] = {
@@ -1459,6 +1660,23 @@ def get_realtime_stock_data(stock_code):
         realtime_data['fetch_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         realtime_data['symbol'] = symbol
         realtime_data['ts_code'] = ts_code
+        
+        # 处理NaN值，避免JSON序列化问题
+        import numpy as np
+        import json
+        
+        def replace_nan_recursive(obj):
+            """递归替换对象中的NaN值为None"""
+            if isinstance(obj, dict):
+                return {k: replace_nan_recursive(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [replace_nan_recursive(item) for item in obj]
+            elif isinstance(obj, float) and (np.isnan(obj) or np.isinf(obj)):
+                return None
+            else:
+                return obj
+        
+        realtime_data = replace_nan_recursive(realtime_data)
         
         return jsonify(realtime_data)
     
@@ -2164,6 +2382,15 @@ def auto_sync_all_markets():
     except Exception as e:
         print(f"自动同步任务执行失败: {e}")
 
+def cleanup_akshare_failures():
+    """清理过期的AkShare失败记录"""
+    try:
+        print("开始清理过期的AkShare失败记录...")
+        akshare_retry_manager.cleanup_old_failures(max_age_hours=24)
+        print("AkShare失败记录清理完成")
+    except Exception as e:
+        print(f"清理AkShare失败记录时出错: {e}")
+
 def start_scheduler():
     """启动定时调度器"""
     # 设置定时任务：工作日下午5点执行数据同步
@@ -2183,9 +2410,13 @@ def start_scheduler():
     # 设置定时任务：每天晚上6点执行股票筛选
     schedule.every().day.at("18:00").do(auto_filter_stocks)
     
+    # 设置定时任务：每天凌晨2点清理过期的AkShare失败记录
+    schedule.every().day.at("02:00").do(cleanup_akshare_failures)
+    
     print("定时任务已设置：工作日下午5点自动同步所有A股数据")
     print("定时任务已设置：工作日晚上7点自动更新资金流向数据")
     print("定时任务已设置：每天晚上6点自动筛选符合条件的股票")
+    print("定时任务已设置：每天凌晨2点清理过期的AkShare失败记录")
     
     # 在后台线程中运行调度器
     def run_scheduler():
@@ -2196,6 +2427,21 @@ def start_scheduler():
     scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
     scheduler_thread.start()
     print("定时调度器已启动")
+
+@app.route('/api/akshare/retry_status')
+def get_akshare_retry_status():
+    """获取AkShare重试状态"""
+    try:
+        status = akshare_retry_manager.get_retry_status()
+        return jsonify({
+            'success': True,
+            'data': status
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/api/scheduler/status')
 def get_scheduler_status():
@@ -3166,6 +3412,8 @@ if __name__ == '__main__':
     print(f"服务器启动配置: host={host}, port={port}, debug={debug_mode}")
     print(f"Tushare API频率限制器已启用: 每分钟最多{rate_limiter.max_requests}次请求")
     print("可通过 /api/rate_limiter/status 查看API使用状态")
+    print(f"AkShare重试机制已启用: 失败后{akshare_retry_manager.retry_interval}秒重试间隔")
+    print("可通过 /api/akshare/retry_status 查看重试状态")
     
     try:
         app.run(debug=debug_mode, host=host, port=port)
