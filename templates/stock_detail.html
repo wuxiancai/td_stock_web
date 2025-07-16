@@ -351,7 +351,7 @@
                             <div class="info-value" id="realtimePrice">-</div>
                         </div>
                         <div class="info-item">
-                            <div class="info-label">涨跌百分比</div>
+                            <div class="info-label">涨幅</div>
                             <div class="info-value" id="realtimeChangePercent">-</div>
                         </div>
                         <div class="info-item">
@@ -544,6 +544,8 @@
             
             document.getElementById('stockName').textContent = data.name;
             document.getElementById('stockCode').textContent = data.ts_code;
+            
+            // 显示当前价格（与实时数据区域保持一致）
             document.getElementById('stockPrice').textContent = '¥' + data.latest_price.toFixed(2);
             
             document.getElementById('highestPrice').textContent = data.highest_price.toFixed(2);
@@ -830,7 +832,7 @@
                 const netInflow = stockData.net_mf_amount * 10000; // 转换为万元
                 const netElement = document.getElementById('realtimeNetInflow');
                 netElement.textContent = formatNumber(netInflow / 10000) + '万';
-                netElement.style.color = netInflow >= 0 ? '#ff4444' : '#44aa44';
+                netElement.style.color = netInflow >= 0 ? '#ff4444' : '#00aa00';
             } else {
                 document.getElementById('realtimeNetInflow').textContent = '-';
             }
@@ -1004,12 +1006,25 @@
             // 显示实时价格和涨跌幅
             if (data.spot) {
                 const quote = data.spot;
+                console.log('实时价格数据调试:', {
+                    stockCode: stockCode,
+                    latest_price: quote.latest_price,
+                    change_percent: quote.change_percent,
+                    data_source: '实时数据接口'
+                });
+                
+                // 更新实时数据区域的价格
                 document.getElementById('realtimePrice').textContent = '¥' + (quote.latest_price || '-');
+                
+                // 同步更新页面顶部的价格显示
+                if (quote.latest_price) {
+                    document.getElementById('stockPrice').textContent = '¥' + quote.latest_price.toFixed(2);
+                }
                 
                 const changePercent = quote.change_percent || 0;
                 const changeElement = document.getElementById('realtimeChangePercent');
-                changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent + '%';
-                changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#44aa44';
+                changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
+                changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#00aa00';
                 
                 document.getElementById('realtimeAmount').textContent = formatNumber((quote.amount || 0) * 1000);
                 document.getElementById('realtimeTurnover').textContent = quote.turnover_rate ? quote.turnover_rate + '%' : '暂无';
@@ -1019,10 +1034,13 @@
                 if (data.money_flow && data.money_flow.close_price) {
                     document.getElementById('realtimePrice').textContent = '¥' + data.money_flow.close_price.toFixed(2);
                     
+                    // 同步更新页面顶部的价格显示
+                    document.getElementById('stockPrice').textContent = '¥' + data.money_flow.close_price.toFixed(2);
+                    
                     const changePercent = data.money_flow.change_percent || 0;
                     const changeElement = document.getElementById('realtimeChangePercent');
                     changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
-                    changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#44aa44';
+                    changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#00aa00';
                     
                     console.log('使用资金流向数据显示基本价格信息');
                 } else {
@@ -1049,15 +1067,23 @@
                 document.getElementById('realtimeVolumeRatio').textContent = '暂无';
             }
             
-            // 显示实时资金流向
-            if (data.money_flow) {
+            // 显示实时资金流向（优先使用直接传递的净流入额字段）
+            if (data.net_mf_amount !== undefined && data.net_mf_amount !== null) {
+                const netInflow = data.net_mf_amount * 10000; // 转换为万元
+                const netElement = document.getElementById('realtimeNetInflow');
+                netElement.textContent = formatNumber(netInflow / 10000) + '万';
+                netElement.style.color = netInflow >= 0 ? '#ff4444' : '#44aa44';
+                console.log('使用直接传递的净流入额:', data.net_mf_amount, '千万元');
+            } else if (data.money_flow) {
                 const netInflow = data.money_flow.main_net_inflow || 0;
                 const netElement = document.getElementById('realtimeNetInflow');
                 // 后端返回的数据单位是元，需要转换为万元显示
                 netElement.textContent = formatNumber(netInflow / 10000) + '万';
                 netElement.style.color = netInflow >= 0 ? '#ff4444' : '#44aa44';
+                console.log('使用money_flow中的净流入额:', netInflow, '万元');
             } else {
                 document.getElementById('realtimeNetInflow').textContent = '-';
+                console.log('无净流入额数据');
             }
             
             // 绘制实时分时图（仅当有真实分时数据时）
@@ -1130,24 +1156,27 @@
             console.log('价格数组:', prices.filter(p => p !== null).length, '个有效数据');
             console.log('成交量数组:', volumes.filter(v => v !== null).length, '个有效数据');
             
-            // 计算均线（5分钟移动平均）
+            // 计算分时均价线（累计成交金额 ÷ 累计成交量）
             const avgPrices = [];
-            const avgPeriod = 5;
+            let cumulativeAmount = 0;  // 累计成交金额
+            let cumulativeVolume = 0;  // 累计成交量
+            
             for (let i = 0; i < prices.length; i++) {
-                if (i < avgPeriod - 1 || prices[i] === null) {
-                    avgPrices.push(null); // 前几个点没有足够数据计算均线或当前点无数据
+                const data = dataMap.get(fullTimeAxis[i]);
+                if (data && data.price !== null && data.volume !== null && data.volume > 0) {
+                    // 累加成交金额和成交量
+                    cumulativeAmount += data.price * data.volume;
+                    cumulativeVolume += data.volume;
+                    
+                    // 计算分时均价
+                    avgPrices.push(cumulativeAmount / cumulativeVolume);
                 } else {
-                    let sum = 0;
-                    let count = 0;
-                    for (let j = i - avgPeriod + 1; j <= i; j++) {
-                        if (prices[j] !== null) {
-                            sum += prices[j];
-                            count++;
-                        }
-                    }
-                    avgPrices.push(count > 0 ? sum / count : null);
+                    // 如果当前时间点没有数据，使用前一个均价值
+                    avgPrices.push(i > 0 ? avgPrices[i - 1] : null);
                 }
             }
+            
+            console.log('分时均价线计算完成，有效数据点:', avgPrices.filter(p => p !== null).length);
             
             const option = {
                 animation: false,

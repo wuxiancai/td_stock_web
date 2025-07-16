@@ -1414,11 +1414,29 @@ def get_stock_data(stock_code):
         if basic_info.empty:
             return jsonify({'error': '股票代码不存在'}), 404
         
-        # 获取最近90天的日K线数据（使用频率限制）
+        # 获取最近90天的日K线数据（使用前复权数据）
         end_date = datetime.now().strftime('%Y%m%d')
         start_date = (datetime.now() - timedelta(days=120)).strftime('%Y%m%d')
         
-        daily_data = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
+        # 使用前复权数据
+        daily_data = safe_tushare_call(pro.adj_factor, ts_code=ts_code, start_date=start_date, end_date=end_date)
+        if daily_data.empty:
+            # 如果前复权数据获取失败，尝试使用普通日线数据
+            daily_data = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
+        else:
+            # 获取普通日线数据
+            raw_daily = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
+            if not raw_daily.empty:
+                # 合并复权因子和日线数据
+                daily_data = pd.merge(raw_daily, daily_data, on=['ts_code', 'trade_date'], how='left')
+                # 计算前复权价格
+                daily_data['adj_factor'] = daily_data['adj_factor'].fillna(1.0)
+                daily_data['open'] = daily_data['open'] * daily_data['adj_factor']
+                daily_data['high'] = daily_data['high'] * daily_data['adj_factor']
+                daily_data['low'] = daily_data['low'] * daily_data['adj_factor']
+                daily_data['close'] = daily_data['close'] * daily_data['adj_factor']
+            else:
+                return jsonify({'error': '无法获取股票数据'}), 404
         if daily_data.empty:
             return jsonify({'error': '无法获取股票数据'}), 404
         
@@ -1667,6 +1685,12 @@ def get_realtime_stock_data(stock_code):
         if stock_data.get('error'):
             return jsonify({'error': stock_data['error']}), 500
         
+        # 添加价格调试信息
+        print(f"股票{ts_code}基础数据中的latest_price: {stock_data.get('latest_price')}")
+        if stock_data.get('kline_data') and len(stock_data['kline_data']) > 0:
+            latest_kline = stock_data['kline_data'][-1]
+            print(f"最新K线数据: 日期={latest_kline.get('trade_date')}, 收盘价={latest_kline.get('close')}")
+        
         realtime_data = {}
         
         # 1. 构造模拟实时行情数据
@@ -1753,6 +1777,20 @@ def get_realtime_stock_data(stock_code):
                             realtime_data['minute_data'] = minute_list
                             minute_data_success = True
                             print(f"AkShare成功获取{symbol}分时图数据，日期: {latest_date}，共{len(minute_list)}个数据点")
+                            
+                            # 使用分时数据的最新价格更新latest_price
+                            if minute_list:
+                                latest_minute_price = minute_list[-1]['price']
+                                realtime_data['spot']['latest_price'] = latest_minute_price
+                                print(f"使用分时数据更新latest_price: {latest_minute_price}（原K线价格: {stock_data.get('latest_price')}）")
+                                
+                                # 重新计算涨跌额和涨跌幅
+                                if realtime_data['spot']['pre_close'] > 0:
+                                    change_amount = latest_minute_price - realtime_data['spot']['pre_close']
+                                    change_percent = (change_amount / realtime_data['spot']['pre_close']) * 100
+                                    realtime_data['spot']['change_amount'] = change_amount
+                                    realtime_data['spot']['change_percent'] = change_percent
+                                    print(f"重新计算涨跌幅: {change_percent:.2f}%")
                         else:
                             print(f"AkShare最近几日暂无{symbol}分时数据")
                     else:
@@ -1806,6 +1844,20 @@ def get_realtime_stock_data(stock_code):
                         realtime_data['minute_data'] = minute_list
                         minute_data_success = True
                         print(f"Tushare成功获取{ts_code}分时图数据，日期: {latest_date}，共{len(minute_list)}个数据点")
+                        
+                        # 使用分时数据的最新价格更新latest_price
+                        if minute_list:
+                            latest_minute_price = minute_list[-1]['price']
+                            realtime_data['spot']['latest_price'] = latest_minute_price
+                            print(f"使用Tushare分时数据更新latest_price: {latest_minute_price}（原K线价格: {stock_data.get('latest_price')}）")
+                            
+                            # 重新计算涨跌额和涨跌幅
+                            if realtime_data['spot']['pre_close'] > 0:
+                                change_amount = latest_minute_price - realtime_data['spot']['pre_close']
+                                change_percent = (change_amount / realtime_data['spot']['pre_close']) * 100
+                                realtime_data['spot']['change_amount'] = change_amount
+                                realtime_data['spot']['change_percent'] = change_percent
+                                print(f"重新计算涨跌幅: {change_percent:.2f}%")
                     else:
                         print(f"Tushare获取{ts_code}分时数据为空")
                         
@@ -1838,6 +1890,13 @@ def get_realtime_stock_data(stock_code):
                 'change_percent': stock_data.get('pct_chg', 0),
                 'main_net_inflow': stock_data.get('net_mf_amount', 0) * 10000  # 转换为万元
             }
+        
+        # 5. 直接传递净流入额字段给前端
+        if stock_data.get('net_mf_amount') is not None:
+            realtime_data['net_mf_amount'] = stock_data.get('net_mf_amount', 0)
+            print(f"传递净流入额给前端: {realtime_data['net_mf_amount']}千万元")
+        else:
+            print(f"股票{ts_code}无净流入额数据")
         
         print(f"成功生成{ts_code}的实时数据")
         return jsonify(realtime_data)
