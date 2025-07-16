@@ -720,6 +720,8 @@
                 .then(data => {
                     if (data.error) {
                         console.error('加载实时数据失败:', data.error);
+                        // 即使有错误，也尝试显示基础数据
+                        displayRealtimeDataFallback();
                         return;
                     }
                     
@@ -730,6 +732,8 @@
                 })
                 .catch(error => {
                     console.error('加载实时数据失败:', error);
+                    // 网络错误时也尝试显示基础数据
+                    displayRealtimeDataFallback();
                 });
         }
         
@@ -797,6 +801,201 @@
             }
         }
         
+        // 备用实时数据显示函数（基于已加载的股票数据）
+        function displayRealtimeDataFallback() {
+            if (!stockData) {
+                console.log('没有股票数据可用于备用显示');
+                return;
+            }
+            
+            console.log('使用备用数据显示实时信息');
+            
+            // 显示实时数据部分
+            document.getElementById('realtimeSection').style.display = 'block';
+            
+            // 使用股票基础数据填充实时信息
+            document.getElementById('realtimePrice').textContent = '¥' + (stockData.latest_price || 0).toFixed(2);
+            
+            const changePercent = stockData.pct_chg || 0;
+            const changeElement = document.getElementById('realtimeChangePercent');
+            changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
+            changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#44aa44';
+            
+            document.getElementById('realtimeAmount').textContent = formatNumber((stockData.amount || 0) * 1000);
+            document.getElementById('realtimeTurnover').textContent = (stockData.turnover_rate || 0).toFixed(2) + '%';
+            document.getElementById('realtimeVolumeRatio').textContent = (stockData.volume_ratio || 0).toFixed(2);
+            
+            // 显示净流入额
+            if (stockData.net_mf_amount !== undefined && stockData.net_mf_amount !== null) {
+                const netInflow = stockData.net_mf_amount * 10000; // 转换为万元
+                const netElement = document.getElementById('realtimeNetInflow');
+                netElement.textContent = formatNumber(netInflow / 10000) + '万';
+                netElement.style.color = netInflow >= 0 ? '#ff4444' : '#44aa44';
+            } else {
+                document.getElementById('realtimeNetInflow').textContent = '-';
+            }
+            
+            // 显示K线图（基于真实历史数据）
+            if (stockData.kline_data && stockData.kline_data.length > 0) {
+                drawRealtimeKlineChart(stockData.kline_data);
+            }
+            
+            // 不显示分时图（避免模拟数据）
+            showNoMinuteDataMessage();
+            
+            // 更新最后刷新时间
+            updateLastRefreshTime();
+        }
+        
+        // 显示分时图无数据提示
+        function showNoMinuteDataMessage() {
+            const chart = echarts.init(document.getElementById('realtimeMinuteChart'));
+            
+            const option = {
+                title: {
+                    text: '分时图暂无数据',
+                    subtext: '分时图需要真实交易时间的实时数据\n非交易时间无法显示',
+                    left: 'center',
+                    top: 'middle',
+                    textStyle: {
+                        fontSize: 16,
+                        color: '#999'
+                    },
+                    subtextStyle: {
+                        fontSize: 12,
+                        color: '#ccc'
+                    }
+                },
+                grid: {
+                    show: false
+                }
+            };
+            
+            chart.setOption(option);
+            
+            window.addEventListener('resize', function() {
+                chart.resize();
+            });
+        }
+        
+        // 绘制简化分时图（基于K线数据）
+        function drawSimplifiedMinuteChart(klineData) {
+            const chart = echarts.init(document.getElementById('realtimeMinuteChart'));
+            
+            // 使用最近5天的收盘价作为分时数据
+            const recentData = klineData.slice(-5);
+            const times = recentData.map(item => {
+                const date = item.trade_date || item.date;
+                return date.substring(4, 6) + '-' + date.substring(6, 8);
+            });
+            const prices = recentData.map(item => parseFloat(item.close));
+            const volumes = recentData.map(item => parseFloat(item.vol || item.volume || 0));
+            
+            const option = {
+                animation: false,
+                title: {
+                    text: '近期走势（基于日K线数据）',
+                    textStyle: {
+                        fontSize: 12,
+                        color: '#666'
+                    },
+                    left: 'center'
+                },
+                grid: [{
+                    left: '10%',
+                    right: '8%',
+                    height: '50%'
+                }, {
+                    left: '10%',
+                    right: '8%',
+                    top: '75%',
+                    height: '15%',
+                    bottom: '10%'
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: fullTimeAxis,
+                    scale: true,
+                    boundaryGap: false,
+                    axisLine: { onZero: false },
+                    splitLine: { show: false },
+                    splitNumber: 20,
+                    min: 'dataMin',
+                    max: 'dataMax'
+                }, {
+                    type: 'category',
+                    gridIndex: 1,
+                    data: fullTimeAxis,
+                    scale: true,
+                    boundaryGap: false,
+                    axisLine: { onZero: false },
+                    axisTick: { show: true },
+                    splitLine: { show: false },
+                    axisLabel: { 
+                        show: true,
+                        margin: 8,
+                        textStyle: {
+                            fontSize: 10
+                        }
+                    }
+                }],
+                yAxis: [{
+                    scale: true,
+                    splitArea: {
+                        show: true
+                    }
+                }, {
+                    scale: true,
+                    gridIndex: 1,
+                    splitNumber: 2,
+                    axisLabel: { show: false },
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    splitLine: { show: false }
+                }],
+                dataZoom: [{
+                    type: 'inside',
+                    xAxisIndex: [0, 1],
+                    start: 0,
+                    end: 100
+                }],
+                series: [{
+                    name: '价格走势',
+                    type: 'line',
+                    data: prices,
+                    smooth: true,
+                    lineStyle: {
+                        opacity: 0.8,
+                        color: '#1890ff'
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                            offset: 0,
+                            color: 'rgba(24, 144, 255, 0.3)'
+                        }, {
+                            offset: 1,
+                            color: 'rgba(24, 144, 255, 0.1)'
+                        }])
+                    }
+                }, {
+                    name: '成交量',
+                    type: 'bar',
+                    xAxisIndex: 1,
+                    yAxisIndex: 1,
+                    data: volumes,
+                    itemStyle: {
+                        color: '#26a69a'
+                    }
+                }]
+            };
+            
+            chart.setOption(option);
+            
+            window.addEventListener('resize', function() {
+                chart.resize();
+            });
+        }
+        
         // 显示实时数据函数
         function displayRealtimeData(data) {
             // 显示实时数据部分
@@ -861,9 +1060,12 @@
                 document.getElementById('realtimeNetInflow').textContent = '-';
             }
             
-            // 绘制实时分时图
+            // 绘制实时分时图（仅当有真实分时数据时）
             if (data.minute_data && data.minute_data.length > 0) {
                 drawRealtimeMinuteChart(data.minute_data);
+            } else {
+                // 没有真实分时数据时，显示提示信息
+                showNoMinuteDataMessage();
             }
             
             // 绘制实时K线图
@@ -874,89 +1076,305 @@
         
         // 绘制实时分时图
         function drawRealtimeMinuteChart(minuteData) {
+            console.log('开始绘制分时图，数据:', minuteData);
             const chart = echarts.init(document.getElementById('realtimeMinuteChart'));
             
-            const times = minuteData.map(item => item.time);
-            const prices = minuteData.map(item => parseFloat(item.price));
-            const volumes = minuteData.map(item => parseFloat(item.volume));
+            // 生成完整的交易时间轴（上午9:30-11:30，下午13:00-15:00）
+            const fullTimeAxis = [];
+            // 上午时段：9:30-11:30
+            for (let hour = 9; hour <= 11; hour++) {
+                const startMin = hour === 9 ? 30 : 0;
+                const endMin = hour === 11 ? 30 : 59;
+                for (let min = startMin; min <= endMin; min++) {
+                    fullTimeAxis.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
+                }
+            }
+            // 下午时段：13:00-15:00
+            for (let hour = 13; hour <= 15; hour++) {
+                const endMin = hour === 15 ? 0 : 59;
+                for (let min = 0; min <= endMin; min++) {
+                    fullTimeAxis.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
+                }
+            }
+            
+            // 创建数据映射，将实际数据映射到完整时间轴
+            const dataMap = new Map();
+            minuteData.forEach(item => {
+                const timeStr = item.time;
+                let timeKey;
+                // 提取时间部分（HH:MM）
+                if (timeStr.includes(' ')) {
+                    timeKey = timeStr.split(' ')[1].substring(0, 5); // 只取HH:MM
+                } else {
+                    timeKey = timeStr.substring(11, 16); // 从完整时间戳中提取HH:MM
+                }
+                dataMap.set(timeKey, {
+                    price: parseFloat(item.price),
+                    volume: parseFloat(item.volume)
+                });
+            });
+            
+            // 根据完整时间轴生成数据数组
+            const prices = fullTimeAxis.map(time => {
+                const data = dataMap.get(time);
+                return data ? data.price : null;
+            });
+            
+            const volumes = fullTimeAxis.map(time => {
+                const data = dataMap.get(time);
+                return data ? data.volume : null;
+            });
+            
+            console.log('完整时间轴长度:', fullTimeAxis.length);
+            console.log('数据映射大小:', dataMap.size);
+            console.log('价格数组:', prices.filter(p => p !== null).length, '个有效数据');
+            console.log('成交量数组:', volumes.filter(v => v !== null).length, '个有效数据');
+            
+            // 计算均线（5分钟移动平均）
+            const avgPrices = [];
+            const avgPeriod = 5;
+            for (let i = 0; i < prices.length; i++) {
+                if (i < avgPeriod - 1 || prices[i] === null) {
+                    avgPrices.push(null); // 前几个点没有足够数据计算均线或当前点无数据
+                } else {
+                    let sum = 0;
+                    let count = 0;
+                    for (let j = i - avgPeriod + 1; j <= i; j++) {
+                        if (prices[j] !== null) {
+                            sum += prices[j];
+                            count++;
+                        }
+                    }
+                    avgPrices.push(count > 0 ? sum / count : null);
+                }
+            }
             
             const option = {
                 animation: false,
+                backgroundColor: '#ffffff',
                 grid: [{
-                    left: '10%',
-                    right: '8%',
-                    height: '60%'
+                    left: '8%',
+                    right: '5%',
+                    top: '8%',
+                    height: '60%',
+                    borderColor: '#e6e6e6',
+                    borderWidth: 1
                 }, {
-                    left: '10%',
-                    right: '8%',
+                    left: '8%',
+                    right: '5%',
                     top: '75%',
-                    height: '16%'
+                    height: '18%',
+                    bottom: '7%',
+                    borderColor: '#e6e6e6',
+                    borderWidth: 1
                 }],
                 xAxis: [{
                     type: 'category',
-                    data: times,
+                    data: fullTimeAxis,
                     scale: true,
                     boundaryGap: false,
-                    axisLine: { onZero: false },
-                    splitLine: { show: false },
+                    axisLine: { 
+                        show: true,
+                        lineStyle: {
+                            color: '#cccccc'
+                        }
+                    },
+                    axisTick: {
+                        show: true,
+                        lineStyle: {
+                            color: '#cccccc'
+                        }
+                    },
+                    splitLine: { 
+                        show: true,
+                        lineStyle: {
+                            color: '#f5f5f5',
+                            type: 'solid',
+                            width: 1
+                        }
+                    },
+                    axisLabel: {
+                        show: true,
+                        interval: function(index, value) {
+                            // 显示关键时间点：9:30, 10:00, 10:30, 11:00, 11:30, 13:00, 13:30, 14:00, 14:30, 15:00
+                            const keyTimes = ['09:30', '10:00', '10:30', '11:00', '11:30', '13:00', '13:30', '14:00', '14:30', '15:00'];
+                            return keyTimes.includes(value);
+                        },
+                        textStyle: {
+                            color: '#666666',
+                            fontSize: 11
+                        }
+                    },
                     splitNumber: 20,
                     min: 'dataMin',
                     max: 'dataMax'
                 }, {
                     type: 'category',
                     gridIndex: 1,
-                    data: times,
+                    data: fullTimeAxis,
                     scale: true,
                     boundaryGap: false,
                     axisLine: { onZero: false },
-                    axisTick: { show: false },
+                    axisTick: { show: true },
                     splitLine: { show: false },
-                    axisLabel: { show: false },
+                    axisLabel: { 
+                        show: true,
+                        margin: 8,
+                        textStyle: {
+                            fontSize: 10
+                        },
+                        interval: 'auto',
+                        formatter: function(value, index) {
+                            // 只显示整点和半点
+                            if (value.endsWith(':00') || value.endsWith(':30')) {
+                                return value;
+                            }
+                            return '';
+                        }
+                    },
                     splitNumber: 20,
                     min: 'dataMin',
                     max: 'dataMax'
                 }],
                 yAxis: [{
                     scale: true,
-                    splitArea: { show: true }
+                    splitArea: { 
+                        show: true,
+                        areaStyle: {
+                            color: ['rgba(250,250,250,0.1)', 'rgba(245,245,245,0.1)']
+                        }
+                    },
+                    axisLine: {
+                        show: true,
+                        lineStyle: {
+                            color: '#cccccc'
+                        }
+                    },
+                    axisTick: {
+                        show: true,
+                        lineStyle: {
+                            color: '#cccccc'
+                        }
+                    },
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                            color: '#f5f5f5',
+                            type: 'solid',
+                            width: 1
+                        }
+                    },
+                    axisLabel: {
+                        textStyle: {
+                            color: '#666666',
+                            fontSize: 11
+                        },
+                        formatter: function(value) {
+                            return value.toFixed(2);
+                        }
+                    }
                 }, {
                     scale: true,
                     gridIndex: 1,
                     splitNumber: 2,
-                    axisLabel: { show: false },
-                    axisLine: { show: false },
-                    axisTick: { show: false },
-                    splitLine: { show: false }
-                }],
-                dataZoom: [{
+                    axisLabel: { 
+                        show: true,
+                        textStyle: {
+                            color: '#666666',
+                            fontSize: 10
+                        }
+                    },
+                    axisLine: { 
+                        show: true,
+                        lineStyle: {
+                            color: '#cccccc'
+                        }
+                    },
+                    axisTick: { 
+                        show: true,
+                        lineStyle: {
+                            color: '#cccccc'
+                        }
+                    },
+                    splitLine: { 
+                        show: true,
+                        lineStyle: {
+                            color: '#f5f5f5',
+                            type: 'solid',
+                            width: 1
+                        }
+                    }
+                 }],
+                 dataZoom: [{
                     type: 'inside',
                     xAxisIndex: [0, 1],
                     start: 0,
                     end: 100
                 }],
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                    formatter: function(params) {
+                        let result = `时间: ${params[0].axisValue}<br/>`;
+                        params.forEach(param => {
+                            if (param.seriesName === '分时价格') {
+                                result += `${param.seriesName}: ${param.value.toFixed(2)}<br/>`;
+                            } else if (param.seriesName === '均线') {
+                                result += `${param.seriesName}: ${param.value ? param.value.toFixed(2) : '-'}<br/>`;
+                            } else {
+                                result += `${param.seriesName}: ${param.value}<br/>`;
+                            }
+                        });
+                        return result;
+                    }
+                },
                 series: [{
                     name: '分时价格',
                     type: 'line',
                     data: prices,
                     smooth: true,
                     lineStyle: {
-                        opacity: 0.5
+                        color: '#0066cc',  // 更深的蓝色，类似同花顺
+                        width: 1
                     },
                     areaStyle: {
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
                             offset: 0,
-                            color: 'rgba(128, 255, 165)'
+                            color: 'rgba(0, 102, 204, 0.15)'  // 更淡的填充色
                         }, {
                             offset: 1,
-                            color: 'rgba(1, 191, 236)'
+                            color: 'rgba(0, 102, 204, 0.05)'
                         }])
-                    }
+                    },
+                    symbol: 'none'
+                }, {
+                    name: '均线',
+                    type: 'line',
+                    data: avgPrices,
+                    smooth: true,
+                    lineStyle: {
+                        color: '#ffaa00',  // 更鲜明的黄色，类似同花顺
+                        width: 2  // 更粗的线条
+                    },
+                    symbol: 'none'
                 }, {
                     name: '成交量',
                     type: 'bar',
                     xAxisIndex: 1,
                     yAxisIndex: 1,
-                    data: volumes
+                    data: volumes,
+                    itemStyle: {
+                        color: function(params) {
+                            // 根据价格涨跌设置成交量颜色，使用更鲜明的颜色
+                            const index = params.dataIndex;
+                            if (index === 0) return '#cccccc';
+                            const currentPrice = prices[index];
+                            const prevPrice = prices[index - 1];
+                            return currentPrice >= prevPrice ? '#ff3333' : '#00cc66';  // 更鲜明的红绿色
+                        }
+                    }
                 }]
             };
             

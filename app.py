@@ -146,7 +146,25 @@ def safe_tushare_call(func, *args, **kwargs):
         # 其他类型的错误直接抛出
         raise e
 
-# safe_akshare_call函数已删除，不再使用AkShare
+# AkShare相关导入和函数定义
+try:
+    import akshare as ak
+    AKSHARE_AVAILABLE = True
+    print("AkShare库已成功导入")
+except ImportError:
+    ak = None
+    AKSHARE_AVAILABLE = False
+    print("警告：AkShare库未安装，分时图功能将不可用")
+
+def safe_akshare_call(func, cache_key, *args, **kwargs):
+    """安全的AkShare API调用"""
+    if not AKSHARE_AVAILABLE or ak is None:
+        return None
+    try:
+        return func(*args, **kwargs)
+    except Exception as e:
+        print(f"AkShare API调用失败: {e}")
+        return None
 
 def find_available_port(start_port=8080):
     """查找可用端口"""
@@ -1622,310 +1640,211 @@ def get_stock_data(stock_code):
 
 @app.route('/api/stock/<stock_code>/realtime')
 def get_realtime_stock_data(stock_code):
-    """获取股票实时数据，包括实时价格、分时图、实时K线等"""
+    """获取股票实时数据，基于缓存数据模拟实时显示，不受交易时间限制"""
     try:
-        # AkShare 相关功能已移除，该接口已不再使用
-        return jsonify({'error': 'AkShare相关功能已移除，请使用其他数据源'}), 500
-        
         # 确保股票代码格式正确
         if len(stock_code) == 6:
             if stock_code.startswith(('60', '68')):
-                symbol = f"sh{stock_code}"
                 ts_code = f"{stock_code}.SH"
             elif stock_code.startswith(('43', '83', '87')):
-                symbol = f"bj{stock_code}"
                 ts_code = f"{stock_code}.BJ"
             else:
-                symbol = f"sz{stock_code}"
                 ts_code = f"{stock_code}.SZ"
         else:
-            # 如果已经包含后缀，转换为akshare格式
-            if stock_code.endswith('.SH'):
-                symbol = f"sh{stock_code[:6]}"
-                ts_code = stock_code
-            elif stock_code.endswith('.BJ'):
-                symbol = f"bj{stock_code[:6]}"
-                ts_code = stock_code
-            else:
-                symbol = f"sz{stock_code[:6]}"
-                ts_code = stock_code
+            ts_code = stock_code
+        
+        print(f"获取{ts_code}的模拟实时数据...")
+        
+        # 获取股票基础数据
+        stock_detail_response = get_stock_data(ts_code)
+        if hasattr(stock_detail_response, 'get_json'):
+            stock_data = stock_detail_response.get_json()
+        elif isinstance(stock_detail_response, dict):
+            stock_data = stock_detail_response
+        else:
+            return jsonify({'error': '无法获取股票数据'}), 500
+        
+        if stock_data.get('error'):
+            return jsonify({'error': stock_data['error']}), 500
         
         realtime_data = {}
         
-        try:
-            # 1. 获取实时行情数据
-            print(f"正在获取{symbol}的实时行情数据...")
-            if 'ak' not in globals() or ak is None:
-                print("AkShare未正确导入，跳过实时行情数据获取")
-                realtime_data['spot'] = None
-            else:
-                spot_data = safe_akshare_call(ak.stock_zh_a_spot_em, f"spot_data_{stock_code}")
-                if not spot_data.empty:
-                    # 查找对应股票的实时数据
-                    stock_spot = spot_data[spot_data['代码'] == stock_code[:6]]
-                    if not stock_spot.empty:
-                        stock_info = stock_spot.iloc[0]
-                        realtime_data['spot'] = {
-                            'name': stock_info['名称'],
-                            'latest_price': float(stock_info['最新价']),
-                            'change_percent': float(stock_info['涨跌幅']),
-                            'change_amount': float(stock_info['涨跌额']),
-                            'volume': float(stock_info['成交量']),
-                            'amount': float(stock_info['成交额']),
-                            'turnover_rate': float(stock_info['换手率']),
-                            'volume_ratio': float(stock_info['量比']),
-                            'pe_ratio': float(stock_info['市盈率-动态']) if stock_info['市盈率-动态'] != '-' else None,
-                            'market_cap': float(stock_info['总市值']),
-                            'open': float(stock_info['今开']),
-                            'high': float(stock_info['最高']),
-                            'low': float(stock_info['最低']),
-                            'pre_close': float(stock_info['昨收']),
-                            'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                        }
-                        print(f"成功获取{symbol}实时行情数据")
-                    else:
-                        print(f"未找到{symbol}的实时行情数据")
-                else:
-                    print(f"获取实时行情数据失败")
-        except Exception as e:
-            print(f"获取实时行情数据失败: {e}")
-            realtime_data['spot'] = None
+        # 1. 构造模拟实时行情数据
+        if stock_data:
+            realtime_data['spot'] = {
+                'name': stock_data.get('name', ''),
+                'latest_price': stock_data.get('latest_price', 0),
+                'change_percent': stock_data.get('pct_chg', 0),
+                'change_amount': 0,  # 暂时设为0
+                'volume': stock_data.get('vol', 0),
+                'amount': stock_data.get('amount', 0),
+                'turnover_rate': stock_data.get('turnover_rate', 0),
+                'volume_ratio': stock_data.get('volume_ratio', 0),
+                'pe_ratio': stock_data.get('pe_ttm'),
+                'market_cap': stock_data.get('total_mv', 0),
+                'open': 0,  # 暂时设为0
+                'high': 0,  # 暂时设为0
+                'low': 0,   # 暂时设为0
+                'pre_close': 0,  # 暂时设为0
+                'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+            # 如果有K线数据，补充开高低收信息
+            if stock_data.get('kline_data') and len(stock_data['kline_data']) > 0:
+                latest_kline = stock_data['kline_data'][-1]
+                realtime_data['spot']['open'] = latest_kline.get('open', 0)
+                realtime_data['spot']['high'] = latest_kline.get('high', 0)
+                realtime_data['spot']['low'] = latest_kline.get('low', 0)
+                if len(stock_data['kline_data']) > 1:
+                    realtime_data['spot']['pre_close'] = stock_data['kline_data'][-2].get('close', 0)
+                
+                # 计算涨跌额
+                if realtime_data['spot']['pre_close'] > 0:
+                    change_amount = realtime_data['spot']['latest_price'] - realtime_data['spot']['pre_close']
+                    realtime_data['spot']['change_amount'] = change_amount
         
+        # 2. 获取真实分时图数据
         try:
-            # 2. 获取分时图数据
-            print(f"正在获取{symbol}的分时图数据...")
-            if 'ak' not in globals() or ak is None:
-                print("AkShare未正确导入，跳过分时图数据获取")
-                realtime_data['minute_data'] = None
+            print(f"正在获取{ts_code}的分时图数据...")
+            minute_data_success = False
+            
+            # 首先尝试使用AkShare（如果可用）
+            if 'ak' in globals() and ak is not None:
+                try:
+                    # 转换为akshare格式的symbol
+                    if ts_code.endswith('.SH'):
+                        symbol = f"sh{ts_code[:6]}"
+                    elif ts_code.endswith('.BJ'):
+                        symbol = f"bj{ts_code[:6]}"
+                    else:
+                        symbol = f"sz{ts_code[:6]}"
+                    
+                    # 使用akshare获取分时数据
+                    minute_data = safe_akshare_call(ak.stock_zh_a_minute, f"minute_data_{stock_code}", symbol=symbol, period='1', adjust="")
+                    if minute_data is not None and not minute_data.empty:
+                        # 获取最近的交易日数据（包括今天和最近几天）
+                        from datetime import timedelta
+                        
+                        # 尝试获取今天和最近3个交易日的数据
+                        recent_dates = []
+                        for i in range(4):  # 今天和前3天
+                            date = (datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d')
+                            recent_dates.append(date)
+                        
+                        # 筛选最近几天的数据
+                        recent_data = minute_data[minute_data['day'].str[:10].isin(recent_dates)]
+                        
+                        if not recent_data.empty:
+                            # 按日期排序，取最新的交易日数据
+                            recent_data = recent_data.sort_values('day')
+                            latest_date = recent_data['day'].str[:10].iloc[-1]
+                            latest_day_data = recent_data[recent_data['day'].str.startswith(latest_date)]
+                            
+                            # 转换为前端期望的格式：对象数组，每个对象包含time、price、volume
+                            minute_list = []
+                            for _, row in latest_day_data.iterrows():
+                                minute_item = {
+                                    'time': row['day'],
+                                    'price': float(row['close']),
+                                    'volume': float(row['volume'])
+                                }
+                                minute_list.append(minute_item)
+                            
+                            realtime_data['minute_data'] = minute_list
+                            minute_data_success = True
+                            print(f"AkShare成功获取{symbol}分时图数据，日期: {latest_date}，共{len(minute_list)}个数据点")
+                        else:
+                            print(f"AkShare最近几日暂无{symbol}分时数据")
+                    else:
+                        print(f"AkShare获取{symbol}分时数据失败")
+                except Exception as ak_e:
+                    print(f"AkShare获取分时数据失败: {ak_e}")
             else:
-                # 使用akshare获取分时数据
-                minute_data = safe_akshare_call(ak.stock_zh_a_minute, f"minute_data_{stock_code}", symbol=symbol, period='1', adjust="")
-                if not minute_data.empty:
-                    # 只取今天的数据
-                    today = datetime.now().strftime('%Y-%m-%d')
-                    today_data = minute_data[minute_data['day'].str.startswith(today)]
-                    if not today_data.empty:
-                        # 转换为前端期望的格式：对象数组，每个对象包含time、price、volume
+                print("AkShare未正确导入，尝试使用Tushare接口")
+            
+            # 如果AkShare失败或不可用，尝试使用Tushare
+            if not minute_data_success and TUSHARE_AVAILABLE:
+                try:
+                    print(f"使用Tushare获取{ts_code}的分时数据...")
+                    
+                    # 获取最近几个交易日的日期
+                    from datetime import timedelta
+                    end_date = datetime.now().strftime('%Y%m%d')
+                    start_date = (datetime.now() - timedelta(days=7)).strftime('%Y%m%d')  # 获取最近7天
+                    
+                    # 使用Tushare获取分钟级数据
+                    minute_data = safe_tushare_call(
+                        pro.stk_mins,
+                        ts_code=ts_code,
+                        start_date=start_date,
+                        end_date=end_date,
+                        freq='1min'
+                    )
+                    
+                    if minute_data is not None and not minute_data.empty:
+                        # 按交易时间排序
+                        minute_data = minute_data.sort_values('trade_time')
+                        
+                        # 获取最新交易日的数据
+                        latest_date = minute_data['trade_time'].str[:8].iloc[-1]
+                        latest_day_data = minute_data[minute_data['trade_time'].str.startswith(latest_date)]
+                        
+                        # 转换为前端期望的格式
                         minute_list = []
-                        for _, row in today_data.iterrows():
+                        for _, row in latest_day_data.iterrows():
+                            # 将trade_time格式从'20231201 09:30:00'转换为'2023-12-01 09:30:00'
+                            time_str = row['trade_time']
+                            formatted_time = f"{time_str[:4]}-{time_str[4:6]}-{time_str[6:8]} {time_str[9:]}"
+                            
                             minute_item = {
-                                'time': row['day'],
+                                'time': formatted_time,
                                 'price': float(row['close']),
-                                'volume': float(row['volume'])
+                                'volume': float(row['vol']) if pd.notna(row['vol']) else 0
                             }
                             minute_list.append(minute_item)
                         
                         realtime_data['minute_data'] = minute_list
-                        print(f"成功获取{symbol}分时图数据，共{len(minute_list)}个数据点")
+                        minute_data_success = True
+                        print(f"Tushare成功获取{ts_code}分时图数据，日期: {latest_date}，共{len(minute_list)}个数据点")
                     else:
-                        print(f"今日暂无{symbol}分时数据")
-                        realtime_data['minute_data'] = None
-                else:
-                    print(f"获取{symbol}分时数据失败")
-                    realtime_data['minute_data'] = None
+                        print(f"Tushare获取{ts_code}分时数据为空")
+                        
+                except Exception as ts_e:
+                    print(f"Tushare获取分时数据失败: {ts_e}")
+            
+            # 如果所有方法都失败，设置空数据
+            if not minute_data_success:
+                print("所有分时数据获取方法都失败，返回空数据")
+                realtime_data['minute_data'] = []
+                
         except Exception as e:
             print(f"获取分时图数据失败: {e}")
-            realtime_data['minute_data'] = None
+            realtime_data['minute_data'] = []
         
-        try:
-            # 3. 获取实时K线数据（最近90天的日K线，包含当日数据）
-            print(f"正在获取{symbol}的实时K线数据...")
-            
-            # 优先从缓存获取包含技术指标的K线数据，然后补充当日数据
-            # 先从缓存获取包含技术指标的历史数据
-            stock_detail_response = get_stock_data(ts_code)
-            if hasattr(stock_detail_response, 'get_json'):
-                stock_detail_data = stock_detail_response.get_json()
-            elif isinstance(stock_detail_response, dict):
-                stock_detail_data = stock_detail_response
-            else:
-                stock_detail_data = None
-            
-            cached_kline = None
-            if stock_detail_data and 'kline_data' in stock_detail_data:
-                cached_kline = stock_detail_data['kline_data']
-                print(f"从缓存获取{symbol}K线数据，共{len(cached_kline)}天（包含技术指标）")
-            
-            # 尝试从AKShare获取最新数据以补充当日数据
-            try:
-                end_date = datetime.now().strftime('%Y%m%d')
-                start_date = (datetime.now() - timedelta(days=5)).strftime('%Y%m%d')  # 只获取最近5天
-                
-                if 'ak' not in globals() or ak is None:
-                    print("AkShare未正确导入，跳过K线数据获取")
-                    akshare_kline = pd.DataFrame()  # 空DataFrame
-                else:
-                    akshare_kline = safe_akshare_call(ak.stock_zh_a_hist, f"kline_data_{stock_code}", symbol=stock_code[:6], period="daily", start_date=start_date, end_date=end_date, adjust="")
-                
-                if cached_kline and not akshare_kline.empty:
-                    # 合并缓存数据和最新数据
-                    cached_dates = {item['trade_date'] for item in cached_kline}
-                    new_data_added = False
-                    
-                    # 添加缓存中没有的新数据
-                    for _, row in akshare_kline.iterrows():
-                        trade_date = row['日期'].strftime('%Y%m%d')
-                        if trade_date not in cached_dates:
-                            new_kline_item = {
-                                'trade_date': trade_date,
-                                'open': float(row['开盘']),
-                                'high': float(row['最高']),
-                                'low': float(row['最低']),
-                                'close': float(row['收盘']),
-                                'vol': float(row['成交量']),
-                                'amount': float(row['成交额']),
-                                # 新数据没有技术指标，设置为默认值
-                                'nine_turn_up': 0,
-                                'nine_turn_down': 0,
-                                'countdown_up': 0,
-                                'countdown_down': 0,
-                                'boll_upper': None,
-                                'boll_mid': None,
-                                'boll_lower': None
-                            }
-                            cached_kline.append(new_kline_item)
-                            new_data_added = True
-                            print(f"添加新交易日数据: {trade_date}")
-                    
-                    # 按日期排序并取最近90天
-                    cached_kline.sort(key=lambda x: x['trade_date'])
-                    if len(cached_kline) > 90:
-                        cached_kline = cached_kline[-90:]
-                    
-                    # 如果添加了新数据，重新计算九转序列
-                    if new_data_added:
-                        print(f"检测到新数据，重新计算{symbol}的九转序列...")
-                        # 转换为DataFrame进行计算
-                        import pandas as pd
-                        df_kline = pd.DataFrame(cached_kline)
-                        df_kline['close'] = df_kline['close'].astype(float)
-                        df_kline['high'] = df_kline['high'].astype(float)
-                        df_kline['low'] = df_kline['low'].astype(float)
-                        
-                        # 重新计算九转序列
-                        df_kline = calculate_nine_turn(df_kline)
-                        
-                        # 转换回字典列表
-                        cached_kline = df_kline.to_dict('records')
-                        print(f"九转序列重新计算完成")
-                    
-                    realtime_data['kline_data'] = cached_kline
-                    latest_date = cached_kline[-1]['trade_date'] if cached_kline else 'N/A'
-                    print(f"成功合并{symbol}K线数据，共{len(cached_kline)}天，最新交易日: {latest_date}")
-                
-                elif cached_kline:
-                    # 只有缓存数据，取最近90天
-                    if len(cached_kline) > 90:
-                        cached_kline = cached_kline[-90:]
-                    realtime_data['kline_data'] = cached_kline
-                    latest_date = cached_kline[-1]['trade_date'] if cached_kline else 'N/A'
-                    print(f"使用缓存{symbol}K线数据，共{len(cached_kline)}天，最新交易日: {latest_date}")
-                
-                else:
-                    # 只有AKShare数据，没有技术指标
-                    if not akshare_kline.empty:
-                        recent_kline = akshare_kline.tail(90)
-                        kline_list = []
-                        for _, row in recent_kline.iterrows():
-                            kline_item = {
-                                'trade_date': row['日期'].strftime('%Y%m%d'),
-                                'open': float(row['开盘']),
-                                'high': float(row['最高']),
-                                'low': float(row['最低']),
-                                'close': float(row['收盘']),
-                                'vol': float(row['成交量']),
-                                'amount': float(row['成交额']),
-                                'nine_turn_up': 0,
-                                'nine_turn_down': 0,
-                                'countdown_up': 0,
-                                'countdown_down': 0,
-                                'boll_upper': None,
-                                'boll_mid': None,
-                                'boll_lower': None
-                            }
-                            kline_list.append(kline_item)
-                        
-                        realtime_data['kline_data'] = kline_list
-                        latest_date = kline_list[-1]['trade_date'] if kline_list else 'N/A'
-                        print(f"仅从AKShare获取{symbol}K线数据，共{len(kline_list)}天，最新交易日: {latest_date}（无技术指标）")
-                    else:
-                        realtime_data['kline_data'] = None
-                        print(f"无法获取{symbol}K线数据")
-            
-            except Exception as akshare_error:
-                print(f"从AKShare获取最新K线数据失败: {akshare_error}")
-                if cached_kline:
-                    if len(cached_kline) > 90:
-                        cached_kline = cached_kline[-90:]
-                    realtime_data['kline_data'] = cached_kline
-                    print(f"回退使用缓存{symbol}K线数据，共{len(cached_kline)}天")
-                else:
-                    realtime_data['kline_data'] = None
-        except Exception as e:
-            print(f"获取实时K线数据失败: {e}")
-            realtime_data['kline_data'] = None
+        # 3. 提供K线数据（最近90天）
+        if stock_data.get('kline_data'):
+            kline_data = stock_data['kline_data']
+            if len(kline_data) > 90:
+                kline_data = kline_data[-90:]  # 只取最近90天
+            realtime_data['kline_data'] = kline_data
         
-        try:
-            # 4. 获取实时资金流向数据
-            print(f"正在获取{symbol}的资金流向数据...")
-            if 'ak' not in globals() or ak is None:
-                print("AkShare未正确导入，跳过资金流向数据获取")
-                realtime_data['money_flow'] = None
-            else:
-                # 使用akshare获取个股资金流向
-                money_flow = safe_akshare_call(ak.stock_individual_fund_flow, f"money_flow_{stock_code}", stock=stock_code[:6], market="sh" if symbol.startswith('sh') else "sz")
-                if not money_flow.empty:
-                    latest_flow = money_flow.iloc[-1]
-                    realtime_data['money_flow'] = {
-                        'date': latest_flow['日期'],
-                        'close_price': float(latest_flow['收盘价']),
-                        'change_percent': float(latest_flow['涨跌幅']),
-                        'main_net_inflow': float(latest_flow['主力净流入-净额']),
-                        'main_net_inflow_rate': float(latest_flow['主力净流入-净占比']),
-                        'super_large_net_inflow': float(latest_flow['超大单净流入-净额']),
-                        'super_large_net_inflow_rate': float(latest_flow['超大单净流入-净占比']),
-                        'large_net_inflow': float(latest_flow['大单净流入-净额']),
-                        'large_net_inflow_rate': float(latest_flow['大单净流入-净占比']),
-                        'medium_net_inflow': float(latest_flow['中单净流入-净额']),
-                        'medium_net_inflow_rate': float(latest_flow['中单净流入-净占比']),
-                        'small_net_inflow': float(latest_flow['小单净流入-净额']),
-                        'small_net_inflow_rate': float(latest_flow['小单净流入-净占比'])
-                    }
-                    print(f"成功获取{symbol}资金流向数据")
-                else:
-                    print(f"获取{symbol}资金流向数据失败")
-                    realtime_data['money_flow'] = None
-        except Exception as e:
-            print(f"获取资金流向数据失败: {e}")
-            realtime_data['money_flow'] = None
+        # 4. 构造资金流向数据
+        if stock_data.get('moneyflow'):
+            realtime_data['money_flow'] = stock_data['moneyflow']
+        elif stock_data.get('net_mf_amount') is not None:
+            # 基于净流入额构造简化的资金流向数据
+            realtime_data['money_flow'] = {
+                'close_price': stock_data.get('latest_price', 0),
+                'change_percent': stock_data.get('pct_chg', 0),
+                'main_net_inflow': stock_data.get('net_mf_amount', 0) * 10000  # 转换为万元
+            }
         
-        # 添加获取时间戳
-        realtime_data['fetch_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        realtime_data['symbol'] = symbol
-        realtime_data['ts_code'] = ts_code
-        
-        # 处理NaN值，避免JSON序列化问题
-        import numpy as np
-        import json
-        
-        def replace_nan_recursive(obj):
-            """递归替换对象中的NaN值为None"""
-            if isinstance(obj, dict):
-                return {k: replace_nan_recursive(v) for k, v in obj.items()}
-            elif isinstance(obj, list):
-                return [replace_nan_recursive(item) for item in obj]
-            elif isinstance(obj, float) and (np.isnan(obj) or np.isinf(obj)):
-                return None
-            else:
-                return obj
-        
-        realtime_data = replace_nan_recursive(realtime_data)
-        
+        print(f"成功生成{ts_code}的实时数据")
         return jsonify(realtime_data)
-    
+        
     except Exception as e:
         print(f"获取实时数据失败: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'获取实时数据失败: {str(e)}'}), 500
 
 @app.route('/api/update_progress/<market>')
 def get_update_progress(market):
