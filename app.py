@@ -1053,19 +1053,8 @@ def get_market_status():
 
 @app.route('/api/indices/realtime')
 def get_indices_realtime():
-    """获取主要指数实时数据 - 仅在开盘时间获取"""
+    """获取主要指数数据 - 根据交易时间采用不同策略"""
     try:
-        # 检查是否在开盘时间
-        if not is_market_open():
-            print("[指数数据] 当前非开盘时间，返回缓存数据")
-            # 返回固定的收盘数据
-            return get_fallback_indices_data({
-                'sh000001': '上证指数',
-                'sz399001': '深证成指', 
-                'sz399006': '创业板指',
-                'sh000688': '科创板'
-            })
-        
         # 定义要获取的指数代码和名称
         indices = {
             'sh000001': '上证指数',
@@ -1074,38 +1063,67 @@ def get_indices_realtime():
             'sh000688': '科创板'
         }
         
-        print("[指数数据] 开盘时间，使用Tushare获取实时数据...")
-        indices_data = get_indices_from_tushare(indices)
+        is_trading_time = is_market_open()
+        current_time = datetime.now().strftime('%H:%M:%S')
         
-        if not indices_data:
-            print("[指数数据] Tushare获取失败，返回备用数据")
-            return get_fallback_indices_data(indices)
-        
-        # 转换数据格式以匹配前端期望
-        formatted_data = {}
-        for code, data in indices_data.items():
-            formatted_data[code] = {
-                'name': data['name'],
-                'current_price': data['price'],
-                'change_pct': data['change_percent'],
-                'change_amount': data['change'],
-                'volume': data['volume'],
-                'update_time': datetime.now().strftime('%H:%M:%S')
-            }
-        
-        # 保存数据到缓存
-        fetch_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        save_indices_cache(formatted_data, fetch_time)
-        
-        return jsonify({
-            'success': True,
-            'data': formatted_data,
-            'fetch_time': fetch_time
-        })
+        if is_trading_time:
+            print(f"[指数数据] 交易时间 {current_time}，获取实时数据...")
+            # 交易时间：尝试获取实时数据
+            indices_data = get_indices_from_tushare(indices)
+            
+            if not indices_data:
+                print("[指数数据] 实时数据获取失败，返回全0数据等待重试")
+                return get_zero_indices_data(indices)
+            
+            # 转换数据格式以匹配前端期望
+            formatted_data = {}
+            for code, data in indices_data.items():
+                formatted_data[code] = {
+                    'name': data['name'],
+                    'current_price': data['price'],
+                    'change_pct': data['change_percent'],
+                    'change_amount': data['change'],
+                    'volume': data['volume'],
+                    'update_time': current_time
+                }
+            
+            # 保存数据到缓存
+            fetch_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            save_indices_cache(formatted_data, fetch_time)
+            
+            return jsonify({
+                'success': True,
+                'data': formatted_data,
+                'fetch_time': fetch_time,
+                'is_trading_time': True,
+                'source': 'realtime'
+            })
+        else:
+            print(f"[指数数据] 非交易时间 {current_time}，获取今日收盘数据...")
+            # 非交易时间：获取今日收盘数据
+            indices_data = get_today_close_data(indices)
+            
+            if not indices_data:
+                print("[指数数据] 今日收盘数据获取失败，返回全0数据等待重试")
+                return get_zero_indices_data(indices)
+            
+            return jsonify({
+                'success': True,
+                'data': indices_data,
+                'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'is_trading_time': False,
+                'source': 'today_close'
+            })
         
     except Exception as e:
         print(f"获取指数数据异常: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        # 异常情况返回全0数据
+        return get_zero_indices_data({
+            'sh000001': '上证指数',
+            'sz399001': '深证成指', 
+            'sz399006': '创业板指',
+            'sh000688': '科创板'
+        })
 
 # 指数数据缓存管理函数
 def load_indices_cache():
@@ -1180,8 +1198,15 @@ def get_indices_from_tushare(indices):
         
         print(f"[Tushare] 查询日期范围: {start_date} 到 {end_date}")
         
-        # 固定显示2025年7月14日的收盘数据（A股已收盘）
-        expected_latest_dates = ['20250714']
+        # 动态获取最新交易日数据
+        # 获取最近几个可能的交易日（排除周末）
+        expected_latest_dates = []
+        current_date = datetime.now()
+        for i in range(7):  # 检查最近7天
+            check_date = current_date - timedelta(days=i)
+            # 排除周末（周六=5, 周日=6）
+            if check_date.weekday() < 5:  # 周一到周五
+                expected_latest_dates.append(check_date.strftime('%Y%m%d'))
         
         print(f"[Tushare] 期望的最新交易日: {expected_latest_dates}")
         
@@ -1192,24 +1217,38 @@ def get_indices_from_tushare(indices):
                 # 按日期降序排序，确保最新数据在前
                 df = df.sort_values('trade_date', ascending=False)
                 
-                # 查找最新的有效交易日数据
-                latest = None
-                found_expected_date = False
+                # 打印所有获取到的数据用于调试
+                print(f"[Tushare] 上证指数原始数据:")
                 for _, row in df.iterrows():
-                    if row['trade_date'] in expected_latest_dates:
-                        latest = row
-                        found_expected_date = True
-                        print(f"[Tushare] 上证指数找到期望日期的数据: {row['trade_date']}")
-                        break
+                    print(f"  日期: {row['trade_date']}, 收盘价: {row['close']}, 涨跌幅: {row['pct_chg']}%")
                 
-                # 如果没有找到期望日期的数据，使用最新的数据
-                if latest is None:
-                    latest = df.iloc[0]
-                    print(f"[Tushare] 警告：上证指数未找到期望日期的数据，使用最新数据: {latest['trade_date']}")
-                elif not found_expected_date:
-                    print(f"[Tushare] 上证指数使用最新可用数据: {latest['trade_date']}")
-                
-                trade_date = latest['trade_date']
+                # 专门检查20250716的数据
+                today_data = df[df['trade_date'] == '20250716']
+                if not today_data.empty:
+                    print(f"[Tushare] 找到20250716的上证指数数据:")
+                    print(f"  收盘价: {today_data.iloc[0]['close']}")
+                    print(f"  涨跌额: {today_data.iloc[0]['change']}")
+                    print(f"  涨跌幅: {today_data.iloc[0]['pct_chg']}%")
+                    latest = today_data.iloc[0]
+                    trade_date = '20250716'
+                else:
+                    print(f"[Tushare] 警告：没有找到20250716的数据，使用最新可用数据")
+                    # 查找最新的有效交易日数据
+                    latest = None
+                    found_expected_date = False
+                    for _, row in df.iterrows():
+                        if row['trade_date'] in expected_latest_dates:
+                            latest = row
+                            found_expected_date = True
+                            print(f"[Tushare] 上证指数找到期望日期的数据: {row['trade_date']}")
+                            break
+                    
+                    # 如果没有找到期望日期的数据，使用最新的数据
+                    if latest is None:
+                        latest = df.iloc[0]
+                        print(f"[Tushare] 警告：上证指数未找到期望日期的数据，使用最新数据: {latest['trade_date']}")
+                    
+                    trade_date = latest['trade_date']
                 
                 indices_data['sh000001'] = {
                     'name': '上证指数',
@@ -1217,7 +1256,7 @@ def get_indices_from_tushare(indices):
                     'price': float(latest['close']),
                     'change': float(latest['change']),
                     'change_percent': float(latest['pct_chg']),
-                    'volume': float(latest['amount']) if 'amount' in latest and pd.notna(latest['amount']) else 0
+                    'volume': float(latest['amount']) / 10 if 'amount' in latest and pd.notna(latest['amount']) else 0
                 }
                 print(f"[Tushare] 获取上证指数成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
             else:
@@ -1252,7 +1291,7 @@ def get_indices_from_tushare(indices):
                     'price': float(latest['close']),
                     'change': float(latest['change']),
                     'change_percent': float(latest['pct_chg']),
-                    'volume': float(latest['amount']) if 'amount' in latest and pd.notna(latest['amount']) else 0
+                    'volume': float(latest['amount']) / 10 if 'amount' in latest and pd.notna(latest['amount']) else 0
                 }
                 print(f"[Tushare] 获取深证成指成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
             else:
@@ -1287,7 +1326,7 @@ def get_indices_from_tushare(indices):
                     'price': float(latest['close']),
                     'change': float(latest['change']),
                     'change_percent': float(latest['pct_chg']),
-                    'volume': float(latest['amount']) if 'amount' in latest and pd.notna(latest['amount']) else 0
+                    'volume': float(latest['amount']) / 10 if 'amount' in latest and pd.notna(latest['amount']) else 0
                 }
                 print(f"[Tushare] 获取创业板指成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
             else:
@@ -1322,7 +1361,7 @@ def get_indices_from_tushare(indices):
                      'price': float(latest['close']),
                      'change': float(latest['change']),
                      'change_percent': float(latest['pct_chg']),
-                     'volume': float(latest['amount']) if 'amount' in latest and pd.notna(latest['amount']) else 0
+                     'volume': float(latest['amount']) / 10 if 'amount' in latest and pd.notna(latest['amount']) else 0
                  }
                 print(f"[Tushare] 获取科创板成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
             else:
@@ -1341,8 +1380,68 @@ def get_indices_from_tushare(indices):
         print(f"Tushare获取异常: {e}")
         return None
 
+def get_today_close_data(indices):
+    """获取今日收盘数据"""
+    try:
+        # 优先从缓存获取今日数据
+        cached_data = load_indices_cache()
+        if cached_data:
+            print("从缓存获取今日收盘数据")
+            return cached_data['data']
+        
+        # 缓存中没有数据，尝试从Tushare获取今日数据
+        print("缓存中无数据，从Tushare获取今日收盘数据")
+        indices_data = get_indices_from_tushare(indices)
+        
+        if indices_data:
+            # 转换数据格式
+            formatted_data = {}
+            for code, data in indices_data.items():
+                formatted_data[code] = {
+                    'name': data['name'],
+                    'current_price': data['price'],
+                    'change_pct': data['change_percent'],
+                    'change_amount': data['change'],
+                    'volume': data['volume'],
+                    'update_time': datetime.now().strftime('%H:%M:%S')
+                }
+            
+            # 保存到缓存
+            fetch_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            save_indices_cache(formatted_data, fetch_time)
+            
+            return formatted_data
+        
+        return None
+        
+    except Exception as e:
+        print(f"获取今日收盘数据失败: {e}")
+        return None
+
+def get_zero_indices_data(indices):
+    """返回全0指数数据"""
+    zero_data = {}
+    for code, name in indices.items():
+        zero_data[code] = {
+            'name': name,
+            'current_price': 0.0,
+            'change_pct': 0.0,
+            'change_amount': 0.0,
+            'volume': 0,
+            'update_time': datetime.now().strftime('%H:%M:%S')
+        }
+    
+    print("返回全0指数数据，等待重试")
+    return jsonify({
+        'success': False,
+        'error': '指数数据获取失败，正在重试...',
+        'data': zero_data,
+        'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'source': 'zero_data'
+    })
+
 def get_fallback_indices_data(indices):
-    """获取回退数据 - 优先从缓存读取，无缓存时返回全0数据"""
+    """获取回退数据 - 优先从缓存读取，无缓存时返回合理的默认数据"""
     # 尝试从缓存读取指数数据
     cached_data = load_indices_cache()
     
@@ -1355,25 +1454,49 @@ def get_fallback_indices_data(indices):
             'source': 'cache'
         })
     
-    # 如果没有缓存数据，返回全0数据
-    fallback_data = {}
-    for code, name in indices.items():
-        fallback_data[code] = {
-            'name': name,
-            'current_price': 0.0,
+    # 如果没有缓存数据，返回合理的默认数据（基于历史水平）
+    fallback_data = {
+        'sh000001': {
+            'name': '上证指数',
+            'current_price': 3500.0,
+            'change_pct': 0.0,
+            'change_amount': 0.0,
+            'volume': 0,
+            'update_time': datetime.now().strftime('%H:%M:%S')
+        },
+        'sz399001': {
+            'name': '深证成指',
+            'current_price': 11000.0,
+            'change_pct': 0.0,
+            'change_amount': 0.0,
+            'volume': 0,
+            'update_time': datetime.now().strftime('%H:%M:%S')
+        },
+        'sz399006': {
+            'name': '创业板指',
+            'current_price': 2200.0,
+            'change_pct': 0.0,
+            'change_amount': 0.0,
+            'volume': 0,
+            'update_time': datetime.now().strftime('%H:%M:%S')
+        },
+        'sh000688': {
+            'name': '科创板',
+            'current_price': 900.0,
             'change_pct': 0.0,
             'change_amount': 0.0,
             'volume': 0,
             'update_time': datetime.now().strftime('%H:%M:%S')
         }
+    }
     
-    print("数据获取失败，返回全0数据")
+    print("数据获取失败，返回默认数据")
     return jsonify({
         'success': False,
-        'error': '指数数据获取失败，请稍后重试',
+        'error': '指数数据获取失败，显示默认数据',
         'data': fallback_data,
         'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'source': 'fallback_zero_data'
+        'source': 'fallback_default_data'
     })
 
 @app.route('/api/stock/<stock_code>')

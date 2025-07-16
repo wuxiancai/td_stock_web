@@ -1799,9 +1799,9 @@
      function refreshIndicesData() {
          checkMarketStatus().then(isMarketOpen => {
              if (isMarketOpen) {
-                 console.log('市场开盘中，刷新指数数据');
+                 console.log('市场开盘中，启动实时数据刷新（每3秒）');
                  fetchIndicesData();
-                 // 开盘时间，设置10秒刷新一次
+                 // 交易时间，设置3秒刷新一次
                  if (!indicesRefreshTimer) {
                      indicesRefreshTimer = setInterval(() => {
                          checkMarketStatus().then(stillOpen => {
@@ -1811,13 +1811,15 @@
                                  console.log('市场已收盘，停止自动刷新指数数据');
                                  clearInterval(indicesRefreshTimer);
                                  indicesRefreshTimer = null;
+                                 // 收盘后获取一次今日收盘数据
+                                 fetchIndicesData();
                              }
                          });
-                     }, 10000);
+                     }, 3000); // 3秒刷新一次
                  }
              } else {
-                 console.log('市场非开盘时间，获取缓存数据并停止自动刷新');
-                 fetchIndicesData(); // 获取一次缓存数据用于显示
+                 console.log('市场非开盘时间，获取今日收盘数据（不自动刷新）');
+                 fetchIndicesData(); // 获取一次今日收盘数据用于显示
                  // 清除定时器，停止自动刷新
                  if (indicesRefreshTimer) {
                      clearInterval(indicesRefreshTimer);
@@ -1834,11 +1836,13 @@
              .then(data => {
                  if (data.success) {
                      displayIndicesData(data.data);
-                     document.getElementById('indicesUpdateTime').textContent = `更新时间: ${data.fetch_time.split(' ')[1]}`;
+                     const timeStr = data.fetch_time.split(' ')[1];
+                     const sourceStr = data.is_trading_time ? '实时' : '收盘';
+                     document.getElementById('indicesUpdateTime').textContent = `${sourceStr}数据 - ${timeStr}`;
                  } else {
                      // 数据获取失败时显示全0数据和错误信息
                      displayIndicesData(data.data);
-                     document.getElementById('indicesUpdateTime').textContent = `数据获取失败 - ${data.fetch_time.split(' ')[1]}`;
+                     document.getElementById('indicesUpdateTime').textContent = `获取失败，正在重试... - ${data.fetch_time.split(' ')[1]}`;
                      console.error('获取指数数据失败:', data.error);
                  }
              })
@@ -1862,15 +1866,13 @@
                  const changeClass = index.change_pct >= 0 ? 'price-positive' : 'price-negative';
                  const changeSymbol = index.change_pct >= 0 ? '+' : '';
                  
-                 // 格式化成交额
+                 // 格式化成交额（Tushare返回的单位是万元）
                  let volumeText = '0';
                  if (index.volume > 0) {
-                     if (index.volume >= 100000000) {
-                         volumeText = (index.volume / 100000000).toFixed(2) + '亿';
-                     } else if (index.volume >= 10000) {
-                         volumeText = (index.volume / 10000).toFixed(2) + '万';
+                     if (index.volume >= 10000) {
+                         volumeText = (index.volume / 10000).toFixed(2) + '亿';
                      } else {
-                         volumeText = index.volume.toFixed(2);
+                         volumeText = index.volume.toFixed(2) + '万';
                      }
                  }
                  
