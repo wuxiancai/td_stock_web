@@ -2007,7 +2007,7 @@
      function initCryptoWebSocket() {
          console.log('初始化虚拟货币WebSocket连接...');
          
-         // 首先获取当天0点价格
+         // 首先获取币安16点整开盘价
          getCryptoDayOpenPrices().then(() => {
              connectCryptoWebSocket();
          });
@@ -2015,32 +2015,61 @@
      
      function getCryptoDayOpenPrices() {
          return new Promise((resolve) => {
-             // 获取+8时区当天0点的时间戳
+             // 币安使用UTC时区，每天16点整保存价格作为开盘价
              const now = new Date();
-             const utc8Now = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-             const todayStart = new Date(utc8Now.getFullYear(), utc8Now.getMonth(), utc8Now.getDate());
-             const startTime = todayStart.getTime();
              
-             console.log('获取虚拟货币当天0点价格...');
+             console.log('当前币安时间(UTC):', now.toISOString());
              
-             // 使用币安REST API获取当天开盘价
+             // 计算今天16点整的时间戳
+             const today16UTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 16, 0, 0));
+             
+             // 判断使用今天还是昨天的16点
+             let openTime;
+             if (now.getTime() >= today16UTC.getTime()) {
+                 // 当前时间已过今天16点，使用今天16点
+                 openTime = today16UTC;
+             } else {
+                 // 当前时间未到今天16点，使用昨天16点
+                 openTime = new Date(today16UTC.getTime() - 24 * 60 * 60 * 1000);
+             }
+             
+             const openTimestamp = openTime.getTime();
+             
+             console.log('获取币安16点整开盘价...', openTime.toISOString());
+             
+             // 获取16点整的价格
              const promises = cryptoSymbols.map(crypto => {
-                 return fetch(`https://api.binance.com/api/v3/klines?symbol=${crypto.symbol}&interval=1d&startTime=${startTime}&limit=1`)
+                 const startTime = openTimestamp - 5 * 60 * 1000; // 提前5分钟
+                 const endTime = openTimestamp + 5 * 60 * 1000; // 延后5分钟
+                 
+                 return fetch(`https://api.binance.com/api/v3/klines?symbol=${crypto.symbol}&interval=5m&startTime=${startTime}&endTime=${endTime}&limit=3`)
                      .then(response => response.json())
                      .then(data => {
                          if (data && data.length > 0) {
-                             cryptoDayOpenPrices[crypto.symbol] = parseFloat(data[0][1]); // 开盘价
-                             console.log(`${crypto.symbol} 当天0点价格: ${cryptoDayOpenPrices[crypto.symbol]}`);
+                             // 找到最接近16点的K线
+                             let closestKline = data[0];
+                             let minTimeDiff = Math.abs(parseInt(data[0][0]) - openTimestamp);
+                             
+                             for (let i = 1; i < data.length; i++) {
+                                 const timeDiff = Math.abs(parseInt(data[i][0]) - openTimestamp);
+                                 if (timeDiff < minTimeDiff) {
+                                     minTimeDiff = timeDiff;
+                                     closestKline = data[i];
+                                 }
+                             }
+                             
+                             cryptoDayOpenPrices[crypto.symbol] = parseFloat(closestKline[1]); // 开盘价
+                             console.log(`${crypto.symbol} 16点整开盘价: ${cryptoDayOpenPrices[crypto.symbol]}`);
                          }
                      })
                      .catch(error => {
-                         console.error(`获取${crypto.symbol}当天开盘价失败:`, error);
+                         console.error(`获取${crypto.symbol}开盘价失败:`, error);
                          cryptoDayOpenPrices[crypto.symbol] = 0;
                      });
              });
              
              Promise.all(promises).then(() => {
-                 console.log('虚拟货币当天0点价格获取完成');
+                 console.log('币安16点整开盘价获取完成');
                  resolve();
              });
          });
@@ -2131,7 +2160,7 @@
              const data = cryptoData[symbol];
              
              if (data) {
-                 // 计算相对于当天0点的涨跌幅
+                 // 计算涨跌幅：(实时价格 - 16点整开盘价) / 16点整开盘价
                  const dayOpenPrice = cryptoDayOpenPrices[symbol] || data.openPrice;
                  const dayChange = data.price - dayOpenPrice;
                  const dayChangePercent = dayOpenPrice > 0 ? (dayChange / dayOpenPrice) * 100 : 0;
