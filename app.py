@@ -857,6 +857,11 @@ def calculate_rsi(df, period=14):
     return df
 
 
+@app.route('/test-adjusted-price')
+def test_adjusted_price():
+    """前复权价格测试页面"""
+    return send_from_directory('.', 'test_adjusted_price.html')
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -1537,31 +1542,80 @@ def get_stock_data(stock_code):
         if basic_info.empty:
             return jsonify({'error': '股票代码不存在'}), 404
         
-        # 获取最近90天的日K线数据（使用前复权数据）
+        # 获取最近500天的日K线数据（使用前复权数据）
         end_date = datetime.now().strftime('%Y%m%d')
-        start_date = (datetime.now() - timedelta(days=120)).strftime('%Y%m%d')
+        start_date = (datetime.now() - timedelta(days=500)).strftime('%Y%m%d')
         
-        # 使用前复权数据
-        daily_data = safe_tushare_call(pro.adj_factor, ts_code=ts_code, start_date=start_date, end_date=end_date)
-        if daily_data.empty:
-            # 如果前复权数据获取失败，尝试使用普通日线数据
-            daily_data = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
-        else:
-            # 获取普通日线数据
-            raw_daily = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
-            if not raw_daily.empty:
-                # 合并复权因子和日线数据
-                daily_data = pd.merge(raw_daily, daily_data, on=['ts_code', 'trade_date'], how='left')
-                # 计算前复权价格
-                daily_data['adj_factor'] = daily_data['adj_factor'].fillna(1.0)
-                daily_data['open'] = daily_data['open'] * daily_data['adj_factor']
-                daily_data['high'] = daily_data['high'] * daily_data['adj_factor']
-                daily_data['low'] = daily_data['low'] * daily_data['adj_factor']
-                daily_data['close'] = daily_data['close'] * daily_data['adj_factor']
-            else:
-                return jsonify({'error': '无法获取股票数据'}), 404
+        # 获取普通日线数据
+        daily_data = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
         if daily_data.empty:
             return jsonify({'error': '无法获取股票数据'}), 404
+        
+        # 获取复权因子数据
+        adj_factor_data = safe_tushare_call(pro.adj_factor, ts_code=ts_code, start_date=start_date, end_date=end_date)
+        
+        if not adj_factor_data.empty:
+            # 合并复权因子和日线数据
+            daily_data = pd.merge(daily_data, adj_factor_data, on=['ts_code', 'trade_date'], how='left')
+            
+            # 填充缺失的复权因子为1.0
+            daily_data['adj_factor'] = daily_data['adj_factor'].fillna(1.0)
+            
+            # 获取最新的复权因子作为基准
+            latest_adj_factor = daily_data['adj_factor'].iloc[-1]
+            print(f"最新复权因子: {latest_adj_factor}")
+            
+            # 计算前复权价格：使用最新复权因子除以历史复权因子，然后乘以历史价格
+            # 前复权公式：前复权价格 = 历史价格 × (最新复权因子 / 历史复权因子)
+            daily_data['adj_ratio'] = latest_adj_factor / daily_data['adj_factor']
+            
+            # 调试：打印复权前后的价格对比
+            print(f"复权调试信息 - 股票代码: {ts_code}")
+            print(f"最新复权因子: {latest_adj_factor}")
+            if len(daily_data) > 0:
+                first_row = daily_data.iloc[0]
+                last_row = daily_data.iloc[-1]
+                print(f"第一条数据 - 日期: {first_row['trade_date']}, 复权因子: {first_row['adj_factor']}, 复权比例: {first_row['adj_ratio']:.4f}")
+                print(f"第一条数据复权前 - 开盘: {first_row['open']:.2f}, 收盘: {first_row['close']:.2f}")
+                
+                # 检查是否有异常高价格的数据
+                high_price_data = daily_data[daily_data['open'] > 50]  # 查找开盘价超过50元的数据
+                if len(high_price_data) > 0:
+                    print(f"发现高价格数据（复权前）:")
+                    for idx, row in high_price_data.head(3).iterrows():
+                        print(f"  日期: {row['trade_date']}, 开盘: {row['open']:.2f}, 复权因子: {row['adj_factor']:.4f}, 复权比例: {row['adj_ratio']:.4f}")
+                
+            daily_data['open'] = daily_data['open'] * daily_data['adj_ratio']
+            daily_data['high'] = daily_data['high'] * daily_data['adj_ratio']
+            daily_data['low'] = daily_data['low'] * daily_data['adj_ratio']
+            daily_data['close'] = daily_data['close'] * daily_data['adj_ratio']
+            
+            # 调试：打印复权后的价格
+            if len(daily_data) > 0:
+                first_row = daily_data.iloc[0]
+                last_row = daily_data.iloc[-1]
+                print(f"第一条数据复权后 - 开盘: {first_row['open']:.2f}, 收盘: {first_row['close']:.2f}")
+                print(f"最后一条数据复权后 - 开盘: {last_row['open']:.2f}, 收盘: {last_row['close']:.2f}")
+                
+                # 检查复权后是否还有异常高价格
+                high_price_after = daily_data[daily_data['open'] > 50]
+                if len(high_price_after) > 0:
+                    print(f"复权后仍有高价格数据:")
+                    for idx, row in high_price_after.head(3).iterrows():
+                        print(f"  日期: {row['trade_date']}, 开盘: {row['open']:.2f}, 收盘: {row['close']:.2f}")
+                
+                # 打印价格范围统计
+                print(f"复权后价格范围 - 开盘价: {daily_data['open'].min():.2f} ~ {daily_data['open'].max():.2f}")
+                print(f"复权后价格范围 - 收盘价: {daily_data['close'].min():.2f} ~ {daily_data['close'].max():.2f}")
+            
+            # 添加标识字段，表明这是前复权数据
+            daily_data['is_adjusted'] = True
+            print(f"成功应用前复权因子，股票代码: {ts_code}，最新收盘价: {daily_data['close'].iloc[-1]:.2f}")
+        else:
+            # 如果没有复权因子数据，使用原始价格
+            daily_data['adj_factor'] = 1.0
+            daily_data['is_adjusted'] = False
+            print(f"未获取到复权因子数据，使用原始价格，股票代码: {ts_code}")
         
         daily_data = daily_data.sort_values('trade_date').tail(90)
         
@@ -1839,21 +1893,78 @@ def get_realtime_stock_data(stock_code):
             # 如果有K线数据，补充开高低收信息
             if stock_data.get('kline_data') and len(stock_data['kline_data']) > 0:
                 latest_kline = stock_data['kline_data'][-1]
-                realtime_data['spot']['open'] = latest_kline.get('open', 0)
-                realtime_data['spot']['high'] = latest_kline.get('high', 0)
-                realtime_data['spot']['low'] = latest_kline.get('low', 0)
-                if len(stock_data['kline_data']) > 1:
-                    realtime_data['spot']['pre_close'] = stock_data['kline_data'][-2].get('close', 0)
                 
-                # 计算涨跌额
+                # 检查是否为复权数据
+                is_adjusted = latest_kline.get('is_adjusted', False)
+                
+                if is_adjusted:
+                    # 如果是复权数据，需要将复权后的价格转换回当天的真实价格
+                    # 对于实时显示，我们需要当天的真实开盘价，而不是复权后的历史价格
+                    adj_factor = latest_kline.get('adj_factor', 1.0)
+                    adj_ratio = latest_kline.get('adj_ratio', 1.0)
+                    
+                    # 将复权后的价格转换回原始价格（当天真实价格）
+                    # 复权后价格 = 原始价格 * adj_ratio，所以原始价格 = 复权后价格 / adj_ratio
+                    if adj_ratio != 0:
+                        realtime_data['spot']['open'] = latest_kline.get('open', 0) / adj_ratio
+                        realtime_data['spot']['high'] = latest_kline.get('high', 0) / adj_ratio
+                        realtime_data['spot']['low'] = latest_kline.get('low', 0) / adj_ratio
+                        # latest_price 保持复权后的价格，因为这是用于显示的当前价格
+                        print(f"实时数据使用当天真实价格: 开盘={realtime_data['spot']['open']:.2f} (复权后={latest_kline.get('open', 0):.2f})")
+                    else:
+                        # 如果adj_ratio为0，直接使用复权后的价格
+                        realtime_data['spot']['open'] = latest_kline.get('open', 0)
+                        realtime_data['spot']['high'] = latest_kline.get('high', 0)
+                        realtime_data['spot']['low'] = latest_kline.get('low', 0)
+                else:
+                    # 如果不是复权数据，直接使用原始价格
+                    realtime_data['spot']['open'] = latest_kline.get('open', 0)
+                    realtime_data['spot']['high'] = latest_kline.get('high', 0)
+                    realtime_data['spot']['low'] = latest_kline.get('low', 0)
+                
+                # 前一日收盘价也需要相应处理
+                if len(stock_data['kline_data']) > 1:
+                    prev_kline = stock_data['kline_data'][-2]
+                    if is_adjusted and adj_ratio != 0:
+                        realtime_data['spot']['pre_close'] = prev_kline.get('close', 0) / adj_ratio
+                    else:
+                        realtime_data['spot']['pre_close'] = prev_kline.get('close', 0)
+                
+                # 计算涨跌额（使用当天真实价格计算）
                 if realtime_data['spot']['pre_close'] > 0:
-                    change_amount = realtime_data['spot']['latest_price'] - realtime_data['spot']['pre_close']
+                    # 当前价格需要转换为当天真实价格进行比较
+                    current_real_price = realtime_data['spot']['latest_price']
+                    if is_adjusted and adj_ratio != 0:
+                        current_real_price = realtime_data['spot']['latest_price'] / adj_ratio
+                    
+                    change_amount = current_real_price - realtime_data['spot']['pre_close']
                     realtime_data['spot']['change_amount'] = change_amount
+                    
+                    # 重新计算涨跌幅
+                    change_percent = (change_amount / realtime_data['spot']['pre_close']) * 100
+                    realtime_data['spot']['change_percent'] = change_percent
         
         # 2. 获取真实分时图数据
         try:
             print(f"正在获取{ts_code}的分时图数据...")
             minute_data_success = False
+            
+            # 获取复权因子信息（从K线数据中获取最新的复权因子）
+            adj_factor = 1.0
+            is_adjusted = False
+            latest_adj_factor = 1.0
+            if stock_data.get('kline_data') and len(stock_data['kline_data']) > 0:
+                latest_kline = stock_data['kline_data'][-1]
+                adj_factor = latest_kline.get('adj_factor', 1.0)
+                is_adjusted = latest_kline.get('is_adjusted', False)
+                latest_adj_factor = adj_factor  # 最新的复权因子作为基准
+                print(f"从K线数据获取复权信息: adj_factor={adj_factor}, is_adjusted={is_adjusted}")
+                
+                # 如果是复权数据，更新实时价格为复权后价格
+                if is_adjusted and 'latest_price' in realtime_data['spot']:
+                    original_price = realtime_data['spot']['latest_price']
+                    # 实时价格已经是复权后的价格，无需再次调整
+                    print(f"实时价格已为复权价格: {original_price}")
             
             # 首先尝试使用AkShare（如果可用）
             if 'ak' in globals() and ak is not None:
@@ -1866,7 +1977,7 @@ def get_realtime_stock_data(stock_code):
                     else:
                         symbol = f"sz{ts_code[:6]}"
                     
-                    # 使用akshare获取分时数据
+                    # 使用akshare获取分时数据（未复权）
                     minute_data = safe_akshare_call(ak.stock_zh_a_minute, f"minute_data_{stock_code}", symbol=symbol, period='1', adjust="")
                     if minute_data is not None and not minute_data.empty:
                         # 获取最近的交易日数据（包括今天和最近几天）
@@ -1890,9 +2001,18 @@ def get_realtime_stock_data(stock_code):
                             # 转换为前端期望的格式：对象数组，每个对象包含time、price、volume
                             minute_list = []
                             for _, row in latest_day_data.iterrows():
+                                # 应用复权因子到分时价格
+                                original_price = float(row['close'])
+                                if is_adjusted:
+                                    # 对于分时数据，需要应用相同的复权逻辑
+                                    # 分时数据通常是当天的，复权因子应该是最新的
+                                    adjusted_price = original_price * (latest_adj_factor / adj_factor) if adj_factor != 0 else original_price
+                                else:
+                                    adjusted_price = original_price
+                                
                                 minute_item = {
                                     'time': row['day'],
-                                    'price': float(row['close']),
+                                    'price': adjusted_price,
                                     'volume': float(row['volume'])
                                 }
                                 minute_list.append(minute_item)
@@ -1900,6 +2020,8 @@ def get_realtime_stock_data(stock_code):
                             realtime_data['minute_data'] = minute_list
                             minute_data_success = True
                             print(f"AkShare成功获取{symbol}分时图数据，日期: {latest_date}，共{len(minute_list)}个数据点")
+                            if is_adjusted:
+                                print(f"已对分时数据应用复权因子: {latest_adj_factor}")
                             
                             # 使用分时数据的最新价格更新latest_price
                             if minute_list:
@@ -1957,9 +2079,18 @@ def get_realtime_stock_data(stock_code):
                             time_str = row['trade_time']
                             formatted_time = f"{time_str[:4]}-{time_str[4:6]}-{time_str[6:8]} {time_str[9:]}"
                             
+                            # 应用复权因子到分时价格
+                            original_price = float(row['close'])
+                            if is_adjusted:
+                                # 对于分时数据，需要应用相同的复权逻辑
+                                # 分时数据通常是当天的，复权因子应该是最新的
+                                adjusted_price = original_price * (latest_adj_factor / adj_factor) if adj_factor != 0 else original_price
+                            else:
+                                adjusted_price = original_price
+                            
                             minute_item = {
                                 'time': formatted_time,
-                                'price': float(row['close']),
+                                'price': adjusted_price,
                                 'volume': float(row['vol']) if pd.notna(row['vol']) else 0
                             }
                             minute_list.append(minute_item)
@@ -1967,6 +2098,8 @@ def get_realtime_stock_data(stock_code):
                         realtime_data['minute_data'] = minute_list
                         minute_data_success = True
                         print(f"Tushare成功获取{ts_code}分时图数据，日期: {latest_date}，共{len(minute_list)}个数据点")
+                        if is_adjusted:
+                            print(f"已对分时数据应用复权因子: {latest_adj_factor}")
                         
                         # 使用分时数据的最新价格更新latest_price
                         if minute_list:

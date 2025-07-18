@@ -293,6 +293,10 @@
                         <div class="info-value" id="pbRatio"></div>
                     </div>
                     <div class="info-item">
+                        <div class="info-label">当天开盘价</div>
+                        <div class="info-value" id="openPrice">-</div>
+                    </div>
+                    <div class="info-item">
                         <div class="info-label">当天涨幅</div>
                         <div class="info-value" id="changePercent"></div>
                     </div>
@@ -347,9 +351,9 @@
                     <h3 style="margin: 20px 0 10px 0; color: #333; font-size: 1.0em;">实时数据</h3>
                     <div class="stock-info">
                         <div class="info-item">
-                            <div class="info-label">实时价格</div>
-                            <div class="info-value" id="realtimePrice">-</div>
-                        </div>
+                    <div class="info-label">实时价格 (前复权)</div>
+                    <div class="info-value" id="realtimePrice">-</div>
+                </div>
                         <div class="info-item">
                             <div class="info-label">涨幅</div>
                             <div class="info-value" id="realtimeChangePercent">-</div>
@@ -374,13 +378,13 @@
                     
                     <!-- 实时分时图 -->
                     <div class="chart-container" style="margin-top: 20px;">
-                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时分时图</h4>
+                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时分时图 (前复权价格)</h4>
                         <div id="realtimeMinuteChart" style="width: 100%; height: 300px;"></div>
                     </div>
                     
                     <!-- 实时K线图 -->
                     <div class="chart-container" style="margin-top: 20px;">
-                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时K线图 (最近90天)</h4>
+                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时K线图 (最近90天) - 前复权</h4>
                         <div id="realtimeKlineChart" style="width: 100%; height: 400px;"></div>
                     </div>
                     
@@ -397,7 +401,7 @@
         </div>
         
         <div class="chart-section" id="chartSection" style="display: none;">
-            <div class="chart-title">日K线图 (最近90天) - 九转序列</div>
+            <div class="chart-title">日K线图 (最近90天) - 九转序列 - 前复权价格</div>
             <div id="klineChart" class="kline-chart"></div>
         </div>
         
@@ -447,11 +451,51 @@
         
         // 安全的数值转换函数 - 移到全局作用域
         function safeParseFloat(value, defaultValue = 0) {
+            // 处理null、undefined、空字符串等无效值
             if (value === null || value === undefined || value === '') {
                 return defaultValue;
             }
+            
+            // 处理字符串类型的数值
+            if (typeof value === 'string') {
+                // 移除可能的空格和特殊字符
+                value = value.trim();
+                if (value === '') {
+                    return defaultValue;
+                }
+            }
+            
+            // 如果已经是数字类型且有效，直接返回
+            if (typeof value === 'number' && !isNaN(value) && isFinite(value)) {
+                return value;
+            }
+            
+            // 尝试解析为浮点数
             const parsed = parseFloat(value);
-            return isNaN(parsed) ? defaultValue : parsed;
+            
+            // 验证解析结果
+            if (isNaN(parsed) || !isFinite(parsed)) {
+                // 在开发环境下记录警告
+                if (console && console.warn) {
+                    console.warn(`safeParseFloat: 无法解析值 "${value}", 使用默认值 ${defaultValue}`);
+                }
+                return defaultValue;
+            }
+            
+            return parsed;
+        }
+        
+        // 数据验证函数
+        function validateKlineItem(item) {
+            if (!item || typeof item !== 'object') {
+                return false;
+            }
+            
+            const requiredFields = ['open', 'close', 'low', 'high'];
+            return requiredFields.every(field => {
+                const value = safeParseFloat(item[field]);
+                return value > 0; // 股价应该大于0
+            });
         }
         
         function loadStockData() {
@@ -1010,6 +1054,7 @@
                     stockCode: stockCode,
                     latest_price: quote.latest_price,
                     change_percent: quote.change_percent,
+                    open_price: quote.open,
                     data_source: '实时数据接口'
                 });
                 
@@ -1019,6 +1064,15 @@
                 // 同步更新页面顶部的价格显示
                 if (quote.latest_price) {
                     document.getElementById('stockPrice').textContent = '¥' + quote.latest_price.toFixed(2);
+                }
+                
+                // 显示当天开盘价（从spot数据获取真实开盘价）
+                if (quote.open && quote.open > 0) {
+                    document.getElementById('openPrice').textContent = '¥' + quote.open.toFixed(2);
+                    console.log('显示当天真实开盘价:', quote.open.toFixed(2));
+                } else {
+                    document.getElementById('openPrice').textContent = '-';
+                    console.log('spot数据中无开盘价信息');
                 }
                 
                 const changePercent = quote.change_percent || 0;
@@ -1049,6 +1103,10 @@
                     document.getElementById('realtimeChangePercent').textContent = '-';
                     console.log('实时行情数据暂时无法获取，可能是网络问题或非交易时间');
                 }
+                
+                // 当没有spot数据时，开盘价显示为暂无
+                document.getElementById('openPrice').textContent = '-';
+                console.log('无spot数据，开盘价显示为暂无');
                 
                 // 尝试从K线数据获取成交额
                 if (data.kline_data && data.kline_data.length > 0) {
@@ -1414,11 +1472,31 @@
         function drawRealtimeKlineChart(klineData) {
             const chart = echarts.init(document.getElementById('realtimeKlineChart'));
             
+            // K线数据配置常量
+            const KLINE_CONFIG = {
+                // ECharts candlestick 数据格式: [open, close, low, high]
+                // 注意：此处应为前复权价格数据
+                DATA_FORMAT: 'OCLH', // Open, Close, Low, High
+                PRECISION: 2, // 价格精度
+                CURRENCY_SYMBOL: '¥'
+            };
+            
+            // 调试：检查实时K线数据的复权状态
+            console.log('实时K线数据调试信息:');
+            if (klineData && klineData.length > 0) {
+                const firstItem = klineData[0];
+                const lastItem = klineData[klineData.length - 1];
+                console.log('第一条实时K线数据:', firstItem);
+                console.log('最后一条实时K线数据:', lastItem);
+                console.log('是否为复权数据:', lastItem.is_adjusted);
+                console.log('复权因子:', lastItem.adj_factor);
+            }
+            
             const candlestickData = klineData.map(item => [
-                safeParseFloat(item.open),
-                safeParseFloat(item.close),
-                safeParseFloat(item.low),
-                safeParseFloat(item.high)
+                safeParseFloat(item.open),    // 开盘价
+                safeParseFloat(item.close),   // 收盘价
+                safeParseFloat(item.low),     // 最低价
+                safeParseFloat(item.high)     // 最高价
             ]);
             
             const dates = klineData.map(item => formatDate(item.trade_date || item.date));
@@ -1504,6 +1582,74 @@
                     borderColor: '#ccc',
                     textStyle: {
                         color: '#000'
+                    },
+                    formatter: function (params) {
+                        const dataIndex = params[0].dataIndex;
+                        const klineItem = klineData[dataIndex];
+                        const date = params[0].axisValue;
+                        
+                        let html = `<div style="font-weight: bold; margin-bottom: 5px;">${date}</div>`;
+                        
+                        // 查找K线数据参数
+                        const klineParam = params.find(p => p.seriesName === '实时K线');
+                        if (klineParam && klineParam.data) {
+                            const candlestickPrices = klineParam.data;
+                            // 检查是否为前复权数据
+                            const isAdjusted = klineItem && klineItem.is_adjusted === true;
+                            const priceType = isAdjusted ? '前复权' : '未除权';
+                            const priceColor = isAdjusted ? '#2e7d32' : '#999'; // 前复权用绿色，未除权用灰色
+                            
+                            // ECharts candlestick数据格式: [open, close, low, high]
+                            html += `<div style="color: #333; margin-bottom: 3px;">开盘: ¥${candlestickPrices[0].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">收盘: ¥${candlestickPrices[1].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">最低: ¥${candlestickPrices[2].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">最高: ¥${candlestickPrices[3].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
+                            
+                            // 如果有复权因子信息，显示复权因子
+                            if (klineItem && klineItem.adj_factor && klineItem.adj_factor !== 1.0) {
+                                html += `<div style="color: #666; margin-top: 5px; font-size: 11px;">复权因子: ${klineItem.adj_factor.toFixed(4)}</div>`;
+                            }
+                            
+                            // 调试信息：显示is_adjusted字段的值
+                            console.log(`实时K线数据调试 - 日期: ${date}, is_adjusted: ${klineItem ? klineItem.is_adjusted : 'undefined'}, adj_factor: ${klineItem ? klineItem.adj_factor : 'undefined'}`);
+                        }
+                        
+                        // BOLL线数据
+                        const bollUpperParam = params.find(p => p.seriesName === 'BOLL上轨');
+                        const bollMidParam = params.find(p => p.seriesName === 'BOLL中轨');
+                        const bollLowerParam = params.find(p => p.seriesName === 'BOLL下轨');
+                        
+                        if (bollUpperParam && bollUpperParam.data !== null) {
+                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Upper: ${bollUpperParam.data.toFixed(2)}</div>`;
+                        }
+                        if (bollMidParam && bollMidParam.data !== null) {
+                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Mid: ${bollMidParam.data.toFixed(2)}</div>`;
+                        }
+                        if (bollLowerParam && bollLowerParam.data !== null) {
+                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Lower: ${bollLowerParam.data.toFixed(2)}</div>`;
+                        }
+                        
+                        // 成交额
+                        if (klineItem && klineItem.amount) {
+                            const amount = parseFloat(klineItem.amount);
+                            html += `<div style="color: #666; margin-bottom: 3px;">Amount: ${formatNumber(amount * 1000)}</div>`;
+                        }
+                        
+                        // 涨跌幅
+                        if (klineItem && klineItem.pct_chg !== undefined && klineItem.pct_chg !== null) {
+                            const pctChg = parseFloat(klineItem.pct_chg);
+                            const color = pctChg >= 0 ? '#ff4444' : '#44aa44';
+                            html += `<div style="color: ${color}; margin-bottom: 3px;">Change: ${pctChg >= 0 ? '+' : ''}${pctChg.toFixed(2)}%</div>`;
+                        }
+                        
+                        // 成交量数据
+                        const volumeParam = params.find(p => p.seriesName === '成交量');
+                        if (volumeParam) {
+                            const vol = volumeParam.data;
+                            html += `<div style="color: #888; margin-top: 5px;">Volume: ${formatNumber(vol * 100)}</div>`;
+                        }
+                        
+                        return html;
                     }
                 },
                 grid: [{
@@ -1749,6 +1895,17 @@
         function drawKlineChart(data) {
             const chart = echarts.init(document.getElementById('klineChart'));
             
+            // 调试：检查K线数据的复权状态
+            console.log('K线数据调试信息:');
+            if (data.kline_data && data.kline_data.length > 0) {
+                const firstItem = data.kline_data[0];
+                const lastItem = data.kline_data[data.kline_data.length - 1];
+                console.log('第一条K线数据:', firstItem);
+                console.log('最后一条K线数据:', lastItem);
+                console.log('是否为复权数据:', lastItem.is_adjusted);
+                console.log('复权因子:', lastItem.adj_factor);
+            }
+            
             const klineData = data.kline_data.map(item => [
                 safeParseFloat(item.open),
                 safeParseFloat(item.close),
@@ -1853,12 +2010,25 @@
                         // 查找K线数据参数
                         const klineParam = params.find(p => p.seriesName === '日K');
                         if (klineParam && klineParam.data) {
-                            const klineData = klineParam.data;
+                            const candlestickPrices = klineParam.data;
+                            // 检查是否为前复权数据
+                            const isAdjusted = klineItem && klineItem.is_adjusted === true;
+                            const priceType = isAdjusted ? '前复权' : '未除权';
+                            const priceColor = isAdjusted ? '#2e7d32' : '#999'; // 前复权用绿色，未除权用灰色
+                            
                             // ECharts candlestick数据格式: [open, close, low, high]
-                            html += `<div style="color: #333; margin-bottom: 3px;">Open: ${klineData[0].toFixed(2)}</div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">Close: ${klineData[1].toFixed(2)}</div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">Low: ${klineData[2].toFixed(2)}</div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">High: ${klineData[3].toFixed(2)}</div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">开盘: ¥${candlestickPrices[0].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">收盘: ¥${candlestickPrices[1].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">最低: ¥${candlestickPrices[2].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">最高: ¥${candlestickPrices[3].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
+                            
+                            // 如果有复权因子信息，显示复权因子
+                            if (klineItem && klineItem.adj_factor && klineItem.adj_factor !== 1.0) {
+                                html += `<div style="color: #666; margin-top: 5px; font-size: 11px;">复权因子: ${klineItem.adj_factor.toFixed(4)}</div>`;
+                            }
+                            
+                            // 调试信息：显示is_adjusted字段的值
+                            console.log(`K线数据调试 - 日期: ${date}, is_adjusted: ${klineItem ? klineItem.is_adjusted : 'undefined'}, adj_factor: ${klineItem ? klineItem.adj_factor : 'undefined'}`);
                         }
                         
                         // BOLL线数据
