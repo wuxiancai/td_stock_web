@@ -1,0 +1,42 @@
+# 开发环境配置
+environment: development
+debug: true
+host: "0.0.0.0"
+port: 8080
+
+database:
+  path: "data/stock_data.db"
+  max_connections: 10
+  timeout: 30.0
+  backup_enabled: true
+  backup_interval: 3600
+
+api:
+  tushare_token: null  # 从环境变量 TUSHARE_TOKEN 获取
+  rate_limit_per_minute: 199
+  timeout: 30.0
+  retry_times: 3
+  retry_delay: 1.0
+
+cache:
+  enabled: true
+  directory: "cache"
+  default_ttl: 3600
+  max_size_mb: 500
+  cleanup_interval: 7200
+
+logging:
+  level: "DEBUG"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_path: "logs/app.log"
+  max_file_size: 10485760  # 10MB
+  backup_count: 5
+  console_output: true
+
+security:
+  secret_key: null  # 自动生成
+  session_timeout: 3600
+  max_request_size: 16777216  # 16MB
+  rate_limit_enabled: true
+  cors_enabled: true
+  allowed_origins: ["*"]

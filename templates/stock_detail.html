@@ -351,7 +351,7 @@
                     <h3 style="margin: 20px 0 10px 0; color: #333; font-size: 1.0em;">实时数据</h3>
                     <div class="stock-info">
                         <div class="info-item">
-                    <div class="info-label">实时价格 (前复权)</div>
+                    <div class="info-label">实时价格</div>
                     <div class="info-value" id="realtimePrice">-</div>
                 </div>
                         <div class="info-item">
@@ -378,13 +378,13 @@
                     
                     <!-- 实时分时图 -->
                     <div class="chart-container" style="margin-top: 20px;">
-                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时分时图 (前复权价格)</h4>
+                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时分时图</h4>
                         <div id="realtimeMinuteChart" style="width: 100%; height: 300px;"></div>
                     </div>
                     
                     <!-- 实时K线图 -->
                     <div class="chart-container" style="margin-top: 20px;">
-                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时K线图 (最近90天) - 前复权</h4>
+                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时K线图 (最近90天)</h4>
                         <div id="realtimeKlineChart" style="width: 100%; height: 400px;"></div>
                     </div>
                     
@@ -401,7 +401,7 @@
         </div>
         
         <div class="chart-section" id="chartSection" style="display: none;">
-            <div class="chart-title">日K线图 (最近90天) - 九转序列 - 前复权价格</div>
+            <div class="chart-title">日K线图 (最近90天) - 九转序列</div>
             <div id="klineChart" class="kline-chart"></div>
         </div>
         
@@ -614,7 +614,8 @@
             });
             
             if (data.net_mf_amount !== undefined && data.net_mf_amount !== null) {
-                const netMfAmount = data.net_mf_amount * 1000; // 转换为万元单位以匹配formatMoneyflowAmount函数
+                // data.net_mf_amount 单位是千万元，需要转换为万元显示
+                const netMfAmountWan = data.net_mf_amount * 1000; // 千万元转换为万元
                 const netMfElement = document.getElementById('netMfAmount');
                 
                 // 使用与特大单买入金额相同的格式化函数
@@ -633,11 +634,11 @@
                     return sign + formatted;
                 }
                 
-                netMfElement.textContent = formatMoneyflowAmountForNet(netMfAmount);
+                netMfElement.textContent = formatMoneyflowAmountForNet(netMfAmountWan);
                 // 根据正负值设置颜色
-                if (netMfAmount > 0) {
+                if (netMfAmountWan > 0) {
                     netMfElement.style.color = '#ff4444'; // 红色表示净流入
-                } else if (netMfAmount < 0) {
+                } else if (netMfAmountWan < 0) {
                     netMfElement.style.color = '#44aa44'; // 绿色表示净流出
                 } else {
                     netMfElement.style.color = '#666'; // 灰色表示无变化
@@ -873,10 +874,11 @@
             
             // 显示净流入额
             if (stockData.net_mf_amount !== undefined && stockData.net_mf_amount !== null) {
-                const netInflow = stockData.net_mf_amount * 10000; // 转换为万元
+                // stockData.net_mf_amount 单位是千万元，需要转换为万元显示
+                const netInflowWan = stockData.net_mf_amount * 1000; // 千万元转换为万元
                 const netElement = document.getElementById('realtimeNetInflow');
-                netElement.textContent = formatNumber(netInflow / 10000) + '万';
-                netElement.style.color = netInflow >= 0 ? '#ff4444' : '#00aa00';
+                netElement.textContent = formatNumber(netInflowWan) + '万';
+                netElement.style.color = netInflowWan >= 0 ? '#ff4444' : '#00aa00';
             } else {
                 document.getElementById('realtimeNetInflow').textContent = '-';
             }
@@ -1061,10 +1063,8 @@
                 // 更新实时数据区域的价格
                 document.getElementById('realtimePrice').textContent = '¥' + (quote.latest_price || '-');
                 
-                // 同步更新页面顶部的价格显示
-                if (quote.latest_price) {
-                    document.getElementById('stockPrice').textContent = '¥' + quote.latest_price.toFixed(2);
-                }
+                // 注意：页面顶部的价格显示昨天的缓存数据，不进行实时更新
+                // document.getElementById('stockPrice') 保持显示昨天的收盘价
                 
                 // 显示当天开盘价（从spot数据获取真实开盘价）
                 if (quote.open && quote.open > 0) {
@@ -1080,6 +1080,9 @@
                 changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
                 changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#00aa00';
                 
+                // 注意：页面顶部的涨跌幅显示昨天的缓存数据，不进行实时更新
+                // document.getElementById('changePercent') 保持显示昨天的涨跌幅
+                
                 document.getElementById('realtimeAmount').textContent = formatNumber((quote.amount || 0) * 1000);
                 document.getElementById('realtimeTurnover').textContent = quote.turnover_rate ? quote.turnover_rate + '%' : '暂无';
                 document.getElementById('realtimeVolumeRatio').textContent = quote.volume_ratio || '暂无';
@@ -1088,13 +1091,16 @@
                 if (data.money_flow && data.money_flow.close_price) {
                     document.getElementById('realtimePrice').textContent = '¥' + data.money_flow.close_price.toFixed(2);
                     
-                    // 同步更新页面顶部的价格显示
-                    document.getElementById('stockPrice').textContent = '¥' + data.money_flow.close_price.toFixed(2);
+                    // 注意：页面顶部的价格显示昨天的缓存数据，不进行实时更新
+                    // document.getElementById('stockPrice') 保持显示昨天的收盘价
                     
                     const changePercent = data.money_flow.change_percent || 0;
                     const changeElement = document.getElementById('realtimeChangePercent');
                     changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
                     changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#00aa00';
+                    
+                    // 注意：页面顶部的涨跌幅显示昨天的缓存数据，不进行实时更新
+                    // document.getElementById('changePercent') 保持显示昨天的涨跌幅
                     
                     console.log('使用资金流向数据显示基本价格信息');
                 } else {
@@ -1127,11 +1133,12 @@
             
             // 显示实时资金流向（优先使用直接传递的净流入额字段）
             if (data.net_mf_amount !== undefined && data.net_mf_amount !== null) {
-                const netInflow = data.net_mf_amount * 10000; // 转换为万元
+                // data.net_mf_amount 单位是千万元，需要转换为万元显示
+                const netInflowWan = data.net_mf_amount * 1000; // 千万元转换为万元
                 const netElement = document.getElementById('realtimeNetInflow');
-                netElement.textContent = formatNumber(netInflow / 10000) + '万';
-                netElement.style.color = netInflow >= 0 ? '#ff4444' : '#44aa44';
-                console.log('使用直接传递的净流入额:', data.net_mf_amount, '千万元');
+                netElement.textContent = formatNumber(netInflowWan) + '万';
+                netElement.style.color = netInflowWan >= 0 ? '#ff4444' : '#44aa44';
+                console.log('使用直接传递的净流入额:', data.net_mf_amount, '千万元，显示为:', netInflowWan, '万元');
             } else if (data.money_flow) {
                 const netInflow = data.money_flow.main_net_inflow || 0;
                 const netElement = document.getElementById('realtimeNetInflow');
@@ -1475,21 +1482,20 @@
             // K线数据配置常量
             const KLINE_CONFIG = {
                 // ECharts candlestick 数据格式: [open, close, low, high]
-                // 注意：此处应为前复权价格数据
+                // 注意：此处为原始价格数据
                 DATA_FORMAT: 'OCLH', // Open, Close, Low, High
                 PRECISION: 2, // 价格精度
                 CURRENCY_SYMBOL: '¥'
             };
             
-            // 调试：检查实时K线数据的复权状态
+            // 调试：检查实时K线数据
             console.log('实时K线数据调试信息:');
             if (klineData && klineData.length > 0) {
                 const firstItem = klineData[0];
                 const lastItem = klineData[klineData.length - 1];
                 console.log('第一条实时K线数据:', firstItem);
                 console.log('最后一条实时K线数据:', lastItem);
-                console.log('是否为复权数据:', lastItem.is_adjusted);
-                console.log('复权因子:', lastItem.adj_factor);
+                console.log('数据源:', lastItem.data_source);
             }
             
             const candlestickData = klineData.map(item => [
@@ -1594,24 +1600,12 @@
                         const klineParam = params.find(p => p.seriesName === '实时K线');
                         if (klineParam && klineParam.data) {
                             const candlestickPrices = klineParam.data;
-                            // 检查是否为前复权数据
-                            const isAdjusted = klineItem && klineItem.is_adjusted === true;
-                            const priceType = isAdjusted ? '前复权' : '未除权';
-                            const priceColor = isAdjusted ? '#2e7d32' : '#999'; // 前复权用绿色，未除权用灰色
                             
                             // ECharts candlestick数据格式: [open, close, low, high]
-                            html += `<div style="color: #333; margin-bottom: 3px;">开盘: ¥${candlestickPrices[0].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">收盘: ¥${candlestickPrices[1].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">最低: ¥${candlestickPrices[2].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">最高: ¥${candlestickPrices[3].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
-                            
-                            // 如果有复权因子信息，显示复权因子
-                            if (klineItem && klineItem.adj_factor && klineItem.adj_factor !== 1.0) {
-                                html += `<div style="color: #666; margin-top: 5px; font-size: 11px;">复权因子: ${klineItem.adj_factor.toFixed(4)}</div>`;
-                            }
-                            
-                            // 调试信息：显示is_adjusted字段的值
-                            console.log(`实时K线数据调试 - 日期: ${date}, is_adjusted: ${klineItem ? klineItem.is_adjusted : 'undefined'}, adj_factor: ${klineItem ? klineItem.adj_factor : 'undefined'}`);
+                            html += `<div style="color: #333; margin-bottom: 3px;">开盘: ¥${candlestickPrices[0].toFixed(2)}</div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">收盘: ¥${candlestickPrices[1].toFixed(2)}</div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">最低: ¥${candlestickPrices[2].toFixed(2)}</div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">最高: ¥${candlestickPrices[3].toFixed(2)}</div>`;
                         }
                         
                         // BOLL线数据
@@ -1902,8 +1896,7 @@
                 const lastItem = data.kline_data[data.kline_data.length - 1];
                 console.log('第一条K线数据:', firstItem);
                 console.log('最后一条K线数据:', lastItem);
-                console.log('是否为复权数据:', lastItem.is_adjusted);
-                console.log('复权因子:', lastItem.adj_factor);
+                console.log('数据来源:', lastItem.data_source);
             }
             
             const klineData = data.kline_data.map(item => [
@@ -2011,24 +2004,12 @@
                         const klineParam = params.find(p => p.seriesName === '日K');
                         if (klineParam && klineParam.data) {
                             const candlestickPrices = klineParam.data;
-                            // 检查是否为前复权数据
-                            const isAdjusted = klineItem && klineItem.is_adjusted === true;
-                            const priceType = isAdjusted ? '前复权' : '未除权';
-                            const priceColor = isAdjusted ? '#2e7d32' : '#999'; // 前复权用绿色，未除权用灰色
                             
                             // ECharts candlestick数据格式: [open, close, low, high]
-                            html += `<div style="color: #333; margin-bottom: 3px;">开盘: ¥${candlestickPrices[0].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">收盘: ¥${candlestickPrices[1].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">最低: ¥${candlestickPrices[2].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">最高: ¥${candlestickPrices[3].toFixed(2)} <span style="color: ${priceColor}; font-size: 11px;">(${priceType})</span></div>`;
-                            
-                            // 如果有复权因子信息，显示复权因子
-                            if (klineItem && klineItem.adj_factor && klineItem.adj_factor !== 1.0) {
-                                html += `<div style="color: #666; margin-top: 5px; font-size: 11px;">复权因子: ${klineItem.adj_factor.toFixed(4)}</div>`;
-                            }
-                            
-                            // 调试信息：显示is_adjusted字段的值
-                            console.log(`K线数据调试 - 日期: ${date}, is_adjusted: ${klineItem ? klineItem.is_adjusted : 'undefined'}, adj_factor: ${klineItem ? klineItem.adj_factor : 'undefined'}`);
+                            html += `<div style="color: #333; margin-bottom: 3px;">开盘: ¥${candlestickPrices[0].toFixed(2)}</div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">收盘: ¥${candlestickPrices[1].toFixed(2)}</div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">最低: ¥${candlestickPrices[2].toFixed(2)}</div>`;
+                            html += `<div style="color: #333; margin-bottom: 3px;">最高: ¥${candlestickPrices[3].toFixed(2)}</div>`;
                         }
                         
                         // BOLL线数据

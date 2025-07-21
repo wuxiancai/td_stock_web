@@ -104,7 +104,7 @@ class FileLockManager:
             while time.time() - start_time < self.lock_timeout:
                 try:
                     fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    logger.debug(f"成功获取文件锁: {file_path}")
+                    logger.info(f"成功获取文件锁: {file_path}")
                     return lock_fd
                 except BlockingIOError:
                     time.sleep(0.1)
