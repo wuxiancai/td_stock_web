@@ -483,7 +483,7 @@
                     <button onclick="triggerAutoSync()" style="padding: 8px 16px; background: #60A5FA; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🚀 立即增量同步</button>
                     <button onclick="triggerMoneyflowUpdate()" style="padding: 8px 16px; background: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">💰 更新资金流向</button>
                     <button onclick="refreshIndicesData()" style="padding: 8px 16px; background: #16A34A; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新指数数据</button>
-                    <button onclick="openRedFilter()" style="padding: 8px 16px; background: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔴 红 5-6</button>
+                    <button onclick="openRedFilter()" style="padding: 8px 16px; background: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔴 红 3-6</button>
                     <button onclick="openGreenFilter()" style="padding: 8px 16px; background: #16A34A; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🟢 绿 9</button>
                     <button onclick="triggerFilterTask()" style="padding: 8px 16px; background: #6B7280; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🎯 执行筛选</button>
                     <div class="search-box" style="margin-left: 15px;">
@@ -505,6 +505,10 @@
             
             <!-- 指数实时数据面板 -->
             <div class="indices-section" style="margin-top: 10px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="font-size: 14px; font-weight: bold; color: white;">主要指数</div>
+                    <div id="indicesUpdateTime" style="font-size: 10px; color: #ccc;">加载中...</div>
+                </div>
                 <div id="indicesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
                     <!-- 指数数据将通过JavaScript动态填充 -->
                 </div>
@@ -1788,7 +1792,7 @@
              .then(response => response.json())
              .then(data => {
                  if (data.status === 'success') {
-                     alert('筛选任务已开始执行！\n\n系统将自动筛选符合条件的股票：\n• 红 5-6：换手率>2，量比>1，九转买入红色5-6\n• 绿 9：九转买入绿色>9\n\n筛选结果将保存到缓存中，可通过"红 5-6"和"绿 9"按钮查看。');
+                     alert('筛选任务已开始执行！\n\n系统将自动筛选符合条件的股票：\n• 红 3-6：换手率>2，量比>1，九转买入红色3-6\n• 绿 9：九转买入绿色>9\n\n筛选结果将保存到缓存中，可通过"红 3-6"和"绿 9"按钮查看。');
                  } else {
                      alert('筛选任务触发失败：' + (data.message || '未知错误'));
                  }

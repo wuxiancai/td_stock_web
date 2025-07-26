@@ -351,12 +351,40 @@
                     <h3 style="margin: 20px 0 10px 0; color: #333; font-size: 1.0em;">实时数据</h3>
                     <div class="stock-info">
                         <div class="info-item">
-                    <div class="info-label">实时价格</div>
-                    <div class="info-value" id="realtimePrice">-</div>
-                </div>
+                            <div class="info-label">实时价格</div>
+                            <div class="info-value" id="realtimePrice">-</div>
+                        </div>
                         <div class="info-item">
-                            <div class="info-label">涨幅</div>
+                            <div class="info-label">涨跌幅</div>
                             <div class="info-value" id="realtimeChangePercent">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">涨跌额</div>
+                            <div class="info-value" id="realtimeChangeAmount">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">今开</div>
+                            <div class="info-value" id="realtimeOpen">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">昨收</div>
+                            <div class="info-value" id="realtimePreClose">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">最高</div>
+                            <div class="info-value" id="realtimeHigh">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">最低</div>
+                            <div class="info-value" id="realtimeLow">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">振幅</div>
+                            <div class="info-value" id="realtimeAmplitude">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">成交量</div>
+                            <div class="info-value" id="realtimeVolume">-</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">成交额</div>
@@ -369,6 +397,14 @@
                         <div class="info-item">
                             <div class="info-label">量比</div>
                             <div class="info-value" id="realtimeVolumeRatio">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">市盈率(动态)</div>
+                            <div class="info-value" id="realtimePE">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">市净率</div>
+                            <div class="info-value" id="realtimePB">-</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">净流入额</div>
@@ -1069,9 +1105,11 @@
                 // 显示当天开盘价（从spot数据获取真实开盘价）
                 if (quote.open && quote.open > 0) {
                     document.getElementById('openPrice').textContent = '¥' + quote.open.toFixed(2);
+                    document.getElementById('realtimeOpen').textContent = '¥' + quote.open.toFixed(2);
                     console.log('显示当天真实开盘价:', quote.open.toFixed(2));
                 } else {
                     document.getElementById('openPrice').textContent = '-';
+                    document.getElementById('realtimeOpen').textContent = '-';
                     console.log('spot数据中无开盘价信息');
                 }
                 
@@ -1080,12 +1118,39 @@
                 changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
                 changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#00aa00';
                 
+                // 涨跌额
+                const changeAmount = quote.change_amount || 0;
+                const changeAmountElement = document.getElementById('realtimeChangeAmount');
+                changeAmountElement.textContent = (changeAmount >= 0 ? '+' : '') + changeAmount.toFixed(2);
+                changeAmountElement.style.color = changeAmount >= 0 ? '#ff4444' : '#00aa00';
+                
+                // 昨收
+                document.getElementById('realtimePreClose').textContent = quote.pre_close ? '¥' + quote.pre_close.toFixed(2) : '-';
+                
+                // 最高价
+                document.getElementById('realtimeHigh').textContent = quote.high ? '¥' + quote.high.toFixed(2) : '-';
+                
+                // 最低价
+                document.getElementById('realtimeLow').textContent = quote.low ? '¥' + quote.low.toFixed(2) : '-';
+                
+                // 振幅
+                document.getElementById('realtimeAmplitude').textContent = quote.amplitude ? quote.amplitude + '%' : '-';
+                
+                // 成交量
+                document.getElementById('realtimeVolume').textContent = quote.volume ? formatNumber(quote.volume) : '-';
+                
                 // 注意：页面顶部的涨跌幅显示昨天的缓存数据，不进行实时更新
                 // document.getElementById('changePercent') 保持显示昨天的涨跌幅
                 
                 document.getElementById('realtimeAmount').textContent = formatNumber((quote.amount || 0) * 1000);
                 document.getElementById('realtimeTurnover').textContent = quote.turnover_rate ? quote.turnover_rate + '%' : '暂无';
                 document.getElementById('realtimeVolumeRatio').textContent = quote.volume_ratio || '暂无';
+                
+                // 市盈率(动态)
+                document.getElementById('realtimePE').textContent = quote.pe_ratio || '-';
+                
+                // 市净率
+                document.getElementById('realtimePB').textContent = quote.pb_ratio || '-';
             } else {
                 // 当spot数据为空时，尝试从资金流向数据和K线数据获取信息
                 if (data.money_flow && data.money_flow.close_price) {
@@ -1110,9 +1175,18 @@
                     console.log('实时行情数据暂时无法获取，可能是网络问题或非交易时间');
                 }
                 
-                // 当没有spot数据时，开盘价显示为暂无
+                // 当没有spot数据时，其他字段显示为暂无
                 document.getElementById('openPrice').textContent = '-';
-                console.log('无spot数据，开盘价显示为暂无');
+                document.getElementById('realtimeOpen').textContent = '-';
+                document.getElementById('realtimeChangeAmount').textContent = '-';
+                document.getElementById('realtimePreClose').textContent = '-';
+                document.getElementById('realtimeHigh').textContent = '-';
+                document.getElementById('realtimeLow').textContent = '-';
+                document.getElementById('realtimeAmplitude').textContent = '-';
+                document.getElementById('realtimeVolume').textContent = '-';
+                document.getElementById('realtimePE').textContent = '-';
+                document.getElementById('realtimePB').textContent = '-';
+                console.log('无spot数据，其他字段显示为暂无');
                 
                 // 尝试从K线数据获取成交额
                 if (data.kline_data && data.kline_data.length > 0) {
