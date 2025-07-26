@@ -2706,6 +2706,209 @@ def auto_sync_all_markets():
 
 # cleanup_akshare_failures函数已删除，不再使用AkShare
 
+def auto_update_nine_turn_all_markets():
+    """自动更新所有A股市场的九转序列数据"""
+    try:
+        # 检查是否为工作日
+        now = datetime.now()
+        if now.weekday() >= 5:  # 周六(5)和周日(6)不执行
+            print(f"今天是{['周一', '周二', '周三', '周四', '周五', '周六', '周日'][now.weekday()]}，跳过九转序列更新")
+            return
+        
+        print(f"开始自动更新所有A股市场的九转序列数据 - {now.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        market_names = {
+            'cyb': '创业板',
+            'hu': '沪A股',
+            'zxb': '深A',
+            'kcb': '科创板',
+            'bj': '北交所'
+        }
+        
+        total_updated = 0
+        total_failed = 0
+        
+        for market in markets:
+            try:
+                print(f"正在更新{market_names[market]}九转序列数据...")
+                
+                # 加载缓存数据
+                cache_data = load_cache_data(market)
+                if not cache_data or 'stocks' not in cache_data:
+                    print(f"{market_names[market]}无缓存数据，跳过")
+                    continue
+                
+                stocks_list = cache_data['stocks']
+                market_updated = 0
+                market_failed = 0
+                
+                # 逐个更新股票的九转序列
+                for i, stock_info in enumerate(stocks_list):
+                    try:
+                        ts_code = stock_info['ts_code']
+                        print(f"正在更新 {ts_code} 九转序列 ({i+1}/{len(stocks_list)})")
+                        
+                        # 获取最近45天的K线数据用于计算九转序列
+                        end_date = datetime.now().strftime('%Y%m%d')
+                        start_date = (datetime.now() - timedelta(days=45)).strftime('%Y%m%d')
+                        kline_data = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
+                        
+                        # 计算九转序列
+                        nine_turn_up = 0
+                        nine_turn_down = 0
+                        countdown_up = 0
+                        countdown_down = 0
+                        
+                        if not kline_data.empty and len(kline_data) >= 5:
+                            kline_data = kline_data.sort_values('trade_date')
+                            kline_with_nine_turn = calculate_nine_turn(kline_data)
+                            # 获取最新一天的九转序列数据
+                            latest_nine_turn = kline_with_nine_turn.iloc[-1]
+                            nine_turn_up = int(latest_nine_turn['nine_turn_up']) if latest_nine_turn['nine_turn_up'] > 0 else 0
+                            nine_turn_down = int(latest_nine_turn['nine_turn_down']) if latest_nine_turn['nine_turn_down'] > 0 else 0
+                            countdown_up = int(latest_nine_turn['countdown_up']) if latest_nine_turn['countdown_up'] > 0 else 0
+                            countdown_down = int(latest_nine_turn['countdown_down']) if latest_nine_turn['countdown_down'] > 0 else 0
+                        
+                        # 更新股票信息中的九转序列数据
+                        stock_info['nine_turn_up'] = nine_turn_up
+                        stock_info['nine_turn_down'] = nine_turn_down
+                        stock_info['countdown_up'] = countdown_up
+                        stock_info['countdown_down'] = countdown_down
+                        stock_info['nine_turn_last_update'] = datetime.now().strftime('%Y%m%d %H:%M:%S')
+                        
+                        market_updated += 1
+                        
+                        # 每10只股票保存一次缓存，减少文件IO操作
+                        if (i + 1) % 10 == 0 or i == len(stocks_list) - 1:
+                            cache_data['stocks'] = stocks_list
+                            cache_data['nine_turn_last_update'] = datetime.now().strftime('%Y%m%d %H:%M:%S')
+                            save_cache_data(market, cache_data)
+                            print(f"已保存{market_names[market]}九转序列缓存，当前进度: {i+1}/{len(stocks_list)}")
+                        
+                        # 避免API频率限制
+                        time.sleep(0.1)
+                        
+                    except Exception as e:
+                        print(f"更新股票{stock_info.get('ts_code', 'unknown')}九转序列失败: {e}")
+                        market_failed += 1
+                        continue
+                
+                print(f"{market_names[market]}九转序列更新完成: 成功{market_updated}只, 失败{market_failed}只")
+                total_updated += market_updated
+                total_failed += market_failed
+                
+                # 等待一段时间再处理下一个市场，避免API频率限制
+                time.sleep(2)
+                
+            except Exception as e:
+                print(f"更新{market_names[market]}九转序列数据失败: {e}")
+                continue
+        
+        print(f"所有A股市场九转序列更新完成 - 总计成功: {total_updated}只, 失败: {total_failed}只 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+    except Exception as e:
+        print(f"自动九转序列更新任务执行失败: {e}")
+
+def manual_update_nine_turn_all_markets():
+    """手动更新所有A股市场的九转序列数据（不受工作日限制）"""
+    try:
+        now = datetime.now()
+        print(f"开始手动更新所有A股市场的九转序列数据 - {now.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        market_names = {
+            'cyb': '创业板',
+            'hu': '沪A股',
+            'zxb': '深A',
+            'kcb': '科创板',
+            'bj': '北交所'
+        }
+        
+        total_updated = 0
+        total_failed = 0
+        
+        for market in markets:
+            try:
+                print(f"正在更新{market_names[market]}九转序列数据...")
+                
+                # 加载缓存数据
+                cache_data = load_cache_data(market)
+                if not cache_data or 'stocks' not in cache_data:
+                    print(f"{market_names[market]}无缓存数据，跳过")
+                    continue
+                
+                stocks_list = cache_data['stocks']
+                market_updated = 0
+                market_failed = 0
+                
+                # 逐个更新股票的九转序列
+                for i, stock_info in enumerate(stocks_list):
+                    try:
+                        ts_code = stock_info['ts_code']
+                        print(f"正在更新 {ts_code} 九转序列 ({i+1}/{len(stocks_list)})")
+                        
+                        # 获取最近45天的K线数据用于计算九转序列
+                        end_date = datetime.now().strftime('%Y%m%d')
+                        start_date = (datetime.now() - timedelta(days=45)).strftime('%Y%m%d')
+                        kline_data = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
+                        
+                        # 计算九转序列
+                        nine_turn_up = 0
+                        nine_turn_down = 0
+                        countdown_up = 0
+                        countdown_down = 0
+                        
+                        if not kline_data.empty and len(kline_data) >= 5:
+                            kline_data = kline_data.sort_values('trade_date')
+                            kline_with_nine_turn = calculate_nine_turn(kline_data)
+                            # 获取最新一天的九转序列数据
+                            latest_nine_turn = kline_with_nine_turn.iloc[-1]
+                            nine_turn_up = int(latest_nine_turn['nine_turn_up']) if latest_nine_turn['nine_turn_up'] > 0 else 0
+                            nine_turn_down = int(latest_nine_turn['nine_turn_down']) if latest_nine_turn['nine_turn_down'] > 0 else 0
+                            countdown_up = int(latest_nine_turn['countdown_up']) if latest_nine_turn['countdown_up'] > 0 else 0
+                            countdown_down = int(latest_nine_turn['countdown_down']) if latest_nine_turn['countdown_down'] > 0 else 0
+                        
+                        # 更新股票信息中的九转序列数据
+                        stock_info['nine_turn_up'] = nine_turn_up
+                        stock_info['nine_turn_down'] = nine_turn_down
+                        stock_info['countdown_up'] = countdown_up
+                        stock_info['countdown_down'] = countdown_down
+                        stock_info['nine_turn_last_update'] = datetime.now().strftime('%Y%m%d %H:%M:%S')
+                        
+                        market_updated += 1
+                        
+                        # 每10只股票保存一次缓存，减少文件IO操作
+                        if (i + 1) % 10 == 0 or i == len(stocks_list) - 1:
+                            cache_data['stocks'] = stocks_list
+                            cache_data['nine_turn_last_update'] = datetime.now().strftime('%Y%m%d %H:%M:%S')
+                            save_cache_data(market, cache_data)
+                            print(f"已保存{market_names[market]}九转序列缓存，当前进度: {i+1}/{len(stocks_list)}")
+                        
+                        # 避免API频率限制
+                        time.sleep(0.1)
+                        
+                    except Exception as e:
+                        print(f"更新股票{stock_info.get('ts_code', 'unknown')}九转序列失败: {e}")
+                        market_failed += 1
+                        continue
+                
+                print(f"{market_names[market]}九转序列更新完成: 成功{market_updated}只, 失败{market_failed}只")
+                total_updated += market_updated
+                total_failed += market_failed
+                
+                # 等待一段时间再处理下一个市场，避免API频率限制
+                time.sleep(2)
+                
+            except Exception as e:
+                print(f"更新{market_names[market]}九转序列数据失败: {e}")
+                continue
+        
+        print(f"所有A股市场九转序列更新完成 - 总计成功: {total_updated}只, 失败: {total_failed}只 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+    except Exception as e:
+        print(f"手动九转序列更新任务执行失败: {e}")
+
 def start_scheduler():
     """启动定时调度器"""
     # 设置定时任务：工作日下午5点执行数据同步
@@ -2714,6 +2917,13 @@ def start_scheduler():
     schedule.every().wednesday.at("17:00").do(auto_sync_all_markets)
     schedule.every().thursday.at("17:00").do(auto_sync_all_markets)
     schedule.every().friday.at("17:00").do(auto_sync_all_markets)
+    
+    # 设置定时任务：工作日下午5:30执行九转序列更新
+    schedule.every().monday.at("17:30").do(auto_update_nine_turn_all_markets)
+    schedule.every().tuesday.at("17:30").do(auto_update_nine_turn_all_markets)
+    schedule.every().wednesday.at("17:30").do(auto_update_nine_turn_all_markets)
+    schedule.every().thursday.at("17:30").do(auto_update_nine_turn_all_markets)
+    schedule.every().friday.at("17:30").do(auto_update_nine_turn_all_markets)
     
     # 设置定时任务：工作日晚上7点执行资金流向数据更新
     schedule.every().monday.at("19:00").do(auto_update_moneyflow_data)
@@ -2728,6 +2938,7 @@ def start_scheduler():
     # AkShare清理任务已删除，不再使用AkShare
     
     print("定时任务已设置：工作日下午5点自动同步所有A股数据")
+    print("定时任务已设置：工作日下午5:30自动更新九转序列数据")
     print("定时任务已设置：工作日晚上7点自动更新资金流向数据")
     print("定时任务已设置：每天晚上6点自动筛选符合条件的股票")
     
@@ -2811,6 +3022,24 @@ def trigger_auto_filter():
         return jsonify({
             'status': 'success',
             'message': '手动筛选任务已启动'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/scheduler/trigger_nine_turn', methods=['POST'])
+def trigger_nine_turn_update():
+    """手动触发九转序列更新任务"""
+    try:
+        # 在后台线程中执行九转序列更新任务（使用不受工作日限制的手动版本）
+        nine_turn_thread = threading.Thread(target=manual_update_nine_turn_all_markets, daemon=True)
+        nine_turn_thread.start()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '九转序列更新任务已启动'
         })
     except Exception as e:
         return jsonify({

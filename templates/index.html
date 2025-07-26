@@ -482,6 +482,7 @@
                 <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                     <button onclick="triggerAutoSync()" style="padding: 8px 16px; background: #60A5FA; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🚀 立即增量同步</button>
                     <button onclick="triggerMoneyflowUpdate()" style="padding: 8px 16px; background: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">💰 更新资金流向</button>
+                    <button onclick="triggerNineTurnUpdate()" style="padding: 8px 16px; background: #F59E0B; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 更新九转序列</button>
                     <button onclick="refreshIndicesData()" style="padding: 8px 16px; background: #16A34A; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔄 刷新指数数据</button>
                     <button onclick="openRedFilter()" style="padding: 8px 16px; background: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🔴 红 3-6</button>
                     <button onclick="openGreenFilter()" style="padding: 8px 16px; background: #16A34A; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">🟢 绿 9</button>
@@ -499,7 +500,7 @@
 
                 </div>
                 <div style="margin-top: 10px; font-size: 10px; color: #ccc;">
-                    💡 系统将在每个工作日下午5点自动同步所有A股数据，工作日晚上7点自动更新资金流向数据，每天晚上6点自动筛选股票
+                    💡 系统将在每个工作日下午5点自动同步所有A股数据，下午5:30自动更新九转序列，工作日晚上7点自动更新资金流向数据，每天晚上6点自动筛选股票
                 </div>
             </div>
             
@@ -1345,6 +1346,10 @@
                          valueA = Math.max(a.nine_turn_up || 0, a.nine_turn_down || 0);
                          valueB = Math.max(b.nine_turn_up || 0, b.nine_turn_down || 0);
                          break;
+                     case 'net_mf_amount':
+                         valueA = a.net_mf_amount || 0;
+                         valueB = b.net_mf_amount || 0;
+                         break;
                      default:
                          return 0;
                  }
@@ -1683,6 +1688,32 @@
              .catch(error => {
                  console.error('触发资金流向数据更新失败:', error);
                  alert('资金流向数据更新失败：网络错误');
+             })
+             .finally(() => {
+                 updateBtn.textContent = originalText;
+                 updateBtn.disabled = false;
+             });
+     }
+     
+     function triggerNineTurnUpdate() {
+         const updateBtn = event.target;
+         const originalText = updateBtn.textContent;
+         
+         updateBtn.textContent = '更新中...';
+         updateBtn.disabled = true;
+         
+         fetch('/api/scheduler/trigger_nine_turn', { method: 'POST' })
+             .then(response => response.json())
+             .then(data => {
+                 if (data.status === 'success') {
+                     alert('九转序列更新任务已启动！\n\n系统将重新计算所有A股的九转序列数据。\n\n更新过程可能需要一些时间，请耐心等待。更新完成后可刷新页面查看最新数据。');
+                 } else {
+                     alert('九转序列更新失败：' + (data.message || '未知错误'));
+                 }
+             })
+             .catch(error => {
+                 console.error('触发九转序列更新失败:', error);
+                 alert('九转序列更新失败：网络错误');
              })
              .finally(() => {
                  updateBtn.textContent = originalText;
