@@ -5,7 +5,7 @@
 
 // 数据配置常量
 const STOCK_CONFIG = {
-    // K线数据格式
+    // K线数据格式: [open, close, low, high]
     KLINE_FORMAT: {
         OPEN: 0,
         CLOSE: 1, 
@@ -63,7 +63,7 @@ function formatPercent(value) {
 function buildCandlestickData(rawData) {
     return rawData.map(item => [
         safeParseFloat(item.open),    // 开盘价
-        safeParseFloat(item.close),   // 收盘价  
+        safeParseFloat(item.close),   // 收盘价
         safeParseFloat(item.low),     // 最低价
         safeParseFloat(item.high)     // 最高价
     ]);

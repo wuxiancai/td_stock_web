@@ -230,6 +230,42 @@ update_status = {}
 
 # AkShare重试管理器已删除，不再使用AkShare
 
+def clean_float_precision(value, decimal_places=2):
+    """
+    清理浮点数精度问题，避免显示包含999的精度误差
+    
+    Args:
+        value: 要处理的数值
+        decimal_places: 保留的小数位数，默认2位
+    
+    Returns:
+        处理后的浮点数
+    """
+    try:
+        if value is None or pd.isna(value):
+            return 0.0
+        
+        # 转换为浮点数
+        float_value = float(value)
+        
+        # 检查是否为特殊值
+        if not np.isfinite(float_value):
+            return 0.0
+        
+        # 四舍五入到指定小数位数，避免精度问题
+        rounded_value = round(float_value, decimal_places)
+        
+        # 检查字符串表示是否包含999（可能的精度问题）
+        str_value = str(float_value)
+        if '999' in str_value and abs(float_value - rounded_value) < 0.01:
+            # 如果原值包含999且与四舍五入后的值差异很小，使用四舍五入后的值
+            return rounded_value
+        
+        return float_value
+        
+    except (ValueError, TypeError):
+        return 0.0
+
 def get_real_time_stock_data(ts_code, name, industry, current_date):
     """获取单只股票的实时数据"""
     def safe_float(value, default=0.0):
@@ -655,7 +691,7 @@ def calculate_nine_turn(df):
             if up_count >= 3:
                 for j, pos in enumerate(up_positions):
                     if j < 9:  # 最多显示9个
-                        df.iloc[pos, df.columns.get_loc('nine_turn_up')] = j + 1
+                        df.iloc[pos, df.columns.get_loc('nine_turn_up')] = j + 1  # pos是位置，j+1是序列值
             
             # 如果达到9个，记录Setup完成位置并停止计数
             if up_count >= 9:
@@ -684,7 +720,7 @@ def calculate_nine_turn(df):
             if down_count >= 3:
                 for j, pos in enumerate(down_positions):
                     if j < 9:  # 最多显示9个
-                        df.iloc[pos, df.columns.get_loc('nine_turn_down')] = j + 1
+                        df.iloc[pos, df.columns.get_loc('nine_turn_down')] = j + 1  # pos是位置，j+1是序列值
             
             # 如果达到9个，记录Setup完成位置并停止计数
             if down_count >= 9:
@@ -771,6 +807,11 @@ def calculate_boll(df, period=20, std_dev=2):
     df['boll_upper'] = df['boll_mid'] + (df['boll_std'] * std_dev)
     df['boll_lower'] = df['boll_mid'] - (df['boll_std'] * std_dev)
     
+    # 应用精度修复，避免显示包含"999"的浮点数
+    df['boll_mid'] = df['boll_mid'].apply(lambda x: clean_float_precision(x, 4))
+    df['boll_upper'] = df['boll_upper'].apply(lambda x: clean_float_precision(x, 4))
+    df['boll_lower'] = df['boll_lower'].apply(lambda x: clean_float_precision(x, 4))
+    
     # 对于前期数据不足的情况，保持为NaN，后续会被前端正确处理
     # 不填充NaN值，让前端图表自动处理空值
     
@@ -800,6 +841,11 @@ def calculate_macd(df, fast_period=12, slow_period=26, signal_period=9):
     # 计算MACD柱状图（MACD）
     df['macd_histogram'] = (df['macd_dif'] - df['macd_dea']) * 2
     
+    # 应用精度修复，避免显示包含"999"的浮点数
+    df['macd_dif'] = df['macd_dif'].apply(lambda x: clean_float_precision(x, 4))
+    df['macd_dea'] = df['macd_dea'].apply(lambda x: clean_float_precision(x, 4))
+    df['macd_histogram'] = df['macd_histogram'].apply(lambda x: clean_float_precision(x, 4))
+    
     return df
 
 
@@ -828,6 +874,11 @@ def calculate_kdj(df, k_period=9, d_period=3, j_period=3):
     
     # 计算J值
     df['kdj_j'] = 3 * df['kdj_k'] - 2 * df['kdj_d']
+    
+    # 应用精度修复，避免显示包含"999"的浮点数
+    df['kdj_k'] = df['kdj_k'].apply(lambda x: clean_float_precision(x, 4))
+    df['kdj_d'] = df['kdj_d'].apply(lambda x: clean_float_precision(x, 4))
+    df['kdj_j'] = df['kdj_j'].apply(lambda x: clean_float_precision(x, 4))
     
     return df
 
@@ -860,6 +911,9 @@ def calculate_rsi(df, period=14):
     # 处理第一行的NaN值
     df['rsi'] = df['rsi'].fillna(50)
     
+    # 应用精度修复，避免显示包含"999"的浮点数
+    df['rsi'] = df['rsi'].apply(lambda x: clean_float_precision(x, 4))
+    
     return df
 
 
@@ -872,6 +926,19 @@ def index():
 @app.route('/stock/<stock_code>')
 def stock_detail(stock_code):
     return render_template('stock_detail.html', stock_code=stock_code)
+
+@app.route('/stock_detail')
+def stock_detail_with_params():
+    """股票详情页面（通过查询参数获取股票代码）"""
+    stock_code = request.args.get('code', '300354')
+    return render_template('stock_detail.html', stock_code=stock_code)
+
+@app.route('/stock/<stock_code>/candlestick')
+def candlestick_chart(stock_code):
+    """股票蜡烛图页面"""
+    return render_template('candlestick_chart.html', stock_code=stock_code)
+
+
 
 @app.route('/watchlist')
 def watchlist():
@@ -1552,17 +1619,18 @@ def get_stock_data(stock_code):
         end_date = datetime.now().strftime('%Y%m%d')
         start_date = (datetime.now() - timedelta(days=500)).strftime('%Y%m%d')
         
-        # 获取普通日线数据（原始价格，无需复权处理）
-        daily_data = safe_tushare_call(pro.daily, ts_code=ts_code, start_date=start_date, end_date=end_date)
+        # 使用TushareDataFetcher获取标准格式的日线数据
+        from tushare_data_fetcher import TushareDataFetcher
+        fetcher = TushareDataFetcher(pro_api=pro)
+        daily_data = fetcher.get_daily_data(ts_code, days=1000)
+        
         if daily_data.empty:
             return jsonify({'error': '无法获取股票数据'}), 404
         
-        # 直接使用原始数据，无需复权处理
-        daily_data['adj_factor'] = 1.0
-        daily_data['is_adjusted'] = False
-        print(f"使用原始价格数据，股票代码: {ts_code}，最新收盘价: {daily_data['close'].iloc[-1]:.2f}")
+        print(f"获取到{len(daily_data)}条日线数据，股票代码: {ts_code}，最新收盘价: {daily_data['close'].iloc[-1]:.2f}")
         
-        daily_data = daily_data.sort_values('trade_date').tail(90)
+        # 确保数据已按日期排序
+        daily_data = daily_data.sort_values('trade_date')
         
         # 获取最新的财务数据，尝试多个交易日（使用频率限制）
         daily_basic = pd.DataFrame()
@@ -1705,6 +1773,31 @@ def get_stock_data(stock_code):
             if yesterday_close > 0:
                 pct_chg = ((latest_close - yesterday_close) / yesterday_close) * 100
         
+        # 确保只包含Tushare官方文档定义的字段，避免index等额外字段
+        # 官方文档字段：ts_code, trade_date, open, high, low, close, pre_close, change, pct_chg, vol, amount
+        tushare_columns = ['ts_code', 'trade_date', 'open', 'high', 'low', 'close', 'pre_close', 'change', 'pct_chg', 'vol', 'amount']
+        
+        # 添加计算出的技术指标字段
+        indicator_columns = ['nine_turn_up', 'nine_turn_down', 'countdown_up', 'countdown_down', 
+                           'boll_upper', 'boll_mid', 'boll_lower', 'boll_std',
+                           'macd_dif', 'macd_dea', 'macd_histogram',
+                           'kdj_k', 'kdj_d', 'kdj_j', 'rsi']
+        
+        # 只选择存在的列
+        available_columns = [col for col in tushare_columns + indicator_columns if col in daily_data.columns]
+        clean_daily_data = daily_data[available_columns].copy()
+        
+        # 对OHLC数据应用精度清理，避免显示包含"999"的浮点数
+        ohlc_columns = ['open', 'high', 'low', 'close', 'pre_close']
+        for col in ohlc_columns:
+            if col in clean_daily_data.columns:
+                clean_daily_data[col] = clean_daily_data[col].apply(lambda x: clean_float_precision(x, 4) if x is not None and not pd.isna(x) else x)
+        
+        # 保留原始索引信息，确保九转序列显示在正确位置
+        # 重置索引并将原索引作为data_index字段保存
+        clean_daily_data_with_index = clean_daily_data.reset_index()
+        clean_daily_data_with_index['data_index'] = clean_daily_data_with_index.index
+        
         # 准备返回数据
         stock_info = {
             'ts_code': ts_code,
@@ -1722,7 +1815,7 @@ def get_stock_data(stock_code):
             'lowest_price': safe_float(lowest_price),
             'highest_date': highest_date,
             'lowest_date': lowest_date,
-            'kline_data': daily_data.to_dict('records')
+            'kline_data': clean_daily_data_with_index.to_dict('records')  # 包含data_index字段的数据
         }
         
         # 添加资金流向数据（优先使用缓存数据）
@@ -1812,22 +1905,22 @@ def get_live_realtime_data(ts_code, stock_code):
         realtime_data = {}
         
         if stock_data:
-            # 使用股票数据中的实时信息
+            # 使用股票数据中的实时信息，应用精度清理
             realtime_data['spot'] = {
                 'name': stock_data.get('name', ''),
-                'latest_price': stock_data.get('latest_price', 0),
-                'change_percent': stock_data.get('pct_chg', 0),
-                'change_amount': stock_data.get('change_amount', 0),
-                'volume': stock_data.get('volume', 0),
-                'amount': stock_data.get('amount', 0),
-                'turnover_rate': stock_data.get('turnover_rate', 0),
-                'volume_ratio': stock_data.get('volume_ratio', 0),
+                'latest_price': clean_float_precision(stock_data.get('latest_price', 0)),
+                'change_percent': clean_float_precision(stock_data.get('pct_chg', 0)),
+                'change_amount': clean_float_precision(stock_data.get('change_amount', 0)),
+                'volume': clean_float_precision(stock_data.get('volume', 0)),
+                'amount': clean_float_precision(stock_data.get('amount', 0)),
+                'turnover_rate': clean_float_precision(stock_data.get('turnover_rate', 0)),
+                'volume_ratio': clean_float_precision(stock_data.get('volume_ratio', 0)),
                 'pe_ratio': stock_data.get('pe_ttm'),
-                'market_cap': stock_data.get('total_mv', 0),
-                'open': stock_data.get('open', 0),
-                'high': stock_data.get('high', 0),
-                'low': stock_data.get('low', 0),
-                'pre_close': stock_data.get('pre_close', 0),
+                'market_cap': clean_float_precision(stock_data.get('total_mv', 0)),
+                'open': clean_float_precision(stock_data.get('open', 0)),
+                'high': clean_float_precision(stock_data.get('high', 0)),
+                'low': clean_float_precision(stock_data.get('low', 0)),
+                'pre_close': clean_float_precision(stock_data.get('pre_close', 0)),
                 'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'data_source': 'live_realtime'  # 标记数据来源
             }
@@ -1907,25 +2000,25 @@ def get_latest_close_data(ts_code, stock_code):
                 pre_close = prev_close
                 
                 if prev_close > 0:
-                    calculated_change_amount = current_close - prev_close
-                    calculated_change_percent = (calculated_change_amount / prev_close) * 100
+                    calculated_change_amount = clean_float_precision(current_close - prev_close)
+                    calculated_change_percent = clean_float_precision((calculated_change_amount / prev_close) * 100)
                     print(f"[收盘数据] 涨跌幅计算: 当前收盘={current_close:.2f}, 前收盘={prev_close:.2f}, 涨跌幅={calculated_change_percent:.2f}%")
             
             realtime_data['spot'] = {
                 'name': stock_data.get('name', ''),
-                'latest_price': latest_kline.get('close', 0) if latest_kline else stock_data.get('latest_price', 0),
+                'latest_price': clean_float_precision(latest_kline.get('close', 0) if latest_kline else stock_data.get('latest_price', 0)),
                 'change_percent': calculated_change_percent,
                 'change_amount': calculated_change_amount,
-                'volume': latest_kline.get('vol', 0) if latest_kline else 0,
-                'amount': latest_kline.get('amount', 0) if latest_kline else 0,
-                'turnover_rate': stock_data.get('turnover_rate', 0),
+                'volume': clean_float_precision(latest_kline.get('vol', 0) if latest_kline else 0),
+                'amount': clean_float_precision(latest_kline.get('amount', 0) if latest_kline else 0),
+                'turnover_rate': clean_float_precision(stock_data.get('turnover_rate', 0)),
                 'volume_ratio': 0,  # 非交易时间无法计算量比
                 'pe_ratio': stock_data.get('pe_ttm'),
-                'market_cap': stock_data.get('total_mv', 0),
-                'open': latest_kline.get('open', 0) if latest_kline else 0,
-                'high': latest_kline.get('high', 0) if latest_kline else 0,
-                'low': latest_kline.get('low', 0) if latest_kline else 0,
-                'pre_close': pre_close,
+                'market_cap': clean_float_precision(stock_data.get('total_mv', 0)),
+                'open': clean_float_precision(latest_kline.get('open', 0) if latest_kline else 0),
+                'high': clean_float_precision(latest_kline.get('high', 0) if latest_kline else 0),
+                'low': clean_float_precision(latest_kline.get('low', 0) if latest_kline else 0),
+                'pre_close': clean_float_precision(pre_close),
                 'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'data_source': 'latest_close'  # 标记数据来源
             }
@@ -2002,6 +2095,466 @@ def get_realtime_stock_data(stock_code):
     except Exception as e:
         print(f"[实时数据] 获取失败: {e}")
         return jsonify({'error': f'获取实时数据失败: {str(e)}'}), 500
+
+@app.route('/api/stock/<stock_code>/daily_basic')
+def get_stock_daily_basic(stock_code):
+    """
+    获取股票每日指标数据
+    严格按照Tushare官方文档 daily_basic 接口的输出参数
+    
+    Args:
+        stock_code: 股票代码，如 000001 或 000001.SZ
+        
+    Query Parameters:
+        trade_date: 指定交易日期 YYYYMMDD，默认为前一交易日
+        
+    Returns:
+        JSON: 每日指标数据，包含Tushare官方文档中的所有输出参数
+    """
+    
+    def safe_float(value, default=None):
+        """安全转换为浮点数，保持None值用于显示空数据"""
+        try:
+            if value is None or pd.isna(value):
+                return default
+            return float(value)
+        except (ValueError, TypeError):
+            return default
+    
+    def get_previous_trading_date():
+        """获取前一个交易日期 - 基于最后交易日20250725，返回20250724"""
+        # 根据用户说明，最后一个交易日是20250725，所以每日指标显示20250724的数据
+        last_trading_date = '20250725'
+        previous_trading_date = '20250724'
+        
+        print(f"[每日指标] 最后交易日: {last_trading_date}, 返回前一交易日: {previous_trading_date}")
+        return previous_trading_date
+    
+    try:
+        # 确保股票代码格式正确
+        if len(stock_code) == 6:
+            if stock_code.startswith(('60', '68')):
+                ts_code = f"{stock_code}.SH"
+            elif stock_code.startswith(('43', '83', '87')):
+                ts_code = f"{stock_code}.BJ"
+            else:
+                ts_code = f"{stock_code}.SZ"
+        else:
+            ts_code = stock_code
+        
+        # 获取交易日期参数，默认为前一交易日
+        trade_date = request.args.get('trade_date')
+        if not trade_date:
+            trade_date = get_previous_trading_date()
+        
+        print(f"[每日指标] 获取{ts_code}在{trade_date}的每日指标数据...")
+        
+        # 验证股票代码是否存在
+        basic_info = safe_tushare_call(pro.stock_basic, ts_code=ts_code)
+        if basic_info.empty:
+            return jsonify({'error': '股票代码不存在'}), 404
+        
+        # 获取指定日期的每日指标数据
+        daily_basic_data = safe_tushare_call(pro.daily_basic, ts_code=ts_code, trade_date=trade_date)
+        
+        # 如果指定日期没有数据，尝试获取最近的数据
+        if daily_basic_data.empty:
+            print(f"[每日指标] {trade_date}无数据，尝试获取最近的每日指标数据...")
+            # 尝试最近10个交易日
+            for i in range(1, 11):
+                try_date = (datetime.strptime(trade_date, '%Y%m%d') - timedelta(days=i)).strftime('%Y%m%d')
+                daily_basic_data = safe_tushare_call(pro.daily_basic, ts_code=ts_code, trade_date=try_date)
+                if not daily_basic_data.empty:
+                    trade_date = try_date
+                    print(f"[每日指标] 找到{trade_date}的数据")
+                    break
+        
+        if daily_basic_data.empty:
+            return jsonify({'error': '无法获取每日指标数据'}), 404
+        
+        # 获取数据行
+        data_row = daily_basic_data.iloc[0]
+        
+        # 按照Tushare官方文档构建返回数据，包含所有输出参数
+        result_data = {
+            'ts_code': data_row.get('ts_code', ts_code),
+            'trade_date': data_row.get('trade_date', trade_date),
+            'close': safe_float(data_row.get('close')),
+            'turnover_rate': safe_float(data_row.get('turnover_rate')),
+            'turnover_rate_f': safe_float(data_row.get('turnover_rate_f')),
+            'volume_ratio': safe_float(data_row.get('volume_ratio')),
+            'pe': safe_float(data_row.get('pe')),
+            'pe_ttm': safe_float(data_row.get('pe_ttm')),
+            'pb': safe_float(data_row.get('pb')),
+            'ps': safe_float(data_row.get('ps')),
+            'ps_ttm': safe_float(data_row.get('ps_ttm')),
+            'dv_ratio': safe_float(data_row.get('dv_ratio')),
+            'dv_ttm': safe_float(data_row.get('dv_ttm')),
+            'total_share': safe_float(data_row.get('total_share')),
+            'float_share': safe_float(data_row.get('float_share')),
+            'free_share': safe_float(data_row.get('free_share')),
+            'total_mv': safe_float(data_row.get('total_mv')),
+            'circ_mv': safe_float(data_row.get('circ_mv'))
+        }
+        
+        # 获取股票基本信息用于显示
+        stock_name = basic_info.iloc[0]['name'] if not basic_info.empty else stock_code
+        
+        print(f"[每日指标] 成功获取{ts_code}({stock_name})在{trade_date}的每日指标数据")
+        
+        return jsonify({
+            'success': True,
+            'data': result_data,
+            'stock_info': {
+                'ts_code': ts_code,
+                'name': stock_name,
+                'trade_date': trade_date
+            },
+            'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        print(f"[每日指标] 获取失败: {e}")
+        return jsonify({'error': f'获取每日指标数据失败: {str(e)}'}), 500
+
+
+@app.route('/api/stock/<stock_code>/daily_history')
+def get_stock_daily_history(stock_code):
+    """
+    获取股票历史日线数据
+    严格按照Tushare官方文档 daily 接口的输出参数
+    
+    Args:
+        stock_code: 股票代码，如 000001 或 000001.SZ
+        
+    Query Parameters:
+        days: 获取天数，默认500天
+        start_date: 开始日期 YYYYMMDD
+        end_date: 结束日期 YYYYMMDD
+        
+    Returns:
+        JSON: 历史日线数据，包含Tushare官方文档中的所有输出参数
+    """
+    try:
+        # 确保股票代码格式正确
+        if len(stock_code) == 6:
+            if stock_code.startswith(('60', '68')):
+                ts_code = f"{stock_code}.SH"
+            elif stock_code.startswith(('43', '83', '87')):
+                ts_code = f"{stock_code}.BJ"
+            else:
+                ts_code = f"{stock_code}.SZ"
+        else:
+            ts_code = stock_code
+        
+        # 获取参数
+        days = request.args.get('days', 500, type=int)
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        print(f"[历史日线] 获取{ts_code}的历史日线数据，天数: {days}")
+        
+        # 验证股票代码是否存在
+        basic_info = safe_tushare_call(pro.stock_basic, ts_code=ts_code)
+        if basic_info.empty:
+            return jsonify({'error': '股票代码不存在'}), 404
+        
+        # 使用TushareDataFetcher获取历史日线数据
+        from tushare_data_fetcher import TushareDataFetcher
+        fetcher = TushareDataFetcher(pro_api=pro)
+        
+        if start_date and end_date:
+            daily_data = fetcher.get_daily_data(ts_code, start_date=start_date, end_date=end_date)
+        else:
+            daily_data = fetcher.get_daily_data(ts_code, days=days)
+        
+        if daily_data.empty:
+            return jsonify({'error': '无法获取历史日线数据'}), 404
+        
+        # 转换为JSON格式，保持Tushare官方文档的字段格式
+        data_list = []
+        for _, row in daily_data.iterrows():
+            data_list.append({
+                'ts_code': row['ts_code'],
+                'trade_date': row['trade_date'],
+                'open': float(row['open']) if pd.notna(row['open']) else None,
+                'high': float(row['high']) if pd.notna(row['high']) else None,
+                'low': float(row['low']) if pd.notna(row['low']) else None,
+                'close': float(row['close']) if pd.notna(row['close']) else None,
+                'pre_close': float(row['pre_close']) if pd.notna(row['pre_close']) else None,
+                'change': float(row['change']) if pd.notna(row['change']) else None,
+                'pct_chg': float(row['pct_chg']) if pd.notna(row['pct_chg']) else None,
+                'vol': float(row['vol']) if pd.notna(row['vol']) else None,
+                'amount': float(row['amount']) if pd.notna(row['amount']) else None
+            })
+        
+        # 获取股票基本信息
+        stock_name = basic_info.iloc[0]['name'] if not basic_info.empty else stock_code
+        
+        print(f"[历史日线] 成功获取{ts_code}({stock_name})的{len(data_list)}条历史日线数据")
+        
+        return jsonify({
+            'success': True,
+            'data': data_list,
+            'stock_info': {
+                'ts_code': ts_code,
+                'name': stock_name,
+                'total_records': len(data_list),
+                'date_range': {
+                    'start': data_list[0]['trade_date'] if data_list else None,
+                    'end': data_list[-1]['trade_date'] if data_list else None
+                }
+            },
+            'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        print(f"[历史日线] 获取失败: {e}")
+        return jsonify({'error': f'获取历史日线数据失败: {str(e)}'}), 500
+
+
+@app.route('/api/stock/<stock_code>/nine_turn')
+def get_stock_nine_turn(stock_code):
+    """
+    获取股票神奇九转指标数据
+    使用本地计算方式，严格按照神奇九转算法实现
+    
+    Args:
+        stock_code: 股票代码，如 000001 或 000001.SZ
+        
+    Query Parameters:
+        freq: 频率(日daily,分钟60min)，默认daily
+        days: 获取天数，默认200天
+        start_date: 开始日期 YYYY-MM-DD
+        end_date: 结束日期 YYYY-MM-DD
+        
+    Returns:
+        JSON: 神奇九转指标数据
+    """
+    try:
+        # 确保股票代码格式正确
+        if len(stock_code) == 6:
+            if stock_code.startswith(('60', '68')):
+                ts_code = f"{stock_code}.SH"
+            elif stock_code.startswith(('43', '83', '87')):
+                ts_code = f"{stock_code}.BJ"
+            else:
+                ts_code = f"{stock_code}.SZ"
+        else:
+            ts_code = stock_code
+        
+        # 获取参数
+        freq = request.args.get('freq', 'daily')  # 默认日线
+        days = request.args.get('days', 200, type=int)
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        print(f"[神奇九转] 获取{ts_code}的神奇九转数据，频率: {freq}，天数: {days}")
+        
+        # 验证股票代码是否存在
+        basic_info = safe_tushare_call(pro.stock_basic, ts_code=ts_code)
+        if basic_info.empty:
+            return jsonify({'error': '股票代码不存在'}), 404
+        
+        # 获取K线数据用于计算神奇九转
+        # 需要更多数据来确保九转计算的准确性
+        extended_days = days + 30  # 额外获取30天数据
+        
+        if start_date and end_date:
+            # 使用指定的日期范围
+            try:
+                start_date_obj = datetime.strptime(start_date, '%Y-%m-%d')
+                end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
+                # 扩展开始日期以获取足够的数据进行计算
+                extended_start = start_date_obj - timedelta(days=30)
+                kline_data = safe_tushare_call(pro.daily, 
+                                             ts_code=ts_code, 
+                                             start_date=extended_start.strftime('%Y%m%d'),
+                                             end_date=end_date_obj.strftime('%Y%m%d'))
+            except ValueError:
+                return jsonify({'error': '日期格式错误，请使用YYYY-MM-DD格式'}), 400
+        else:
+            # 使用默认天数
+            end_date_obj = datetime.now()
+            start_date_obj = end_date_obj - timedelta(days=extended_days)
+            kline_data = safe_tushare_call(pro.daily, 
+                                         ts_code=ts_code, 
+                                         start_date=start_date_obj.strftime('%Y%m%d'),
+                                         end_date=end_date_obj.strftime('%Y%m%d'))
+        
+        if kline_data.empty:
+            return jsonify({
+                'success': True,
+                'data': [],
+                'message': '该股票暂无K线数据',
+                'stock_info': {
+                    'ts_code': ts_code,
+                    'name': basic_info.iloc[0]['name'] if not basic_info.empty else stock_code,
+                    'freq': freq
+                }
+            })
+        
+        # 按交易日期排序（从早到晚）
+        kline_data = kline_data.sort_values('trade_date')
+        
+        # 计算神奇九转指标
+        nine_turn_results = calculate_nine_turn_indicator(kline_data)
+        
+        # 如果指定了日期范围，过滤结果
+        if start_date and end_date:
+            start_filter = start_date.replace('-', '')
+            end_filter = end_date.replace('-', '')
+            nine_turn_results = [r for r in nine_turn_results 
+                               if start_filter <= r['trade_date'].replace('-', '') <= end_filter]
+        else:
+            # 只返回最近指定天数的数据
+            nine_turn_results = nine_turn_results[-days:] if len(nine_turn_results) > days else nine_turn_results
+        
+        # 获取股票基本信息
+        stock_name = basic_info.iloc[0]['name'] if not basic_info.empty else stock_code
+        
+        # 统计九转信号 - 统计所有有信号的点（不只是第9天）
+        buy_signals = len([d for d in nine_turn_results if d['buy_signal'] > 0])
+        sell_signals = len([d for d in nine_turn_results if d['sell_signal'] > 0])
+        
+        # 统计完整的九转序列（第9天）
+        complete_buy_turns = len([d for d in nine_turn_results if d['buy_signal'] == 9])
+        complete_sell_turns = len([d for d in nine_turn_results if d['sell_signal'] == 9])
+        
+        print(f"[神奇九转] 成功计算{ts_code}({stock_name})的{len(nine_turn_results)}条神奇九转数据，买入信号: {buy_signals}个(完整序列{complete_buy_turns}个)，卖出信号: {sell_signals}个(完整序列{complete_sell_turns}个)")
+        
+        return jsonify({
+            'success': True,
+            'data': nine_turn_results,
+            'stock_info': {
+                'ts_code': ts_code,
+                'name': stock_name,
+                'freq': freq,
+                'total_records': len(nine_turn_results),
+                'buy_signals': buy_signals,
+                'sell_signals': sell_signals,
+                'complete_buy_turns': complete_buy_turns,
+                'complete_sell_turns': complete_sell_turns,
+                'date_range': {
+                    'start': nine_turn_results[0]['trade_date'] if nine_turn_results else None,
+                    'end': nine_turn_results[-1]['trade_date'] if nine_turn_results else None
+                }
+            },
+            'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        print(f"[神奇九转] 获取失败: {e}")
+        return jsonify({'error': f'获取神奇九转数据失败: {str(e)}'}), 500
+
+
+def calculate_nine_turn_indicator(kline_data):
+    """
+    计算神奇九转指标 - 完整序列显示版本
+    
+    神奇九转算法：
+    1. 卖出序列（上九转）：连续N天收盘价高于4天前的收盘价，显示1-9序列
+    2. 买入序列（下九转）：连续N天收盘价低于4天前的收盘价，显示1-9序列
+    3. 当连续第3天达到条件时开始显示前面的1、2、3
+    4. 如果序列中断，重新开始计数
+    
+    Args:
+        kline_data: K线数据DataFrame，包含trade_date, open, high, low, close, vol, amount等字段
+        
+    Returns:
+        list: 包含九转指标的数据列表
+    """
+    results = []
+    data_list = kline_data.to_dict('records')
+    
+    # 跟踪序列状态
+    up_sequence_count = 0    # 卖出序列计数
+    down_sequence_count = 0  # 买入序列计数
+    
+    for i, row in enumerate(data_list):
+        # 基础数据
+        result = {
+            'ts_code': row['ts_code'],
+            'trade_date': row['trade_date'],
+            'freq': 'daily',
+            'open': float(row['open']) if pd.notna(row['open']) else None,
+            'high': float(row['high']) if pd.notna(row['high']) else None,
+            'low': float(row['low']) if pd.notna(row['low']) else None,
+            'close': float(row['close']) if pd.notna(row['close']) else None,
+            'vol': float(row['vol']) if pd.notna(row['vol']) else None,
+            'amount': float(row['amount']) if pd.notna(row['amount']) else None,
+            'buy_signal': 0,     # 买入信号数字 (1-9)
+            'sell_signal': 0,    # 卖出信号数字 (1-9)
+            'nine_up_turn': None,
+            'nine_down_turn': None
+        }
+        
+        # 需要至少4天前的数据才能计算
+        if i >= 4:
+            current_close = row['close']
+            four_days_ago_close = data_list[i - 4]['close']
+            
+            if pd.notna(current_close) and pd.notna(four_days_ago_close):
+                # 检查卖出序列（收盘价 > 4天前收盘价）
+                if current_close > four_days_ago_close:
+                    up_sequence_count += 1
+                    down_sequence_count = 0  # 重置买入序列
+                    
+                    # 从第3天开始显示序列
+                    if up_sequence_count >= 3:
+                        result['sell_signal'] = up_sequence_count
+                        
+                        # 回填前面的信号
+                        start_idx = max(0, len(results) - up_sequence_count + 1)
+                        for j in range(start_idx, len(results)):
+                            if results[j]['sell_signal'] == 0:
+                                seq_num = j - start_idx + 1
+                                if seq_num <= up_sequence_count:
+                                    results[j]['sell_signal'] = seq_num
+                    
+                    # 标记第9天的特殊信号并重置序列
+                    if up_sequence_count == 9:
+                        result['nine_up_turn'] = '+9'
+                        up_sequence_count = 0  # 完成一个完整序列后重置计数器
+                
+                # 检查买入序列（收盘价 < 4天前收盘价）
+                elif current_close < four_days_ago_close:
+                    down_sequence_count += 1
+                    up_sequence_count = 0  # 重置卖出序列
+                    
+                    # 从第3天开始显示序列
+                    if down_sequence_count >= 3:
+                        result['buy_signal'] = down_sequence_count
+                        
+                        # 回填前面的信号
+                        start_idx = max(0, len(results) - down_sequence_count + 1)
+                        for j in range(start_idx, len(results)):
+                            if results[j]['buy_signal'] == 0:
+                                seq_num = j - start_idx + 1
+                                if seq_num <= down_sequence_count:
+                                    results[j]['buy_signal'] = seq_num
+                    
+                    # 标记第9天的特殊信号并重置序列
+                    if down_sequence_count == 9:
+                        result['nine_down_turn'] = '-9'
+                        down_sequence_count = 0  # 完成一个完整序列后重置计数器
+                
+                else:
+                    # 序列中断，重置计数
+                    up_sequence_count = 0
+                    down_sequence_count = 0
+            else:
+                # 数据缺失，重置计数
+                up_sequence_count = 0
+                down_sequence_count = 0
+        
+        # 保持向后兼容的字段
+        result['up_count'] = float(up_sequence_count)
+        result['down_count'] = float(down_sequence_count)
+        
+        results.append(result)
+    
+    return results
 
 
 # 获取真实的实时数据（交易时间内调用）

@@ -225,7 +225,7 @@ class KlineChartManager {
         // 处理每条数据
         rawData.forEach((item, index) => {
             dates.push(item.trade_date || item.date);
-            // ECharts candlestick 标准格式: [open, close, low, high]
+            // 数据格式: [open, close, low, high]
             klineValues.push([
                 parseFloat(item.open),
                 parseFloat(item.close),

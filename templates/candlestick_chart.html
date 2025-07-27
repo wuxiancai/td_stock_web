@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票蜡烛图 - 交互式K线图</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .input-group input, .input-group select {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .chart-container {
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        .stock-info {
+            background: #e3f2fd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #2196f3;
+        }
+
+        .stock-info h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #bbdefb;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #424242;
+        }
+
+        .info-value {
+            color: #1976d2;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #f44336;
+            margin: 20px 0;
+        }
+
+        .chart-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .chart-btn {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .chart-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .chart-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .range-info {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        @media (max-width: 768px) {
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .input-group input, .input-group select {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .chart-controls {
+                justify-content: center;
+            }
+
+            .chart-btn {
+                flex: 1;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📈 股票蜡烛图</h1>
+            <p>基于Tushare数据的交互式K线图表</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="input-group">
+                    <label for="stockCode">股票代码</label>
+                    <input type="text" id="stockCode" placeholder="如: 300354" value="300354">
+                </div>
+                <div class="input-group">
+                    <label for="days">数据天数</label>
+                    <select id="days">
+                        <option value="100">100天</option>
+                        <option value="200">200天</option>
+                        <option value="500" selected>500天</option>
+                        <option value="1000">1000天</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="startDate">开始日期</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="input-group">
+                    <label for="endDate">结束日期</label>
+                    <input type="date" id="endDate">
+                </div>
+            </div>
+            <button class="btn" onclick="loadChartData()">📊 加载图表</button>
+        </div>
+
+        <div class="chart-container">
+            <div id="loading" class="loading" style="display: none;">
+                🔄 正在加载数据，请稍候...
+            </div>
+            <div id="error" class="error" style="display: none;"></div>
+            <div id="stockInfo" class="stock-info" style="display: none;"></div>
+            <div class="chart-controls" id="chartControls" style="display: none;">
+                <button class="chart-btn active" onclick="setDisplayRange(50)">50根</button>
+                <button class="chart-btn" onclick="setDisplayRange(100)">100根</button>
+                <button class="chart-btn" onclick="setDisplayRange(200)">200根</button>
+                <button class="chart-btn" onclick="setDisplayRange(500)">500根</button>
+                <button class="chart-btn" onclick="setDisplayRange(-1)">全部</button>
+            </div>
+            <div class="range-info" id="rangeInfo" style="display: none;"></div>
+            <div id="candlestickChart"></div>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let currentDisplayRange = 100;
+        let stockInfo = {};
+
+        // 页面加载时自动加载默认股票数据
+        window.onload = function() {
+            // 从URL参数获取股票代码
+            const urlParams = new URLSearchParams(window.location.search);
+            const stockCode = urlParams.get('stock_code') || '300354';
+            document.getElementById('stockCode').value = stockCode;
+            loadChartData();
+        };
+
+        async function loadChartData() {
+            const stockCode = document.getElementById('stockCode').value.trim();
+            const days = document.getElementById('days').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!stockCode) {
+                showError('请输入股票代码');
+                return;
+            }
+
+            showLoading(true);
+            hideError();
+            hideStockInfo();
+
+            try {
+                let url = `/api/stock/${stockCode}/daily_history`;
+                const params = new URLSearchParams();
+                
+                if (startDate && endDate) {
+                    params.append('start_date', startDate.replace(/-/g, ''));
+                    params.append('end_date', endDate.replace(/-/g, ''));
+                } else {
+                    params.append('days', days);
+                }
+
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error || '获取数据失败');
+                }
+
+                allData = result.data;
+                stockInfo = result.stock_info;
+                
+                showStockInfo();
+                showChartControls();
+                createCandlestickChart();
+
+            } catch (error) {
+                showError('数据加载失败: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function createCandlestickChart() {
+            if (!allData || allData.length === 0) {
+                showError('没有可显示的数据');
+                return;
+            }
+
+            // 根据显示范围获取数据
+            let displayData = allData;
+            if (currentDisplayRange > 0 && allData.length > currentDisplayRange) {
+                displayData = allData.slice(-currentDisplayRange);
+            }
+
+            // 准备数据
+            const dates = displayData.map(item => item.trade_date);
+            const opens = displayData.map(item => item.open);
+            const highs = displayData.map(item => item.high);
+            const lows = displayData.map(item => item.low);
+            const closes = displayData.map(item => item.close);
+            const volumes = displayData.map(item => item.vol);
+
+            // 创建蜡烛图
+            const candlestickTrace = {
+                x: dates,
+                open: opens,
+                high: highs,
+                low: lows,
+                close: closes,
+                type: 'candlestick',
+                name: stockInfo.name || '股票',
+                increasing: {
+                    line: { color: '#ff4444', width: 1 },
+                    fillcolor: '#ff4444'
+                },
+                decreasing: {
+                    line: { color: '#00aa00', width: 1 },
+                    fillcolor: '#00aa00'
+                },
+                hovertemplate: 
+                    '<b>%{fullData.name}</b><br>' +
+                    '日期: %{x}<br>' +
+                    '开盘: %{open:.2f}<br>' +
+                    '最高: %{high:.2f}<br>' +
+                    '最低: %{low:.2f}<br>' +
+                    '收盘: %{close:.2f}<br>' +
+                    '<extra></extra>'
+            };
+
+            // 创建成交量图
+            const volumeTrace = {
+                x: dates,
+                y: volumes,
+                type: 'bar',
+                name: '成交量',
+                yaxis: 'y2',
+                marker: {
+                    color: volumes.map((vol, i) => 
+                        closes[i] >= opens[i] ? '#ff4444' : '#00aa00'
+                    ),
+                    opacity: 0.6
+                },
+                hovertemplate: 
+                    '日期: %{x}<br>' +
+                    '成交量: %{y:.0f}手<br>' +
+                    '<extra></extra>'
+            };
+
+            const layout = {
+                title: {
+                    text: `${stockInfo.name || '股票'} (${stockInfo.ts_code || ''}) K线图`,
+                    font: { size: 20, color: '#2c3e50' }
+                },
+                xaxis: {
+                    title: '交易日期',
+                    type: 'category',
+                    rangeslider: { visible: false },
+                    showgrid: true,
+                    gridcolor: '#f0f0f0'
+                },
+                yaxis: {
+                    title: '价格 (元)',
+                    side: 'left',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    tickformat: '.2f'
+                },
+                yaxis2: {
+                    title: '成交量 (手)',
+                    side: 'right',
+                    overlaying: 'y',
+                    showgrid: false,
+                    tickformat: '.0f'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Arial, sans-serif' },
+                hovermode: 'x unified',
+                showlegend: true,
+                legend: {
+                    x: 0,
+                    y: 1,
+                    bgcolor: 'rgba(255,255,255,0.8)'
+                },
+                margin: { l: 60, r: 60, t: 80, b: 60 }
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+                displaylogo: false,
+                toImageButtonOptions: {
+                    format: 'png',
+                    filename: `${stockInfo.name || 'stock'}_candlestick`,
+                    height: 600,
+                    width: 1000,
+                    scale: 1
+                }
+            };
+
+            Plotly.newPlot('candlestickChart', [candlestickTrace, volumeTrace], layout, config);
+            
+            updateRangeInfo();
+        }
+
+        function setDisplayRange(range) {
+            currentDisplayRange = range;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.chart-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 重新绘制图表
+            createCandlestickChart();
+        }
+
+        function updateRangeInfo() {
+            const rangeInfo = document.getElementById('rangeInfo');
+            if (currentDisplayRange > 0) {
+                const displayCount = Math.min(currentDisplayRange, allData.length);
+                rangeInfo.textContent = `显示最近 ${displayCount} 根蜡烛图 (共 ${allData.length} 根)`;
+            } else {
+                rangeInfo.textContent = `显示全部 ${allData.length} 根蜡烛图`;
+            }
+            rangeInfo.style.display = 'block';
+        }
+
+        function showStockInfo() {
+            const stockInfoDiv = document.getElementById('stockInfo');
+            stockInfoDiv.innerHTML = `
+                <h3>📊 ${stockInfo.name} (${stockInfo.ts_code})</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">总记录数:</span>
+                        <span class="info-value">${stockInfo.total_records} 条</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">数据范围:</span>
+                        <span class="info-value">${stockInfo.date_range.start} ~ ${stockInfo.date_range.end}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">最新价格:</span>
+                        <span class="info-value">${allData[allData.length-1]?.close?.toFixed(2) || 'N/A'} 元</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">涨跌幅:</span>
+                        <span class="info-value" style="color: ${(allData[allData.length-1]?.pct_chg || 0) >= 0 ? '#ff4444' : '#00aa00'}">
+                            ${(allData[allData.length-1]?.pct_chg || 0).toFixed(2)}%
+                        </span>
+                    </div>
+                </div>
+            `;
+            stockInfoDiv.style.display = 'block';
+        }
+
+        function showChartControls() {
+            document.getElementById('chartControls').style.display = 'flex';
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function hideStockInfo() {
+            document.getElementById('stockInfo').style.display = 'none';
+            document.getElementById('chartControls').style.display = 'none';
+            document.getElementById('rangeInfo').style.display = 'none';
+        }
+
+        // 支持回车键搜索
+        document.getElementById('stockCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadChartData();
+            }
+        });
+    </script>
+</body>
+</html>

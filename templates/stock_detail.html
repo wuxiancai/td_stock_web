@@ -3,3021 +3,827 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>股票详情 - 九转序列选股及四天持股交易系统</title>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <title>股票详情 - 每日指标</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f8f9fa;
             color: #333;
+            line-height: 1.4;
         }
-        
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
-        
-        .header {
+
+        .stock-header {
             background: white;
-            border-radius: 15px;
+            border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
-        
-        .back-btn {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-        }
-        
-        .back-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        
-        .stock-title {
+
+        .stock-info {
             display: flex;
             align-items: center;
             gap: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-        
+
         .stock-name {
-            font-size: 0.9em;
-            font-weight: bold;
+            font-size: 18px;
+            font-weight: 600;
             color: #333;
         }
-        
+
         .stock-code {
-            font-size: 0.9em;
+            font-size: 14px;
             color: #666;
         }
-        
+
         .stock-price {
-            font-size: 1.8em;
-            font-weight: bold;
+            font-size: 32px;
+            font-weight: 700;
             color: #e74c3c;
         }
-        
-        .stock-info {
+
+        .price-change {
             display: flex;
-            flex-wrap: wrap;
             gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .info-item {
-            background: #f8f9fa;
-            padding: 8px 12px;
-            border-radius: 8px;
-            text-align: center;
-            flex: 1;
-            min-width: 100px;
-        }
-        
-        .info-label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        
-        .info-value {
+            align-items: center;
             font-size: 14px;
-            font-weight: bold;
-            color: #333;
         }
-        
+
+        .change-amount {
+            color: #e74c3c;
+        }
+
+        .change-percent {
+            color: #e74c3c;
+        }
+
+        .trade-date {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .indicators-section {
+            background: white;
+            border-radius: 8px;
+            padding: 0;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .indicators-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .indicator-item {
+            padding: 15px 10px;
+            text-align: center;
+            border-right: 1px solid #e9ecef;
+            transition: background-color 0.2s ease;
+        }
+
+        .indicator-item:last-child {
+            border-right: none;
+        }
+
+        .indicator-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .indicator-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .indicator-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212529;
+            line-height: 1.2;
+        }
+
+        .positive {
+            color: #28a745;
+        }
+
+        .negative {
+            color: #dc3545;
+        }
+
+        .neutral {
+            color: #6c757d;
+        }
+
+        /* 蜡烛图样式 */
         .chart-section {
             background: white;
-            border-radius: 15px;
+            border-radius: 8px;
+            padding: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .chart-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chart-btn {
+            padding: 6px 12px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .chart-btn:hover {
+            background: #e9ecef;
+        }
+
+        .chart-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .chart-container {
             padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        
-        .chart-title {
-            font-size: 0.9em;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #333;
+
+        .chart-loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
         }
-        
-        .kline-chart {
-            width: 100%;
-            height: 600px;
-        }
-        
-        .macd-chart {
-            width: 100%;
-            height: 300px;
-        }
-        
+
         .loading {
             text-align: center;
             padding: 40px;
-            font-size: 14px;
             color: #666;
         }
-        
+
         .error {
-            text-align: center;
-            padding: 20px;
-            color: #e74c3c;
-            background: #ffeaea;
-            border-radius: 10px;
-            margin: 20px 0;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px;
+            border: 1px solid #f5c6cb;
         }
-        
-        .price-info {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-        
-        .price-high {
-            color: #e74c3c;
-        }
-        
-        .price-low {
-            color: #27ae60;
-        }
-        
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
             }
             
-            .stock-title {
+            .indicators-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+            
+            .indicator-item {
+                padding: 10px 5px;
+            }
+            
+            .indicator-label {
+                font-size: 11px;
+            }
+            
+            .indicator-value {
+                font-size: 13px;
+            }
+            
+            .stock-price {
+                font-size: 24px;
+            }
+
+            .chart-header {
                 flex-direction: column;
+                gap: 10px;
                 align-items: flex-start;
             }
-            
-            .stock-info {
-                grid-template-columns: repeat(2, 1fr);
+
+            .chart-controls {
+                width: 100%;
+                justify-content: center;
             }
-            
-            .kline-chart {
-                height: 400px;
-            }
-            
-            .macd-chart {
-                height: 200px;
+        }
+
+        @media (max-width: 480px) {
+            .indicators-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div id="loadingDiv" class="loading">正在加载股票数据...</div>
-            <div id="errorDiv" class="error" style="display: none;"></div>
-            
-            <div id="stockInfo" style="display: none;">
-                <div style="display: flex; justify-content: flex-end; align-items: flex-start; margin-bottom: 20px;">
-                    <div style="display: flex; flex-direction: row; gap: 10px; align-items: center;">
-                        <div style="position: relative; display: inline-block;">
-                            <select id="addToWatchlistSelect" onchange="addToWatchlistWithPriority(this.value)" style="
-                                background: linear-gradient(45deg, #ffc107, #fd7e14);
-                                color: #333;
-                                border: none;
-                                padding: 10px 20px;
-                                border-radius: 20px;
-                                cursor: pointer;
-                                font-size: 14px;
-                                font-weight: bold;
-                                transition: all 0.3s ease;
-                                appearance: none;
-                                -webkit-appearance: none;
-                                -moz-appearance: none;
-                                padding-right: 30px;
-                                background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 4 5%22><path fill=%22%23333%22 d=%22M2 0L0 2h4zm0 5L0 3h4z%22/></svg>');
-                                background-repeat: no-repeat;
-                                background-position: right 10px center;
-                                background-size: 12px;
-                                min-width: 120px;
-                                height: 40px;
-                            ">
-                                <option value="" disabled selected>⭐ 加入自选股</option>
-                                <option value="purple" style="background-color: #8e44ad; color: white;">🟣 可立即买入</option>
-                                <option value="red" style="background-color: #e74c3c; color: white;">🔴 重点关注</option>
-                                <option value="green" style="background-color: #27ae60; color: white;">🟢 观察</option>
-                                <option value="holding" style="background-color: #ff9800; color: white;">🟠 持仓中</option>
-                                <option value="sold" style="background-color: #9e9e9e; color: white;">⚫ 已卖出</option>
-                            </select>
-                        </div>
-                        <button id="removeFromWatchlistBtn" onclick="removeFromWatchlist()" style="
-                            background: linear-gradient(45deg, #dc3545, #c82333);
-                            color: white;
-                            border: none;
-                            padding: 10px 20px;
-                            border-radius: 20px;
-                            cursor: pointer;
-                            font-size: 14px;
-                            font-weight: bold;
-                            transition: all 0.3s ease;
-                            display: none;
-                            min-width: 120px;
-                            height: 40px;
-                        ">🗑️ 删除自选</button>
-                        <button id="refreshDataBtn" onclick="refreshStockData()" style="
-                            background: linear-gradient(45deg, #28a745, #20c997);
-                            color: white;
-                            border: none;
-                            padding: 10px 20px;
-                            border-radius: 20px;
-                            cursor: pointer;
-                            font-size: 14px;
-                            font-weight: bold;
-                            transition: all 0.3s ease;
-                            min-width: 120px;
-                            height: 40px;
-                        ">🔄 刷新数据</button>
-                    </div>
-                </div>
-                <div class="stock-title">
-                    <div>
-                        <div class="stock-name" id="stockName"></div>
-                        <div class="stock-code" id="stockCode"></div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <div class="stock-price" id="stockPrice"></div>
-                        <div class="price-info">
-                            <span class="price-high">90天最高: ¥<span id="highestPrice"></span> (<span id="highestDate"></span>)</span>
-                            <span class="price-low">90天最低: ¥<span id="lowestPrice"></span> (<span id="lowestDate"></span>) <span id="lastKlineDate" style="color: black; float: right;"></span></span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stock-info">
-                    <div class="info-item">
-                        <div class="info-label">市值</div>
-                        <div class="info-value" id="marketCap"></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">成交额</div>
-                        <div class="info-value" id="amount"></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">净流入额</div>
-                        <div class="info-value" id="netMfAmount"></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">换手率</div>
-                        <div class="info-value" id="turnoverRate"></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">量比</div>
-                        <div class="info-value" id="volumeRatio"></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">市盈率(TTM)</div>
-                        <div class="info-value" id="peTtm"></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">市净率(PB)</div>
-                        <div class="info-value" id="pbRatio"></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">当天开盘价</div>
-                        <div class="info-value" id="openPrice">-</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">当天涨幅</div>
-                        <div class="info-value" id="changePercent"></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">所属行业</div>
-                        <div class="info-value" id="industry"></div>
-                    </div>
-                </div>
-                
-                <!-- 资金流向信息 -->
-                <div class="moneyflow-section" id="moneyflowSection" style="display: none;">
-                    <h3 style="margin: 20px 0 10px 0; color: #333; font-size: 1.0em;">资金流向</h3>
-                    <div class="stock-info">
+        <div id="loadingDiv" class="loading" style="display: block;">
+            <p>正在加载每日指标数据...</p>
+        </div>
 
-                        <div class="info-item">
-                            <div class="info-label">特大单买入金额</div>
-                            <div class="info-value" id="buyElgAmount"></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">特大单卖出金额</div>
-                            <div class="info-value" id="sellElgAmount"></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">大单买入金额</div>
-                            <div class="info-value" id="buyLgAmount"></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">大单卖出金额</div>
-                            <div class="info-value" id="sellLgAmount"></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">中单买入金额</div>
-                            <div class="info-value" id="buyMdAmount"></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">中单卖出金额</div>
-                            <div class="info-value" id="sellMdAmount"></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">小单买入金额</div>
-                            <div class="info-value" id="buySmAmount"></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">小单卖出金额</div>
-                            <div class="info-value" id="sellSmAmount"></div>
-                        </div>
+        <div id="errorDiv" class="error" style="display: none;"></div>
+
+        <div id="contentDiv" style="display: none;">
+            <div class="stock-header">
+                <div class="stock-info">
+                    <div>
+                        <span id="stockName" class="stock-name">东华测试</span>
+                        <span id="stockCode" class="stock-code">300354.SZ</span>
                     </div>
-                </div>
-                
-                <!-- 实时数据信息 -->
-                <div class="realtime-section" id="realtimeSection" style="display: none;">
-                    <h3 style="margin: 20px 0 10px 0; color: #333; font-size: 1.0em;">实时数据</h3>
-                    <div class="stock-info">
-                        <div class="info-item">
-                            <div class="info-label">实时价格</div>
-                            <div class="info-value" id="realtimePrice">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">涨跌幅</div>
-                            <div class="info-value" id="realtimeChangePercent">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">涨跌额</div>
-                            <div class="info-value" id="realtimeChangeAmount">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">今开</div>
-                            <div class="info-value" id="realtimeOpen">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">昨收</div>
-                            <div class="info-value" id="realtimePreClose">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">最高</div>
-                            <div class="info-value" id="realtimeHigh">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">最低</div>
-                            <div class="info-value" id="realtimeLow">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">振幅</div>
-                            <div class="info-value" id="realtimeAmplitude">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">成交量</div>
-                            <div class="info-value" id="realtimeVolume">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">成交额</div>
-                            <div class="info-value" id="realtimeAmount">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">换手率</div>
-                            <div class="info-value" id="realtimeTurnover">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">量比</div>
-                            <div class="info-value" id="realtimeVolumeRatio">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">市盈率(动态)</div>
-                            <div class="info-value" id="realtimePE">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">市净率</div>
-                            <div class="info-value" id="realtimePB">-</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">净流入额</div>
-                            <div class="info-value" id="realtimeNetInflow">-</div>
-                        </div>
+                    <div>
+                        <span id="stockPrice" class="stock-price">¥40.31</span>
                     </div>
-                    
-                    <!-- 实时分时图 -->
-                    <div class="chart-container" style="margin-top: 20px;">
-                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时分时图</h4>
-                        <div id="realtimeMinuteChart" style="width: 100%; height: 300px;"></div>
-                    </div>
-                    
-                    <!-- 实时K线图 -->
-                    <div class="chart-container" style="margin-top: 20px;">
-                        <h4 style="margin: 10px 0; color: #333; font-size: 0.9em;">实时K线图 (最近90天)</h4>
-                        <div id="realtimeKlineChart" style="width: 100%; height: 400px;"></div>
-                    </div>
-                    
-                    <div style="text-align: center; margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;">
-                        <div style="margin-bottom: 10px;">
-                            <button id="autoRefreshBtn" onclick="toggleRealtimeAutoRefresh()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9em; margin-right: 10px; min-width: 140px; height: 40px;">▶️ 开始自动刷新</button>
-                            <button onclick="loadRealtimeData()" style="background: linear-gradient(45deg, #007bff, #0056b3); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em; min-width: 120px; height: 40px;">🔄 手动刷新</button>
-                        </div>
-                        <div id="lastRefreshTime" style="font-size: 0.8em; color: #666; margin-top: 5px;">点击开始自动刷新</div>
-                        <div style="font-size: 0.75em; color: #999; margin-top: 3px;">自动刷新间隔: 10秒 (符合AKShare官方建议)</div>
+                    <div class="price-change">
+                        <span id="changeAmount" class="change-amount">+52.00</span>
+                        <span>(<span id="changePercent" class="change-percent">+33.30</span>)</span>
+                        <span id="tradeDate" class="trade-date">2025年7月25日</span>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="chart-section" id="chartSection" style="display: none;">
-            <div class="chart-title">日K线图 (最近90天) - 九转序列</div>
-            <div id="klineChart" class="kline-chart"></div>
-        </div>
-        
-        <div class="chart-section" id="macdSection" style="display: none;">
-            <div class="chart-title">MACD指标</div>
-            <div id="macdChart" class="macd-chart"></div>
-        </div>
-        
-        <div class="chart-section" id="kdjSection" style="display: none;">
-            <div class="chart-title">KDJ指标 (K线-紫色, D线-蓝色, J线-红色)</div>
-            <div id="kdjChart" class="macd-chart"></div>
-        </div>
-        
-        <div class="chart-section" id="rsiSection" style="display: none;">
-            <div class="chart-title">RSI指标</div>
-            <div id="rsiChart" class="macd-chart"></div>
+
+            <div class="indicators-section">
+                <div class="indicators-header">每日指标</div>
+                <div class="indicators-grid">
+                    <div class="indicator-item">
+                        <div class="indicator-label">市值</div>
+                        <div id="totalMv" class="indicator-value">55.76亿</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">成交额</div>
+                        <div id="amount" class="indicator-value">2.53亿</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">净流入额</div>
+                        <div id="netInflow" class="indicator-value negative">-5310.00万</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">换手率</div>
+                        <div id="turnoverRate" class="indicator-value">7.71%</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">量比</div>
+                        <div id="volumeRatio" class="indicator-value">0.85</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">市盈率(TTM)</div>
+                        <div id="peTtm" class="indicator-value">45.17</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">市净率(PB)</div>
+                        <div id="pb" class="indicator-value">7.36</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">当天开盘</div>
+                        <div id="open" class="indicator-value">¥41.01</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">当天涨幅</div>
+                        <div id="pctChg" class="indicator-value negative">-0.03%</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">所属行业</div>
+                        <div id="industry" class="indicator-value">电器仪表</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 蜡烛图部分 -->
+            <div class="chart-section">
+                <div class="chart-header">
+                    <span>K线图</span>
+                    <div class="chart-controls">
+                        <button class="chart-btn" onclick="setDisplayRange(50)">50根</button>
+                        <button class="chart-btn active" onclick="setDisplayRange(100)">100根</button>
+                        <button class="chart-btn" onclick="setDisplayRange(200)">200根</button>
+                        <button class="chart-btn" onclick="setDisplayRange(-1)">全部</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div id="chartLoading" class="chart-loading" style="display: none;">
+                        正在加载K线数据...
+                    </div>
+                    <div id="candlestickChart" style="height: 400px;"></div>
+                <div id="volumeChart" style="height: 150px; margin-top: 5px;"></div>
+                </div>
+            </div>
         </div>
     </div>
-    
+
     <script>
-        const stockCode = '{{ stock_code }}';
-        let stockData = null;
-        
-        
-        function formatNumber(num, decimals = 2) {
-            if (num === 0 || num === null || num === undefined) return '-';
-            if (num >= 100000000) {
-                return (num / 100000000).toFixed(decimals) + '亿';
-            } else if (num >= 10000) {
-                return (num / 10000).toFixed(decimals) + '万';
+        // 全局变量
+        let allChartData = [];
+        let nineTurnData = []; // 添加神奇九转数据
+        let currentDisplayRange = 100;
+        let currentStockCode = '';
+
+        // 从URL参数或后端传递的变量获取股票代码
+        function getStockCodeFromUrl() {
+            // 首先尝试从后端传递的变量获取
+            const backendStockCode = '{{ stock_code }}';
+            if (backendStockCode && backendStockCode !== '') {
+                return backendStockCode;
             }
-            return num.toFixed(decimals);
+            
+            // 如果后端没有传递，则从URL参数获取
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('code') || '300354';
         }
-        
+
+        // 格式化数值
+        function formatValue(value, type = 'number') {
+            if (value === null || value === undefined || value === '') {
+                return '--';
+            }
+            
+            const num = parseFloat(value);
+            if (isNaN(num)) return value;
+            
+            switch (type) {
+                case 'currency':
+                    return `¥${num.toFixed(2)}`;
+                case 'percentage':
+                    return `${num.toFixed(2)}%`;
+                case 'large_number':
+                    if (num >= 100000000) {
+                        return `${(num / 100000000).toFixed(2)}亿`;
+                    } else if (num >= 10000) {
+                        return `${(num / 10000).toFixed(2)}万`;
+                    }
+                    return num.toFixed(2);
+                case 'ratio':
+                    return num.toFixed(2);
+                default:
+                    return num.toFixed(2);
+            }
+        }
+
+        // 格式化成交额
+        function formatAmount(value) {
+            if (value === null || value === undefined || value === '') {
+                return '--';
+            }
+            
+            const num = parseFloat(value);
+            if (isNaN(num)) return value;
+            
+            // Tushare返回的amount单位是千元，需要先转换为万元
+            const amountInWan = num / 10;
+            
+            // 成交额单位转换：万元 -> 亿元
+            if (amountInWan >= 10000) {
+                return `${(amountInWan / 10000).toFixed(2)}亿`;
+            } else {
+                return `${amountInWan.toFixed(2)}万`;
+            }
+        }
+
+        // 格式化图表日期（只显示月日）
+        function formatChartDate(dateStr) {
+            if (!dateStr) return '';
+            const month = dateStr.substring(4, 6);
+            const day = dateStr.substring(6, 8);
+            return `${month}-${day}`;
+        }
+
+        // 格式化日期
         function formatDate(dateStr) {
             if (!dateStr) return '';
-            return dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6) + '-' + dateStr.substring(6, 8);
-        }
-        
-        function formatDateChinese(dateStr) {
-            if (!dateStr) return '';
             const year = dateStr.substring(0, 4);
-            const month = parseInt(dateStr.substring(4, 6));
-            const day = parseInt(dateStr.substring(6, 8));
+            const month = dateStr.substring(4, 6);
+            const day = dateStr.substring(6, 8);
             return `${year}年${month}月${day}日`;
         }
-        
-        // 安全的数值转换函数 - 移到全局作用域
-        function safeParseFloat(value, defaultValue = 0) {
-            // 处理null、undefined、空字符串等无效值
-            if (value === null || value === undefined || value === '') {
-                return defaultValue;
-            }
-            
-            // 处理字符串类型的数值
-            if (typeof value === 'string') {
-                // 移除可能的空格和特殊字符
-                value = value.trim();
-                if (value === '') {
-                    return defaultValue;
-                }
-            }
-            
-            // 如果已经是数字类型且有效，直接返回
-            if (typeof value === 'number' && !isNaN(value) && isFinite(value)) {
-                return value;
-            }
-            
-            // 尝试解析为浮点数
-            const parsed = parseFloat(value);
-            
-            // 验证解析结果
-            if (isNaN(parsed) || !isFinite(parsed)) {
-                // 在开发环境下记录警告
-                if (console && console.warn) {
-                    console.warn(`safeParseFloat: 无法解析值 "${value}", 使用默认值 ${defaultValue}`);
-                }
-                return defaultValue;
-            }
-            
-            return parsed;
-        }
-        
-        // 数据验证函数
-        function validateKlineItem(item) {
-            if (!item || typeof item !== 'object') {
-                return false;
-            }
-            
-            const requiredFields = ['open', 'close', 'low', 'high'];
-            return requiredFields.every(field => {
-                const value = safeParseFloat(item[field]);
-                return value > 0; // 股价应该大于0
-            });
-        }
-        
-        function loadStockData() {
-            fetch(`/api/stock/${stockCode}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        showError(data.error);
-                        return;
-                    }
-                    
-                    stockData = data;
-                    displayStockInfo(data);
-                    drawKlineChart(data);
-                    drawMacdChart(data);
-                    drawKdjChart(data);
-                    drawRsiChart(data);
-                    
-                    // 检查股票是否已在自选股中
-                    checkWatchlistStatus();
-                })
-                .catch(error => {
-                    showError('加载数据失败: ' + error.message);
-                });
-        }
-        
-        function checkWatchlistStatus() {
-            // 使用stockData.ts_code而不是stockCode，确保格式正确
-            const tsCode = stockData ? stockData.ts_code : stockCode;
-            fetch(`/api/watchlist/check?ts_code=${tsCode}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        updateWatchlistUI(data.in_watchlist, data.priority);
-                    }
-                })
-                .catch(error => {
-                    console.error('检查自选股状态失败:', error);
-                });
-        }
-        
-        function updateWatchlistUI(inWatchlist, priority) {
-            const select = document.getElementById('addToWatchlistSelect');
-            const removeBtn = document.getElementById('removeFromWatchlistBtn');
-            
-            if (inWatchlist) {
-                // 股票已在自选股中
-                const priorityNames = {
-                    'purple': '可立即买入',
-                    'red': '重点关注',
-                    'green': '观察',
-                    'holding': '持仓中',
-                    'sold': '已卖出'
-                };
-                
-                select.innerHTML = `<option selected>✓ 已加入自选 (${priorityNames[priority] || '观察'})</option>`;
-                select.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
-                select.disabled = true;
-                
-                // 显示删除按钮
-                removeBtn.style.display = 'inline-block';
-            } else {
-                // 股票不在自选股中，恢复原始状态
-                select.innerHTML = `
-                    <option value="" disabled selected>⭐ 加入自选股</option>
-                    <option value="purple" style="background-color: #8e44ad; color: white;">🟣 可立即买入</option>
-                    <option value="red" style="background-color: #e74c3c; color: white;">🔴 重点关注</option>
-                    <option value="green" style="background-color: #27ae60; color: white;">🟢 观察</option>
-                    <option value="holding" style="background-color: #ff9800; color: white;">🟠 持仓中</option>
-                    <option value="sold" style="background-color: #9e9e9e; color: white;">⚫ 已卖出</option>
-                `;
-                select.style.background = 'linear-gradient(45deg, #ffc107, #fd7e14)';
-                select.disabled = false;
-                
-                // 隐藏删除按钮
-                removeBtn.style.display = 'none';
-            }
-        }
-        
-        function displayStockInfo(data) {
-            document.getElementById('loadingDiv').style.display = 'none';
-            document.getElementById('stockInfo').style.display = 'block';
-            document.getElementById('chartSection').style.display = 'block';
-            document.getElementById('macdSection').style.display = 'block';
-            document.getElementById('kdjSection').style.display = 'block';
-            document.getElementById('rsiSection').style.display = 'block';
-            
-            // 动态设置页面标题为股票名称
-            document.title = data.name + ' - 九转序列选股及四天持股交易系统';
-            
-            document.getElementById('stockName').textContent = data.name;
-            document.getElementById('stockCode').textContent = data.ts_code;
-            
-            // 显示当前价格（与实时数据区域保持一致）
-            document.getElementById('stockPrice').textContent = '¥' + data.latest_price.toFixed(2);
-            
-            document.getElementById('highestPrice').textContent = data.highest_price.toFixed(2);
-            document.getElementById('lowestPrice').textContent = data.lowest_price.toFixed(2);
-            document.getElementById('highestDate').textContent = formatDate(data.highest_date);
-            document.getElementById('lowestDate').textContent = formatDate(data.lowest_date);
-            
-            // 获取最后一根K线的时间并显示
-            if (data.kline_data && data.kline_data.length > 0) {
-                const lastKlineDate = data.kline_data[data.kline_data.length - 1].trade_date;
-                document.getElementById('lastKlineDate').textContent = formatDateChinese(lastKlineDate);
-            }
-            
-            document.getElementById('marketCap').textContent = formatNumber(data.market_cap * 10000);
-            document.getElementById('amount').textContent = formatNumber(data.amount * 1000);
-            
-            // 显示净流入额
-            console.log('净流入额数据调试:', {
-                net_mf_amount: data.net_mf_amount,
-                type: typeof data.net_mf_amount,
-                moneyflow: data.moneyflow
-            });
-            
-            if (data.net_mf_amount !== undefined && data.net_mf_amount !== null) {
-                // data.net_mf_amount 单位是千万元，需要转换为万元显示
-                const netMfAmountWan = data.net_mf_amount * 1000; // 千万元转换为万元
-                const netMfElement = document.getElementById('netMfAmount');
-                
-                // 使用与特大单买入金额相同的格式化函数
-                function formatMoneyflowAmountForNet(value) {
-                    if (value === 0 || value === null || value === undefined) return '-';
-                    const absValue = Math.abs(value);
-                    const sign = value >= 0 ? '+' : '-';
-                    let formatted;
-                    
-                    if (absValue >= 10000) {
-                        formatted = (absValue / 10000).toFixed(2) + '亿';
-                    } else {
-                        formatted = absValue.toFixed(2) + '万';
-                    }
-                    
-                    return sign + formatted;
-                }
-                
-                netMfElement.textContent = formatMoneyflowAmountForNet(netMfAmountWan);
-                // 根据正负值设置颜色
-                if (netMfAmountWan > 0) {
-                    netMfElement.style.color = '#ff4444'; // 红色表示净流入
-                } else if (netMfAmountWan < 0) {
-                    netMfElement.style.color = '#44aa44'; // 绿色表示净流出
-                } else {
-                    netMfElement.style.color = '#666'; // 灰色表示无变化
-                }
-            } else {
-                document.getElementById('netMfAmount').textContent = '-';
-                document.getElementById('netMfAmount').style.color = '#666';
-            }
-            
-            document.getElementById('turnoverRate').textContent = data.turnover_rate.toFixed(2) + '%';
-            document.getElementById('peTtm').textContent = (data.pe_ttm && data.pe_ttm > 0) ? data.pe_ttm.toFixed(2) : '-';
-            document.getElementById('volumeRatio').textContent = data.volume_ratio.toFixed(2);
-            
-            // 显示市净率(PB)
-            document.getElementById('pbRatio').textContent = (data.pb && data.pb > 0) ? data.pb.toFixed(2) : '-';
-            
-            // 显示当天涨幅
-            const changePercent = data.pct_chg || 0;
-            const changeElement = document.getElementById('changePercent');
-            changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
-            changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#44aa44';
-            
-            document.getElementById('industry').textContent = data.industry || '-';
-            
-            // 显示资金流向数据（如果可用）
-            if (data.moneyflow && data.moneyflow !== null) {
-                document.getElementById('moneyflowSection').style.display = 'block';
-                
-                // 格式化资金流向数值的函数（万元单位）
-                function formatMoneyflowAmount(value) {
-                    if (value === 0 || value === null || value === undefined) return '-';
-                    const absValue = Math.abs(value);
-                    let formatted;
-                    
-                    if (absValue >= 10000) {
-                        formatted = (absValue / 10000).toFixed(2) + '亿';
-                    } else {
-                        formatted = absValue.toFixed(2) + '万';
-                    }
-                    
-                    return formatted;
-                }
-                
-                // 设置买入金额颜色（红色）
-                function setBuyAmountStyle(elementId) {
-                    const element = document.getElementById(elementId);
-                    element.style.color = '#ff4444'; // 红色表示买入
-                }
-                
-                // 设置卖出金额颜色（绿色）
-                function setSellAmountStyle(elementId) {
-                    const element = document.getElementById(elementId);
-                    element.style.color = '#44aa44'; // 绿色表示卖出
-                }
-                
-                // 设置净流入额颜色（根据正负值）
-                function setNetAmountStyle(elementId, value) {
-                    const element = document.getElementById(elementId);
-                    if (value > 0) {
-                        element.style.color = '#ff4444'; // 红色表示净流入
-                    } else if (value < 0) {
-                        element.style.color = '#44aa44'; // 绿色表示净流出
-                    } else {
-                        element.style.color = '#666'; // 灰色表示无变化
-                    }
-                }
-                
 
-                
-                // 显示特大单买入金额
-                const buyElgAmount = data.moneyflow.buy_elg_amount || 0;
-                document.getElementById('buyElgAmount').textContent = formatMoneyflowAmount(buyElgAmount);
-                setBuyAmountStyle('buyElgAmount');
-                
-                // 显示特大单卖出金额
-                const sellElgAmount = data.moneyflow.sell_elg_amount || 0;
-                document.getElementById('sellElgAmount').textContent = formatMoneyflowAmount(sellElgAmount);
-                setSellAmountStyle('sellElgAmount');
-                
-                // 显示大单买入金额
-                const buyLgAmount = data.moneyflow.buy_lg_amount || 0;
-                document.getElementById('buyLgAmount').textContent = formatMoneyflowAmount(buyLgAmount);
-                setBuyAmountStyle('buyLgAmount');
-                
-                // 显示大单卖出金额
-                const sellLgAmount = data.moneyflow.sell_lg_amount || 0;
-                document.getElementById('sellLgAmount').textContent = formatMoneyflowAmount(sellLgAmount);
-                setSellAmountStyle('sellLgAmount');
-                
-                // 显示中单买入金额
-                const buyMdAmount = data.moneyflow.buy_md_amount || 0;
-                document.getElementById('buyMdAmount').textContent = formatMoneyflowAmount(buyMdAmount);
-                setBuyAmountStyle('buyMdAmount');
-                
-                // 显示中单卖出金额
-                const sellMdAmount = data.moneyflow.sell_md_amount || 0;
-                document.getElementById('sellMdAmount').textContent = formatMoneyflowAmount(sellMdAmount);
-                setSellAmountStyle('sellMdAmount');
-                
-                // 显示小单买入金额
-                const buySmAmount = data.moneyflow.buy_sm_amount || 0;
-                document.getElementById('buySmAmount').textContent = formatMoneyflowAmount(buySmAmount);
-                setBuyAmountStyle('buySmAmount');
-                
-                // 显示小单卖出金额
-                const sellSmAmount = data.moneyflow.sell_sm_amount || 0;
-                document.getElementById('sellSmAmount').textContent = formatMoneyflowAmount(sellSmAmount);
-                setSellAmountStyle('sellSmAmount');
+        // 设置数值颜色
+        function setValueColor(element, value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) return;
+            
+            element.classList.remove('positive', 'negative', 'neutral');
+            if (num > 0) {
+                element.classList.add('positive');
+            } else if (num < 0) {
+                element.classList.add('negative');
             } else {
-                // 如果没有资金流向数据，隐藏该部分
-                document.getElementById('moneyflowSection').style.display = 'none';
+                element.classList.add('neutral');
             }
-            
-            // 加载实时数据
-            loadRealtimeData();
         }
-        
-        // 实时数据自动刷新相关变量
-        let realtimeRefreshInterval = null;
-        let isRealtimeAutoRefresh = false;
-        
-        // 加载实时数据函数
-        function loadRealtimeData() {
-            fetch(`/api/stock/${stockCode}/realtime`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        console.error('加载实时数据失败:', data.error);
-                        // 即使有错误，也尝试显示基础数据
-                        displayRealtimeDataFallback();
-                        return;
-                    }
-                    
-                    displayRealtimeData(data);
-                    
-                    // 更新最后刷新时间
-                    updateLastRefreshTime();
-                })
-                .catch(error => {
-                    console.error('加载实时数据失败:', error);
-                    // 网络错误时也尝试显示基础数据
-                    displayRealtimeDataFallback();
-                });
-        }
-        
-        // 开始自动刷新实时数据
-        function startRealtimeAutoRefresh() {
-            if (realtimeRefreshInterval) {
-                clearInterval(realtimeRefreshInterval);
-            }
+
+        // 加载股票数据
+        async function loadStockData() {
+            currentStockCode = getStockCodeFromUrl();
             
-            isRealtimeAutoRefresh = true;
-            // 根据AKShare官方建议，设置10秒刷新间隔，避免频繁访问导致的错误
-            realtimeRefreshInterval = setInterval(() => {
-                if (isRealtimeAutoRefresh) {
-                    loadRealtimeData();
+            try {
+                // 获取每日指标数据
+                const dailyBasicResponse = await fetch(`/api/stock/${currentStockCode}/daily_basic`);
+                const dailyBasicResult = await dailyBasicResponse.json();
+                
+                if (!dailyBasicResult.success) {
+                    throw new Error(dailyBasicResult.error || '获取每日指标数据失败');
                 }
-            }, 10000); // 10秒刷新一次
-            
-            // 更新按钮状态
-            updateAutoRefreshButton(true);
-        }
-        
-        // 停止自动刷新实时数据
-        function stopRealtimeAutoRefresh() {
-            if (realtimeRefreshInterval) {
-                clearInterval(realtimeRefreshInterval);
-                realtimeRefreshInterval = null;
-            }
-            
-            isRealtimeAutoRefresh = false;
-            
-            // 更新按钮状态
-            updateAutoRefreshButton(false);
-        }
-        
-        // 切换自动刷新状态
-        function toggleRealtimeAutoRefresh() {
-            if (isRealtimeAutoRefresh) {
-                stopRealtimeAutoRefresh();
-            } else {
-                startRealtimeAutoRefresh();
+
+                // 获取实时数据
+                const realtimeResponse = await fetch(`/api/stock/${currentStockCode}/realtime`);
+                const realtimeResult = await realtimeResponse.json();
+                
+                displayStockData(dailyBasicResult, realtimeResult);
+                
+                // 加载K线数据
+                await loadChartData();
+                
+            } catch (error) {
+                showError('数据加载失败: ' + error.message);
             }
         }
-        
-        // 更新自动刷新按钮状态
-        function updateAutoRefreshButton(isActive) {
-            const button = document.getElementById('autoRefreshBtn');
-            if (button) {
-                if (isActive) {
-                    button.textContent = '⏸️ 停止自动刷新';
-                    button.style.backgroundColor = '#e74c3c';
+
+        // 加载K线数据
+        async function loadChartData() {
+            try {
+                showChartLoading(true);
+                
+                // 并行获取K线数据和神奇九转数据
+                const [historyResponse, nineTurnResponse] = await Promise.all([
+                    fetch(`/api/stock/${currentStockCode}/daily_history?days=200`),
+                    fetch(`/api/stock/${currentStockCode}/nine_turn?days=200&freq=daily`)
+                ]);
+                
+                const historyResult = await historyResponse.json();
+                const nineTurnResult = await nineTurnResponse.json();
+                
+                if (!historyResult.success) {
+                    throw new Error(historyResult.error || '获取K线数据失败');
+                }
+                
+                allChartData = historyResult.data;
+                
+                // 处理神奇九转数据
+                if (nineTurnResult.success && nineTurnResult.data) {
+                    nineTurnData = nineTurnResult.data;
+                    console.log(`[神奇九转] 成功获取${nineTurnData.length}条数据，上九转信号: ${nineTurnResult.stock_info.up_signals}个，下九转信号: ${nineTurnResult.stock_info.down_signals}个`);
                 } else {
-                    button.textContent = '▶️ 开始自动刷新';
-                    button.style.backgroundColor = '#27ae60';
+                    nineTurnData = [];
+                    console.log('[神奇九转] 暂无数据或获取失败');
                 }
+                
+                createCandlestickChart();
+                
+            } catch (error) {
+                console.error('数据加载失败:', error);
+            } finally {
+                showChartLoading(false);
             }
         }
-        
-        // 更新最后刷新时间
-        function updateLastRefreshTime() {
-            const timeElement = document.getElementById('lastRefreshTime');
-            if (timeElement) {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
-                timeElement.textContent = `最后更新: ${timeStr}`;
-            }
-        }
-        
-        // 备用实时数据显示函数（基于已加载的股票数据）
-        function displayRealtimeDataFallback() {
-            if (!stockData) {
-                console.log('没有股票数据可用于备用显示');
+
+        // 创建蜡烛图
+        function createCandlestickChart() {
+            if (!allChartData || allChartData.length === 0) {
                 return;
             }
-            
-            console.log('使用备用数据显示实时信息');
-            
-            // 显示实时数据部分
-            document.getElementById('realtimeSection').style.display = 'block';
-            
-            // 使用股票基础数据填充实时信息
-            document.getElementById('realtimePrice').textContent = '¥' + (stockData.latest_price || 0).toFixed(2);
-            
-            const changePercent = stockData.pct_chg || 0;
-            const changeElement = document.getElementById('realtimeChangePercent');
-            changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
-            changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#44aa44';
-            
-            document.getElementById('realtimeAmount').textContent = formatNumber((stockData.amount || 0) * 1000);
-            document.getElementById('realtimeTurnover').textContent = (stockData.turnover_rate || 0).toFixed(2) + '%';
-            document.getElementById('realtimeVolumeRatio').textContent = (stockData.volume_ratio || 0).toFixed(2);
-            
-            // 显示净流入额
-            if (stockData.net_mf_amount !== undefined && stockData.net_mf_amount !== null) {
-                // stockData.net_mf_amount 单位是千万元，需要转换为万元显示
-                const netInflowWan = stockData.net_mf_amount * 1000; // 千万元转换为万元
-                const netElement = document.getElementById('realtimeNetInflow');
-                netElement.textContent = formatNumber(netInflowWan) + '万';
-                netElement.style.color = netInflowWan >= 0 ? '#ff4444' : '#00aa00';
-            } else {
-                document.getElementById('realtimeNetInflow').textContent = '-';
+
+            // 根据显示范围获取数据
+            let displayData = allChartData;
+            if (currentDisplayRange > 0 && allChartData.length > currentDisplayRange) {
+                displayData = allChartData.slice(-currentDisplayRange);
             }
-            
-            // 显示K线图（基于真实历史数据）
-            if (stockData.kline_data && stockData.kline_data.length > 0) {
-                drawRealtimeKlineChart(stockData.kline_data);
-            }
-            
-            // 不显示分时图（避免模拟数据）
-            showNoMinuteDataMessage();
-            
-            // 更新最后刷新时间
-            updateLastRefreshTime();
-        }
-        
-        // 显示分时图无数据提示
-        function showNoMinuteDataMessage() {
-            const chart = echarts.init(document.getElementById('realtimeMinuteChart'));
-            
-            const option = {
-                title: {
-                    text: '分时图暂无数据',
-                    subtext: '分时图需要真实交易时间的实时数据\n非交易时间无法显示',
-                    left: 'center',
-                    top: 'middle',
-                    textStyle: {
-                        fontSize: 16,
-                        color: '#999'
-                    },
-                    subtextStyle: {
-                        fontSize: 12,
-                        color: '#ccc'
-                    }
+
+            // 准备数据
+            const dates = displayData.map(item => item.trade_date);
+            const formattedDates = dates.map(date => formatChartDate(date)); // 格式化日期用于成交额图表
+            const opens = displayData.map(item => item.open);
+            const highs = displayData.map(item => item.high);
+            const lows = displayData.map(item => item.low);
+            const closes = displayData.map(item => item.close);
+            const amounts = displayData.map(item => item.amount); // 改为成交额
+
+            // 创建蜡烛图
+            const candlestickTrace = {
+                x: dates,
+                open: opens,
+                high: highs,
+                low: lows,
+                close: closes,
+                type: 'candlestick',
+                name: 'K线',
+                increasing: {
+                    line: { color: '#ff4444', width: 1 },
+                    fillcolor: '#ff4444'
                 },
-                grid: {
-                    show: false
-                }
-            };
-            
-            chart.setOption(option);
-            
-            window.addEventListener('resize', function() {
-                chart.resize();
-            });
-        }
-        
-        // 绘制简化分时图（基于K线数据）
-        function drawSimplifiedMinuteChart(klineData) {
-            const chart = echarts.init(document.getElementById('realtimeMinuteChart'));
-            
-            // 使用最近5天的收盘价作为分时数据
-            const recentData = klineData.slice(-5);
-            const times = recentData.map(item => {
-                const date = item.trade_date || item.date;
-                return date.substring(4, 6) + '-' + date.substring(6, 8);
-            });
-            const prices = recentData.map(item => parseFloat(item.close));
-            const volumes = recentData.map(item => parseFloat(item.vol || item.volume || 0));
-            
-            const option = {
-                animation: false,
-                title: {
-                    text: '近期走势（基于日K线数据）',
-                    textStyle: {
-                        fontSize: 12,
-                        color: '#666'
-                    },
-                    left: 'center'
+                decreasing: {
+                    line: { color: '#00aa00', width: 1 },
+                    fillcolor: '#00aa00'
                 },
-                grid: [{
-                    left: '10%',
-                    right: '8%',
-                    height: '50%'
-                }, {
-                    left: '10%',
-                    right: '8%',
-                    top: '75%',
-                    height: '15%',
-                    bottom: '10%'
-                }],
-                xAxis: [{
-                    type: 'category',
-                    data: fullTimeAxis,
-                    scale: true,
-                    boundaryGap: false,
-                    axisLine: { onZero: false },
-                    splitLine: { show: false },
-                    splitNumber: 20,
-                    min: 'dataMin',
-                    max: 'dataMax'
-                }, {
-                    type: 'category',
-                    gridIndex: 1,
-                    data: fullTimeAxis,
-                    scale: true,
-                    boundaryGap: false,
-                    axisLine: { onZero: false },
-                    axisTick: { show: true },
-                    splitLine: { show: false },
-                    axisLabel: { 
-                        show: true,
-                        margin: 8,
-                        textStyle: {
-                            fontSize: 10
-                        }
-                    }
-                }],
-                yAxis: [{
-                    scale: true,
-                    splitArea: {
-                        show: true
-                    }
-                }, {
-                    scale: true,
-                    gridIndex: 1,
-                    splitNumber: 2,
-                    axisLabel: { show: false },
-                    axisLine: { show: false },
-                    axisTick: { show: false },
-                    splitLine: { show: false }
-                }],
-                dataZoom: [{
-                    type: 'inside',
-                    xAxisIndex: [0, 1],
-                    start: 0,
-                    end: 100
-                }],
-                series: [{
-                    name: '价格走势',
-                    type: 'line',
-                    data: prices,
-                    smooth: true,
-                    lineStyle: {
-                        opacity: 0.8,
-                        color: '#1890ff'
-                    },
-                    areaStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                            offset: 0,
-                            color: 'rgba(24, 144, 255, 0.3)'
-                        }, {
-                            offset: 1,
-                            color: 'rgba(24, 144, 255, 0.1)'
-                        }])
-                    }
-                }, {
-                    name: '成交量',
-                    type: 'bar',
-                    xAxisIndex: 1,
-                    yAxisIndex: 1,
-                    data: volumes,
-                    itemStyle: {
-                        color: '#26a69a'
-                    }
-                }]
+                hovertemplate: 
+                    '日期: %{x}<br>' +
+                    '开盘: %{open:.2f}<br>' +
+                    '最高: %{high:.2f}<br>' +
+                    '最低: %{low:.2f}<br>' +
+                    '收盘: %{close:.2f}<br>' +
+                    '<extra></extra>'
             };
+
+            // 准备神奇九转指标数据
+            const traces = [candlestickTrace];
             
-            chart.setOption(option);
-            
-            window.addEventListener('resize', function() {
-                chart.resize();
-            });
-        }
-        
-        // 显示实时数据函数
-        function displayRealtimeData(data) {
-            // 显示实时数据部分
-            document.getElementById('realtimeSection').style.display = 'block';
-            
-            // 显示实时价格和涨跌幅
-            if (data.spot) {
-                const quote = data.spot;
-                console.log('实时价格数据调试:', {
-                    stockCode: stockCode,
-                    latest_price: quote.latest_price,
-                    change_percent: quote.change_percent,
-                    open_price: quote.open,
-                    data_source: '实时数据接口'
+            if (nineTurnData && nineTurnData.length > 0) {
+                // 创建日期到九转数据的映射
+                const nineTurnMap = {};
+                nineTurnData.forEach(item => {
+                    const dateKey = item.trade_date.split(' ')[0]; // 提取日期部分
+                    nineTurnMap[dateKey] = item;
                 });
-                
-                // 更新实时数据区域的价格
-                document.getElementById('realtimePrice').textContent = '¥' + (quote.latest_price || '-');
-                
-                // 注意：页面顶部的价格显示昨天的缓存数据，不进行实时更新
-                // document.getElementById('stockPrice') 保持显示昨天的收盘价
-                
-                // 显示当天开盘价（从spot数据获取真实开盘价）
-                if (quote.open && quote.open > 0) {
-                    document.getElementById('openPrice').textContent = '¥' + quote.open.toFixed(2);
-                    document.getElementById('realtimeOpen').textContent = '¥' + quote.open.toFixed(2);
-                    console.log('显示当天真实开盘价:', quote.open.toFixed(2));
-                } else {
-                    document.getElementById('openPrice').textContent = '-';
-                    document.getElementById('realtimeOpen').textContent = '-';
-                    console.log('spot数据中无开盘价信息');
-                }
-                
-                const changePercent = quote.change_percent || 0;
-                const changeElement = document.getElementById('realtimeChangePercent');
-                changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
-                changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#00aa00';
-                
-                // 涨跌额
-                const changeAmount = quote.change_amount || 0;
-                const changeAmountElement = document.getElementById('realtimeChangeAmount');
-                changeAmountElement.textContent = (changeAmount >= 0 ? '+' : '') + changeAmount.toFixed(2);
-                changeAmountElement.style.color = changeAmount >= 0 ? '#ff4444' : '#00aa00';
-                
-                // 昨收
-                document.getElementById('realtimePreClose').textContent = quote.pre_close ? '¥' + quote.pre_close.toFixed(2) : '-';
-                
-                // 最高价
-                document.getElementById('realtimeHigh').textContent = quote.high ? '¥' + quote.high.toFixed(2) : '-';
-                
-                // 最低价
-                document.getElementById('realtimeLow').textContent = quote.low ? '¥' + quote.low.toFixed(2) : '-';
-                
-                // 振幅
-                document.getElementById('realtimeAmplitude').textContent = quote.amplitude ? quote.amplitude + '%' : '-';
-                
-                // 成交量
-                document.getElementById('realtimeVolume').textContent = quote.volume ? formatNumber(quote.volume) : '-';
-                
-                // 注意：页面顶部的涨跌幅显示昨天的缓存数据，不进行实时更新
-                // document.getElementById('changePercent') 保持显示昨天的涨跌幅
-                
-                document.getElementById('realtimeAmount').textContent = formatNumber((quote.amount || 0) * 1000);
-                document.getElementById('realtimeTurnover').textContent = quote.turnover_rate ? quote.turnover_rate + '%' : '暂无';
-                document.getElementById('realtimeVolumeRatio').textContent = quote.volume_ratio || '暂无';
-                
-                // 市盈率(动态)
-                document.getElementById('realtimePE').textContent = quote.pe_ratio || '-';
-                
-                // 市净率
-                document.getElementById('realtimePB').textContent = quote.pb_ratio || '-';
-            } else {
-                // 当spot数据为空时，尝试从资金流向数据和K线数据获取信息
-                if (data.money_flow && data.money_flow.close_price) {
-                    document.getElementById('realtimePrice').textContent = '¥' + data.money_flow.close_price.toFixed(2);
+
+                // 准备九转信号的标注数据
+                const buySignalDates = [];
+                const buySignalPrices = [];
+                const buySignalTexts = [];
+                const sellSignalDates = [];
+                const sellSignalPrices = [];
+                const sellSignalTexts = [];
+
+                displayData.forEach((item, index) => {
+                    const dateKey = item.trade_date;
+                    const nineTurnItem = nineTurnMap[dateKey];
                     
-                    // 注意：页面顶部的价格显示昨天的缓存数据，不进行实时更新
-                    // document.getElementById('stockPrice') 保持显示昨天的收盘价
-                    
-                    const changePercent = data.money_flow.change_percent || 0;
-                    const changeElement = document.getElementById('realtimeChangePercent');
-                    changeElement.textContent = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(2) + '%';
-                    changeElement.style.color = changePercent >= 0 ? '#ff4444' : '#00aa00';
-                    
-                    // 注意：页面顶部的涨跌幅显示昨天的缓存数据，不进行实时更新
-                    // document.getElementById('changePercent') 保持显示昨天的涨跌幅
-                    
-                    console.log('使用资金流向数据显示基本价格信息');
-                } else {
-                    // 完全无数据时的显示
-                    document.getElementById('realtimePrice').textContent = '暂无数据';
-                    document.getElementById('realtimeChangePercent').textContent = '-';
-                    console.log('实时行情数据暂时无法获取，可能是网络问题或非交易时间');
-                }
-                
-                // 当没有spot数据时，其他字段显示为暂无
-                document.getElementById('openPrice').textContent = '-';
-                document.getElementById('realtimeOpen').textContent = '-';
-                document.getElementById('realtimeChangeAmount').textContent = '-';
-                document.getElementById('realtimePreClose').textContent = '-';
-                document.getElementById('realtimeHigh').textContent = '-';
-                document.getElementById('realtimeLow').textContent = '-';
-                document.getElementById('realtimeAmplitude').textContent = '-';
-                document.getElementById('realtimeVolume').textContent = '-';
-                document.getElementById('realtimePE').textContent = '-';
-                document.getElementById('realtimePB').textContent = '-';
-                console.log('无spot数据，其他字段显示为暂无');
-                
-                // 尝试从K线数据获取成交额
-                if (data.kline_data && data.kline_data.length > 0) {
-                    const latestKline = data.kline_data[data.kline_data.length - 1];
-                    if (latestKline.amount) {
-                        document.getElementById('realtimeAmount').textContent = formatNumber(latestKline.amount);
-                    } else {
-                        document.getElementById('realtimeAmount').textContent = '-';
+                    if (nineTurnItem) {
+                        // 买入信号（绿色数字，显示在蜡烛图下方）
+                        if (nineTurnItem.buy_signal && nineTurnItem.buy_signal > 0) {
+                            buySignalDates.push(dateKey);
+                            buySignalPrices.push(item.low * 0.97); // 在最低价下方显示
+                            buySignalTexts.push(nineTurnItem.buy_signal.toString());
+                        }
+                        
+                        // 卖出信号（红色数字，显示在蜡烛图上方）
+                        if (nineTurnItem.sell_signal && nineTurnItem.sell_signal > 0) {
+                            sellSignalDates.push(dateKey);
+                            sellSignalPrices.push(item.high * 1.03); // 在最高价上方显示
+                            sellSignalTexts.push(nineTurnItem.sell_signal.toString());
+                        }
                     }
-                } else {
-                    document.getElementById('realtimeAmount').textContent = '-';
-                }
-                
-                // 换手率和量比暂时无法从现有数据源获取
-                document.getElementById('realtimeTurnover').textContent = '暂无';
-                document.getElementById('realtimeVolumeRatio').textContent = '暂无';
-            }
-            
-            // 显示实时资金流向（优先使用直接传递的净流入额字段）
-            if (data.net_mf_amount !== undefined && data.net_mf_amount !== null) {
-                // data.net_mf_amount 单位是千万元，需要转换为万元显示
-                const netInflowWan = data.net_mf_amount * 1000; // 千万元转换为万元
-                const netElement = document.getElementById('realtimeNetInflow');
-                netElement.textContent = formatNumber(netInflowWan) + '万';
-                netElement.style.color = netInflowWan >= 0 ? '#ff4444' : '#44aa44';
-                console.log('使用直接传递的净流入额:', data.net_mf_amount, '千万元，显示为:', netInflowWan, '万元');
-            } else if (data.money_flow) {
-                const netInflow = data.money_flow.main_net_inflow || 0;
-                const netElement = document.getElementById('realtimeNetInflow');
-                // 后端返回的数据单位是元，需要转换为万元显示
-                netElement.textContent = formatNumber(netInflow / 10000) + '万';
-                netElement.style.color = netInflow >= 0 ? '#ff4444' : '#44aa44';
-                console.log('使用money_flow中的净流入额:', netInflow, '万元');
-            } else {
-                document.getElementById('realtimeNetInflow').textContent = '-';
-                console.log('无净流入额数据');
-            }
-            
-            // 绘制实时分时图（仅当有真实分时数据时）
-            if (data.minute_data && data.minute_data.length > 0) {
-                drawRealtimeMinuteChart(data.minute_data);
-            } else {
-                // 没有真实分时数据时，显示提示信息
-                showNoMinuteDataMessage();
-            }
-            
-            // 绘制实时K线图
-            if (data.kline_data && data.kline_data.length > 0) {
-                drawRealtimeKlineChart(data.kline_data);
-            }
-        }
-        
-        // 绘制实时分时图
-        function drawRealtimeMinuteChart(minuteData) {
-            console.log('开始绘制分时图，数据:', minuteData);
-            const chart = echarts.init(document.getElementById('realtimeMinuteChart'));
-            
-            // 生成完整的交易时间轴（上午9:30-11:30，下午13:00-15:00）
-            const fullTimeAxis = [];
-            // 上午时段：9:30-11:30
-            for (let hour = 9; hour <= 11; hour++) {
-                const startMin = hour === 9 ? 30 : 0;
-                const endMin = hour === 11 ? 30 : 59;
-                for (let min = startMin; min <= endMin; min++) {
-                    fullTimeAxis.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
-                }
-            }
-            // 下午时段：13:00-15:00
-            for (let hour = 13; hour <= 15; hour++) {
-                const endMin = hour === 15 ? 0 : 59;
-                for (let min = 0; min <= endMin; min++) {
-                    fullTimeAxis.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
-                }
-            }
-            
-            // 创建数据映射，将实际数据映射到完整时间轴
-            const dataMap = new Map();
-            minuteData.forEach(item => {
-                const timeStr = item.time;
-                let timeKey;
-                // 提取时间部分（HH:MM）
-                if (timeStr.includes(' ')) {
-                    timeKey = timeStr.split(' ')[1].substring(0, 5); // 只取HH:MM
-                } else {
-                    timeKey = timeStr.substring(11, 16); // 从完整时间戳中提取HH:MM
-                }
-                dataMap.set(timeKey, {
-                    price: parseFloat(item.price),
-                    volume: parseFloat(item.volume)
                 });
-            });
-            
-            // 根据完整时间轴生成数据数组
-            const prices = fullTimeAxis.map(time => {
-                const data = dataMap.get(time);
-                return data ? data.price : null;
-            });
-            
-            const volumes = fullTimeAxis.map(time => {
-                const data = dataMap.get(time);
-                return data ? data.volume : null;
-            });
-            
-            console.log('完整时间轴长度:', fullTimeAxis.length);
-            console.log('数据映射大小:', dataMap.size);
-            console.log('价格数组:', prices.filter(p => p !== null).length, '个有效数据');
-            console.log('成交量数组:', volumes.filter(v => v !== null).length, '个有效数据');
-            
-            // 计算分时均价线（累计成交金额 ÷ 累计成交量）
-            const avgPrices = [];
-            let cumulativeAmount = 0;  // 累计成交金额
-            let cumulativeVolume = 0;  // 累计成交量
-            
-            for (let i = 0; i < prices.length; i++) {
-                const data = dataMap.get(fullTimeAxis[i]);
-                if (data && data.price !== null && data.volume !== null && data.volume > 0) {
-                    // 累加成交金额和成交量
-                    cumulativeAmount += data.price * data.volume;
-                    cumulativeVolume += data.volume;
-                    
-                    // 计算分时均价
-                    avgPrices.push(cumulativeAmount / cumulativeVolume);
-                } else {
-                    // 如果当前时间点没有数据，使用前一个均价值
-                    avgPrices.push(i > 0 ? avgPrices[i - 1] : null);
+
+                // 添加买入信号（绿色数字，显示在蜡烛图下方）
+                if (buySignalDates.length > 0) {
+                    traces.push({
+                        x: buySignalDates,
+                        y: buySignalPrices,
+                        mode: 'text',
+                        type: 'scatter',
+                        name: '九转买入',
+                        text: buySignalTexts,
+                        textposition: 'middle center',
+                        textfont: {
+                            color: '#00aa00',
+                            size: 12,
+                            family: 'Arial, sans-serif',
+                            weight: 'bold'
+                        },
+                        hovertemplate: 
+                            '日期: %{x}<br>' +
+                            '九转买入信号: %{text}<br>' +
+                            '价格: %{y:.2f}<br>' +
+                            '<extra></extra>',
+                        showlegend: false
+                    });
+                }
+
+                // 添加卖出信号（红色数字，显示在蜡烛图上方）
+                if (sellSignalDates.length > 0) {
+                    traces.push({
+                        x: sellSignalDates,
+                        y: sellSignalPrices,
+                        mode: 'text',
+                        type: 'scatter',
+                        name: '九转卖出',
+                        text: sellSignalTexts,
+                        textposition: 'middle center',
+                        textfont: {
+                            color: '#ff0000',
+                            size: 12,
+                            family: 'Arial, sans-serif',
+                            weight: 'bold'
+                        },
+                        hovertemplate: 
+                            '日期: %{x}<br>' +
+                            '九转卖出信号: %{text}<br>' +
+                            '价格: %{y:.2f}<br>' +
+                            '<extra></extra>',
+                        showlegend: false
+                    });
                 }
             }
-            
-            console.log('分时均价线计算完成，有效数据点:', avgPrices.filter(p => p !== null).length);
-            
-            const option = {
-                animation: false,
-                backgroundColor: '#ffffff',
-                grid: [{
-                    left: '8%',
-                    right: '5%',
-                    top: '8%',
-                    height: '60%',
-                    borderColor: '#e6e6e6',
-                    borderWidth: 1
-                }, {
-                    left: '8%',
-                    right: '5%',
-                    top: '75%',
-                    height: '18%',
-                    bottom: '7%',
-                    borderColor: '#e6e6e6',
-                    borderWidth: 1
-                }],
-                xAxis: [{
+
+            const candlestickLayout = {
+                xaxis: {
                     type: 'category',
-                    data: fullTimeAxis,
-                    scale: true,
-                    boundaryGap: false,
-                    axisLine: { 
-                        show: true,
-                        lineStyle: {
-                            color: '#cccccc'
-                        }
-                    },
-                    axisTick: {
-                        show: true,
-                        lineStyle: {
-                            color: '#cccccc'
-                        }
-                    },
-                    splitLine: { 
-                        show: true,
-                        lineStyle: {
-                            color: '#f5f5f5',
-                            type: 'solid',
-                            width: 1
-                        }
-                    },
-                    axisLabel: {
-                        show: true,
-                        interval: function(index, value) {
-                            // 显示关键时间点：9:30, 10:00, 10:30, 11:00, 11:30, 13:00, 13:30, 14:00, 14:30, 15:00
-                            const keyTimes = ['09:30', '10:00', '10:30', '11:00', '11:30', '13:00', '13:30', '14:00', '14:30', '15:00'];
-                            return keyTimes.includes(value);
-                        },
-                        textStyle: {
-                            color: '#666666',
-                            fontSize: 11
-                        }
-                    },
-                    splitNumber: 20,
-                    min: 'dataMin',
-                    max: 'dataMax'
-                }, {
-                    type: 'category',
-                    gridIndex: 1,
-                    data: fullTimeAxis,
-                    scale: true,
-                    boundaryGap: false,
-                    axisLine: { onZero: false },
-                    axisTick: { show: true },
-                    splitLine: { show: false },
-                    axisLabel: { 
-                        show: true,
-                        margin: 8,
-                        textStyle: {
-                            fontSize: 10
-                        },
-                        interval: 'auto',
-                        formatter: function(value, index) {
-                            // 只显示整点和半点
-                            if (value.endsWith(':00') || value.endsWith(':30')) {
-                                return value;
-                            }
-                            return '';
-                        }
-                    },
-                    splitNumber: 20,
-                    min: 'dataMin',
-                    max: 'dataMax'
-                }],
-                yAxis: [{
-                    scale: true,
-                    splitArea: { 
-                        show: true,
-                        areaStyle: {
-                            color: ['rgba(250,250,250,0.1)', 'rgba(245,245,245,0.1)']
-                        }
-                    },
-                    axisLine: {
-                        show: true,
-                        lineStyle: {
-                            color: '#cccccc'
-                        }
-                    },
-                    axisTick: {
-                        show: true,
-                        lineStyle: {
-                            color: '#cccccc'
-                        }
-                    },
-                    splitLine: {
-                        show: true,
-                        lineStyle: {
-                            color: '#f5f5f5',
-                            type: 'solid',
-                            width: 1
-                        }
-                    },
-                    axisLabel: {
-                        textStyle: {
-                            color: '#666666',
-                            fontSize: 11
-                        },
-                        formatter: function(value) {
-                            return value.toFixed(2);
-                        }
-                    }
-                }, {
-                    scale: true,
-                    gridIndex: 1,
-                    splitNumber: 2,
-                    axisLabel: { 
-                        show: true,
-                        textStyle: {
-                            color: '#666666',
-                            fontSize: 10
-                        }
-                    },
-                    axisLine: { 
-                        show: true,
-                        lineStyle: {
-                            color: '#cccccc'
-                        }
-                    },
-                    axisTick: { 
-                        show: true,
-                        lineStyle: {
-                            color: '#cccccc'
-                        }
-                    },
-                    splitLine: { 
-                        show: true,
-                        lineStyle: {
-                            color: '#f5f5f5',
-                            type: 'solid',
-                            width: 1
-                        }
-                    }
-                 }],
-                 dataZoom: [{
-                    type: 'inside',
-                    xAxisIndex: [0, 1],
-                    start: 0,
-                    end: 100
-                }],
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    },
-                    formatter: function(params) {
-                        let result = `时间: ${params[0].axisValue}<br/>`;
-                        params.forEach(param => {
-                            if (param.seriesName === '分时价格') {
-                                result += `${param.seriesName}: ${param.value.toFixed(2)}<br/>`;
-                            } else if (param.seriesName === '均线') {
-                                result += `${param.seriesName}: ${param.value ? param.value.toFixed(2) : '-'}<br/>`;
-                            } else {
-                                result += `${param.seriesName}: ${param.value}<br/>`;
-                            }
-                        });
-                        return result;
-                    }
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    rangeslider: { visible: false },
+                    showticklabels: false,
+                    categoryorder: 'array',
+                    categoryarray: dates,
+                    range: [-0.5, dates.length - 0.5]
                 },
-                series: [{
-                    name: '分时价格',
-                    type: 'line',
-                    data: prices,
-                    smooth: true,
-                    lineStyle: {
-                        color: '#0066cc',  // 更深的蓝色，类似同花顺
-                        width: 1
-                    },
-                    areaStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                            offset: 0,
-                            color: 'rgba(0, 102, 204, 0.15)'  // 更淡的填充色
-                        }, {
-                            offset: 1,
-                            color: 'rgba(0, 102, 204, 0.05)'
-                        }])
-                    },
-                    symbol: 'none'
-                }, {
-                    name: '均线',
-                    type: 'line',
-                    data: avgPrices,
-                    smooth: true,
-                    lineStyle: {
-                        color: '#ffaa00',  // 更鲜明的黄色，类似同花顺
-                        width: 2  // 更粗的线条
-                    },
-                    symbol: 'none'
-                }, {
-                    name: '成交量',
-                    type: 'bar',
-                    xAxisIndex: 1,
-                    yAxisIndex: 1,
-                    data: volumes,
-                    itemStyle: {
-                        color: function(params) {
-                            // 根据价格涨跌设置成交量颜色，使用更鲜明的颜色
-                            const index = params.dataIndex;
-                            if (index === 0) return '#cccccc';
-                            const currentPrice = prices[index];
-                            const prevPrice = prices[index - 1];
-                            return currentPrice >= prevPrice ? '#ff3333' : '#00cc66';  // 更鲜明的红绿色
-                        }
-                    }
-                }]
+                yaxis: {
+                    title: '价格 (元)',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    tickformat: '.2f'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Arial, sans-serif', size: 12 },
+                margin: { l: 50, r: 20, t: 20, b: 40 },
+                showlegend: false,
+                annotations: []
             };
-            
-            chart.setOption(option);
+
+            const config = {
+                responsive: true,
+                displayModeBar: false,
+                staticPlot: false,
+                modeBarButtonsToRemove: ['toImage', 'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d'],
+                displaylogo: false,
+                showTips: false
+            };
+
+            // 绘制蜡烛图（包含神奇九转指标）
+            Plotly.newPlot('candlestickChart', traces, candlestickLayout, config);
+
+            // 创建成交额图
+            const amountTrace = {
+                x: dates, // 使用原来的日期数据
+                y: amounts.map(amount => amount / 10), // 将千元转换为万元
+                type: 'bar',
+                name: '成交额',
+                marker: {
+                    color: amounts.map((amount, i) => 
+                        closes[i] >= opens[i] ? '#ff4444' : '#00aa00'
+                    ),
+                    opacity: 0.7
+                },
+                hovertemplate: 
+                    '日期: %{x}<br>' +
+                    '成交额: %{customdata}<br>' +
+                    '<extra></extra>',
+                customdata: amounts.map(amount => formatAmount(amount))
+            };
+
+            const amountLayout = {
+                xaxis: {
+                    type: 'category',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    categoryorder: 'array',
+                    categoryarray: dates,
+                    range: [-0.5, dates.length - 0.5],
+                    ticktext: formattedDates, // 显示格式化的日期标签（只显示月日）
+                    tickvals: dates // 对应的原始日期值
+                },
+                yaxis: {
+                    title: '成交额',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    tickformat: '.0f',
+                    ticksuffix: '万'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Arial, sans-serif', size: 12 },
+                margin: { l: 50, r: 20, t: 20, b: 40 },
+                showlegend: false
+            };
+
+            // 绘制成交额图
+            Plotly.newPlot('volumeChart', [amountTrace], amountLayout, config);
         }
-        
-        // 绘制实时K线图
-        function drawRealtimeKlineChart(klineData) {
-            const chart = echarts.init(document.getElementById('realtimeKlineChart'));
+
+        // 设置显示范围
+        function setDisplayRange(range) {
+            currentDisplayRange = range;
             
-            // K线数据配置常量
-            const KLINE_CONFIG = {
-                // ECharts candlestick 数据格式: [open, close, low, high]
-                // 注意：此处为原始价格数据
-                DATA_FORMAT: 'OCLH', // Open, Close, Low, High
-                PRECISION: 2, // 价格精度
-                CURRENCY_SYMBOL: '¥'
-            };
-            
-            // 调试：检查实时K线数据
-            console.log('实时K线数据调试信息:');
-            if (klineData && klineData.length > 0) {
-                const firstItem = klineData[0];
-                const lastItem = klineData[klineData.length - 1];
-                console.log('第一条实时K线数据:', firstItem);
-                console.log('最后一条实时K线数据:', lastItem);
-                console.log('数据源:', lastItem.data_source);
-            }
-            
-            const candlestickData = klineData.map(item => [
-                safeParseFloat(item.open),    // 开盘价
-                safeParseFloat(item.close),   // 收盘价
-                safeParseFloat(item.low),     // 最低价
-                safeParseFloat(item.high)     // 最高价
-            ]);
-            
-            const dates = klineData.map(item => formatDate(item.trade_date || item.date));
-            const volumes = klineData.map(item => safeParseFloat(item.vol || item.volume));
-            
-            // 卖出Setup数据 - 1-9数字，红色，K线上方
-            const nineTurnUp = klineData.map((item, index) => {
-                return item.nine_turn_up > 0 ? [
-                    index, // x坐标：数据索引
-                    safeParseFloat(item.high) + (safeParseFloat(item.high) * 0.02), // y坐标：K线最高价上方2%
-                    item.nine_turn_up // 显示的数值（1-9）
-                ] : null;
-            }).filter(item => item !== null);
-            
-            // 买入Setup数据 - 1-9数字，绿色，K线下方
-            const nineTurnDown = klineData.map((item, index) => {
-                return item.nine_turn_down > 0 ? [
-                    index, // x坐标：数据索引
-                    safeParseFloat(item.low) - (safeParseFloat(item.low) * 0.02), // y坐标：K线最低价下方2%
-                    item.nine_turn_down // 显示的数值（1-9）
-                ] : null;
-            }).filter(item => item !== null);
-            
-            // 卖出Countdown数据 - 1-13数字，紫色，卖出Setup上方
-            const countdownUp = klineData.map((item, index) => {
-                return item.countdown_up > 0 ? [
-                    index, // x坐标：数据索引
-                    safeParseFloat(item.high) + (safeParseFloat(item.high) * 0.05), // y坐标：K线最高价上方5%（卖出Setup上方）
-                    item.countdown_up // 显示的数值（1-13）
-                ] : null;
-            }).filter(item => item !== null);
-            
-            // 买入Countdown数据 - 1-13数字，蓝色，买入Setup下方
-            const countdownDown = klineData.map((item, index) => {
-                return item.countdown_down > 0 ? [
-                    index, // x坐标：数据索引
-                    safeParseFloat(item.low) - (safeParseFloat(item.low) * 0.05), // y坐标：K线最低价下方5%（买入Setup下方）
-                    item.countdown_down // 显示的数值（1-13）
-                ] : null;
-            }).filter(item => item !== null);
-            
-            // 提取BOLL数据，保留null值让ECharts正确处理
-            const bollUpper = klineData.map(item => item.boll_upper === null || item.boll_upper === undefined ? null : parseFloat(item.boll_upper));
-            const bollMid = klineData.map(item => item.boll_mid === null || item.boll_mid === undefined ? null : parseFloat(item.boll_mid));
-            const bollLower = klineData.map(item => item.boll_lower === null || item.boll_lower === undefined ? null : parseFloat(item.boll_lower));
-            
-            // 找到最高价和最低价的位置
-            let highestIndex = -1;
-            let lowestIndex = -1;
-            let maxHigh = -1;
-            let minLow = Number.MAX_VALUE;
-            
-            // 遍历所有数据找到真正的最高价和最低价位置
-            klineData.forEach((item, index) => {
-                const high = safeParseFloat(item.high);
-                const low = safeParseFloat(item.low);
-                
-                if (high > maxHigh) {
-                    maxHigh = high;
-                    highestIndex = index;
-                }
-                
-                if (low < minLow) {
-                    minLow = low;
-                    lowestIndex = index;
-                }
+            // 更新按钮状态
+            document.querySelectorAll('.chart-btn').forEach(btn => {
+                btn.classList.remove('active');
             });
+            event.target.classList.add('active');
             
-            const option = {
-                animation: false,
-                legend: {
-                    bottom: 10,
-                    left: 'center',
-                    data: ['实时K线', '成交量', '卖出Setup', '买入Setup', '卖出Countdown', '买入Countdown', 'BOLL上轨', 'BOLL中轨', 'BOLL下轨']
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    },
-                    backgroundColor: 'rgba(245, 245, 245, 0.8)',
-                    borderWidth: 1,
-                    borderColor: '#ccc',
-                    textStyle: {
-                        color: '#000'
-                    },
-                    formatter: function (params) {
-                        const dataIndex = params[0].dataIndex;
-                        const klineItem = klineData[dataIndex];
-                        const date = params[0].axisValue;
-                        
-                        let html = `<div style="font-weight: bold; margin-bottom: 5px;">${date}</div>`;
-                        
-                        // 查找K线数据参数
-                        const klineParam = params.find(p => p.seriesName === '实时K线');
-                        if (klineParam && klineParam.data) {
-                            const candlestickPrices = klineParam.data;
-                            
-                            // ECharts candlestick数据格式: [open, close, low, high]
-                            html += `<div style="color: #333; margin-bottom: 3px;">开盘: ¥${candlestickPrices[0].toFixed(2)}</div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">收盘: ¥${candlestickPrices[1].toFixed(2)}</div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">最低: ¥${candlestickPrices[2].toFixed(2)}</div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">最高: ¥${candlestickPrices[3].toFixed(2)}</div>`;
-                        }
-                        
-                        // BOLL线数据
-                        const bollUpperParam = params.find(p => p.seriesName === 'BOLL上轨');
-                        const bollMidParam = params.find(p => p.seriesName === 'BOLL中轨');
-                        const bollLowerParam = params.find(p => p.seriesName === 'BOLL下轨');
-                        
-                        if (bollUpperParam && bollUpperParam.data !== null) {
-                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Upper: ${bollUpperParam.data.toFixed(2)}</div>`;
-                        }
-                        if (bollMidParam && bollMidParam.data !== null) {
-                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Mid: ${bollMidParam.data.toFixed(2)}</div>`;
-                        }
-                        if (bollLowerParam && bollLowerParam.data !== null) {
-                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Lower: ${bollLowerParam.data.toFixed(2)}</div>`;
-                        }
-                        
-                        // 成交额
-                        if (klineItem && klineItem.amount) {
-                            const amount = parseFloat(klineItem.amount);
-                            html += `<div style="color: #666; margin-bottom: 3px;">Amount: ${formatNumber(amount * 1000)}</div>`;
-                        }
-                        
-                        // 涨跌幅
-                        if (klineItem && klineItem.pct_chg !== undefined && klineItem.pct_chg !== null) {
-                            const pctChg = parseFloat(klineItem.pct_chg);
-                            const color = pctChg >= 0 ? '#ff4444' : '#44aa44';
-                            html += `<div style="color: ${color}; margin-bottom: 3px;">Change: ${pctChg >= 0 ? '+' : ''}${pctChg.toFixed(2)}%</div>`;
-                        }
-                        
-                        // 成交量数据
-                        const volumeParam = params.find(p => p.seriesName === '成交量');
-                        if (volumeParam) {
-                            const vol = volumeParam.data;
-                            html += `<div style="color: #888; margin-top: 5px;">Volume: ${formatNumber(vol * 100)}</div>`;
-                        }
-                        
-                        return html;
-                    }
-                },
-                grid: [{
-                    left: '10%',
-                    right: '8%',
-                    height: '50%'
-                }, {
-                    left: '10%',
-                    right: '8%',
-                    top: '63%',
-                    height: '16%'
-                }],
-                xAxis: [{
-                    type: 'category',
-                    data: dates,
-                    boundaryGap: false,
-                    axisLine: { onZero: false },
-                    splitLine: { show: false },
-                    min: 'dataMin',
-                    max: 'dataMax',
-                    axisPointer: {
-                        z: 100
-                    }
-                }, {
-                    type: 'category',
-                    gridIndex: 1,
-                    data: dates,
-                    boundaryGap: false,
-                    axisLine: { onZero: false },
-                    axisTick: { show: false },
-                    splitLine: { show: false },
-                    axisLabel: { show: false },
-                    min: 'dataMin',
-                    max: 'dataMax'
-                }],
-                yAxis: [{
-                    scale: true,
-                    splitArea: { show: true }
-                }, {
-                    scale: true,
-                    gridIndex: 1,
-                    splitNumber: 2,
-                    axisLabel: { show: false },
-                    axisLine: { show: false },
-                    axisTick: { show: false },
-                    splitLine: { show: false }
-                }],
-                dataZoom: [{
-                    type: 'inside',
-                    xAxisIndex: [0, 1],
-                    start: 0,
-                    end: 100
-                }],
-                series: [{
-                    name: '实时K线',
-                    type: 'candlestick',
-                    data: candlestickData,
-                    itemStyle: {
-                        color: '#ef232a',
-                        color0: '#14b143',
-                        borderColor: '#ef232a',
-                        borderColor0: '#14b143'
-                    },
-                    markPoint: {
-                        symbol: 'circle',
-                        symbolSize: 8,
-                        label: {
-                            show: true,
-                            position: 'left',
-                            formatter: function (param) {
-                                return param.value ? param.value.toFixed(2) : '';
-                            },
-                            color: '#000000',
-                            backgroundColor: 'rgba(255,255,255,0.9)',
-                            borderWidth: 1,
-                            borderColor: '#cccccc',
-                            borderRadius: 3,
-                            padding: [2, 4],
-                            fontSize: 12,
-                            fontWeight: 'bold'
-                        },
-                        data: [
-                            {
-                                name: '最高价',
-                                coord: [highestIndex, maxHigh],
-                                value: maxHigh,
-                                itemStyle: {
-                                    color: '#ff4444'
-                                }
-                            },
-                            {
-                                name: '最低价',
-                                coord: [lowestIndex, minLow],
-                                value: minLow,
-                                itemStyle: {
-                                    color: '#44ff44'
-                                }
-                            }
-                        ].filter(item => item.coord[0] >= 0), // 过滤掉无效的索引
-                        tooltip: {
-                            formatter: function (param) {
-                                return param.name + '<br>¥' + (param.data.coord ? param.data.coord[1].toFixed(2) : '');
-                            }
-                        }
-                    }
-                }, {
-                    name: '成交量',
-                    type: 'bar',
-                    xAxisIndex: 1,
-                    yAxisIndex: 1,
-                    data: volumes,
-                    itemStyle: {
-                        color: function(params) {
-                            const dataIndex = params.dataIndex;
-                            if (dataIndex === 0) return '#14b143';
-                            return candlestickData[dataIndex][1] > candlestickData[dataIndex][0] ? '#ef232a' : '#14b143';
-                        }
-                    }
-                }, {
-                    name: '卖出Setup',
-                    type: 'scatter',
-                    data: nineTurnUp,
-                    symbolSize: 0, // 隐藏散点符号
-                    itemStyle: {
-                        color: 'transparent'
-                    },
-                    label: {
-                        show: true,
-                        position: 'inside',
-                        color: '#ef232a', // 红色数字
-                        fontWeight: 'bold',
-                        fontSize: 14,
-                        backgroundColor: 'rgba(255,255,255,0.8)',
-                        borderRadius: 3,
-                        padding: [2, 4],
-                        formatter: function(param) {
-                            return param.data[2]; // 数组的第三个元素是数值（1-9）
-                        }
-                    }
-                }, {
-                    name: '买入Setup',
-                    type: 'scatter',
-                    data: nineTurnDown,
-                    symbolSize: 0, // 隐藏散点符号
-                    itemStyle: {
-                        color: 'transparent'
-                    },
-                    label: {
-                        show: true,
-                        position: 'inside',
-                        color: '#00aa00', // 绿色数字
-                        fontWeight: 'bold',
-                        fontSize: 14,
-                        backgroundColor: 'rgba(255,255,255,0.8)',
-                        borderRadius: 3,
-                        padding: [2, 4],
-                        formatter: function(param) {
-                            return param.data[2]; // 数组的第三个元素是数值（1-9）
-                        }
-                    }
-                }, {
-                    name: '卖出Countdown',
-                    type: 'scatter',
-                    data: countdownUp,
-                    symbolSize: 0, // 隐藏散点符号
-                    itemStyle: {
-                        color: 'transparent'
-                    },
-                    label: {
-                        show: true,
-                        position: 'inside',
-                        color: '#8A2BE2', // 紫色数字 - 卖出信号
-                        fontWeight: 'bold',
-                        fontSize: 14,
-                        backgroundColor: 'rgba(255,255,255,0.8)',
-                        borderRadius: 3,
-                        padding: [2, 4],
-                        formatter: function(param) {
-                            return param.data[2]; // 数组的第三个元素是数值（1-13）
-                        }
-                    }
-                }, {
-                    name: '买入Countdown',
-                    type: 'scatter',
-                    data: countdownDown,
-                    symbolSize: 0, // 隐藏散点符号
-                    itemStyle: {
-                        color: 'transparent'
-                    },
-                    label: {
-                        show: true,
-                        position: 'inside',
-                        color: '#1E90FF', // 蓝色数字 - 买入信号
-                        fontWeight: 'bold',
-                        fontSize: 14,
-                        backgroundColor: 'rgba(255,255,255,0.8)',
-                        borderRadius: 3,
-                        padding: [2, 4],
-                        formatter: function(param) {
-                            return param.data[2]; // 数组的第三个元素是数值（1-13）
-                        }
-                    }
-                }, {
-                    name: 'BOLL上轨',
-                    type: 'line',
-                    data: bollUpper,
-                    lineStyle: {
-                        color: '#1E90FF',
-                        width: 1
-                    },
-                    symbol: 'none',
-                    smooth: true
-                }, {
-                    name: 'BOLL中轨',
-                    type: 'line',
-                    data: bollMid,
-                    lineStyle: {
-                        color: '#1E90FF',
-                        width: 1
-                    },
-                    symbol: 'none',
-                    smooth: true
-                }, {
-                    name: 'BOLL下轨',
-                    type: 'line',
-                    data: bollLower,
-                    lineStyle: {
-                        color: '#1E90FF',
-                        width: 1
-                    },
-                    symbol: 'none',
-                    smooth: true
-                }]
-            };
-            
-            chart.setOption(option);
-            
-            window.addEventListener('resize', function() {
-                chart.resize();
-            });
+            // 重新绘制图表
+            createCandlestickChart();
         }
-        
-        function drawKlineChart(data) {
-            const chart = echarts.init(document.getElementById('klineChart'));
+
+        // 显示股票数据
+        function displayStockData(dailyBasicResult, realtimeResult) {
+            const { data: dailyData, stock_info } = dailyBasicResult;
+            const realtimeData = realtimeResult.success ? realtimeResult.data : {};
             
-            // 调试：检查K线数据的复权状态
-            console.log('K线数据调试信息:');
-            if (data.kline_data && data.kline_data.length > 0) {
-                const firstItem = data.kline_data[0];
-                const lastItem = data.kline_data[data.kline_data.length - 1];
-                console.log('第一条K线数据:', firstItem);
-                console.log('最后一条K线数据:', lastItem);
-                console.log('数据来源:', lastItem.data_source);
-            }
+            // 更新股票基本信息
+            document.getElementById('stockName').textContent = stock_info.name || '股票名称';
+            document.getElementById('stockCode').textContent = stock_info.ts_code || '';
+            document.getElementById('tradeDate').textContent = formatDate(stock_info.trade_date);
             
-            const klineData = data.kline_data.map(item => [
-                safeParseFloat(item.open),
-                safeParseFloat(item.close),
-                safeParseFloat(item.low),
-                safeParseFloat(item.high)
-            ]);
+            // 更新价格信息（优先使用实时数据）
+            const currentPrice = realtimeData.price || dailyData.close;
+            const changeAmount = realtimeData.change || 0;
+            const changePct = realtimeData.pct_chg || 0;
             
-            const dates = data.kline_data.map(item => formatDate(item.trade_date));
-            const volumes = data.kline_data.map(item => safeParseFloat(item.vol));
+            document.getElementById('stockPrice').textContent = formatValue(currentPrice, 'currency');
             
-            // 卖出Setup数据 - 1-9数字，红色，K线上方
-            const nineTurnUp = data.kline_data.map((item, index) => {
-                return item.nine_turn_up > 0 ? [
-                    index, // x坐标：数据索引
-                    safeParseFloat(item.high) + (safeParseFloat(item.high) * 0.02), // y坐标：K线最高价上方2%
-                    item.nine_turn_up // 显示的数值（1-9）
-                ] : null;
-            }).filter(item => item !== null);
+            const changeAmountEl = document.getElementById('changeAmount');
+            const changePctEl = document.getElementById('changePercent');
             
-            // 买入Setup数据 - 1-9数字，绿色，K线下方
-            const nineTurnDown = data.kline_data.map((item, index) => {
-                return item.nine_turn_down > 0 ? [
-                    index, // x坐标：数据索引
-                    safeParseFloat(item.low) - (safeParseFloat(item.low) * 0.02), // y坐标：K线最低价下方2%
-                    item.nine_turn_down // 显示的数值（1-9）
-                ] : null;
-            }).filter(item => item !== null);
+            changeAmountEl.textContent = (changeAmount >= 0 ? '+' : '') + formatValue(changeAmount);
+            changePctEl.textContent = (changePct >= 0 ? '+' : '') + formatValue(changePct, 'percentage');
             
-            // 卖出Countdown数据 - 1-13数字，紫色，卖出Setup上方
-            const countdownUp = data.kline_data.map((item, index) => {
-                return item.countdown_up > 0 ? [
-                    index, // x坐标：数据索引
-                    safeParseFloat(item.high) + (safeParseFloat(item.high) * 0.05), // y坐标：K线最高价上方5%（卖出Setup上方）
-                    item.countdown_up // 显示的数值（1-13）
-                ] : null;
-            }).filter(item => item !== null);
+            setValueColor(changeAmountEl, changeAmount);
+            setValueColor(changePctEl, changePct);
             
-            // 买入Countdown数据 - 1-13数字，蓝色，买入Setup下方
-            const countdownDown = data.kline_data.map((item, index) => {
-                return item.countdown_down > 0 ? [
-                    index, // x坐标：数据索引
-                    safeParseFloat(item.low) - (safeParseFloat(item.low) * 0.05), // y坐标：K线最低价下方5%（买入Setup下方）
-                    item.countdown_down // 显示的数值（1-13）
-                ] : null;
-            }).filter(item => item !== null);
+            // 更新指标数据
+            document.getElementById('totalMv').textContent = formatValue(dailyData.total_mv, 'large_number');
+            document.getElementById('amount').textContent = formatAmount(realtimeData.amount || 0);
+            document.getElementById('netInflow').textContent = formatValue(realtimeData.net_inflow || 0, 'large_number');
+            document.getElementById('turnoverRate').textContent = formatValue(dailyData.turnover_rate, 'percentage');
+            document.getElementById('volumeRatio').textContent = formatValue(dailyData.volume_ratio, 'ratio');
+            document.getElementById('peTtm').textContent = formatValue(dailyData.pe_ttm, 'ratio');
+            document.getElementById('pb').textContent = formatValue(dailyData.pb, 'ratio');
+            document.getElementById('open').textContent = formatValue(realtimeData.open || dailyData.close, 'currency');
             
-            // 提取BOLL数据，保留null值让ECharts正确处理
-            const bollUpper = data.kline_data.map(item => item.boll_upper === null || item.boll_upper === undefined ? null : parseFloat(item.boll_upper));
-            const bollMid = data.kline_data.map(item => item.boll_mid === null || item.boll_mid === undefined ? null : parseFloat(item.boll_mid));
-            const bollLower = data.kline_data.map(item => item.boll_lower === null || item.boll_lower === undefined ? null : parseFloat(item.boll_lower));
+            const pctChgEl = document.getElementById('pctChg');
+            pctChgEl.textContent = formatValue(changePct, 'percentage');
+            setValueColor(pctChgEl, changePct);
             
-            // 找到最高价和最低价的位置
-            let highestIndex = -1;
-            let lowestIndex = -1;
-            let maxHigh = -1;
-            let minLow = Number.MAX_VALUE;
+            const netInflowEl = document.getElementById('netInflow');
+            setValueColor(netInflowEl, realtimeData.net_inflow || 0);
             
-            // 遍历所有数据找到真正的最高价和最低价位置
-            data.kline_data.forEach((item, index) => {
-                const high = safeParseFloat(item.high);
-                const low = safeParseFloat(item.low);
-                
-                if (high > maxHigh) {
-                    maxHigh = high;
-                    highestIndex = index;
-                }
-                
-                if (low < minLow) {
-                    minLow = low;
-                    lowestIndex = index;
-                }
-            });
+            document.getElementById('industry').textContent = stock_info.industry || '未知行业';
             
-            console.log('最高价位置:', highestIndex, '价格:', maxHigh);
-            console.log('最低价位置:', lowestIndex, '价格:', minLow);
-            
-            const option = {
-                animation: false,
-                legend: {
-                    bottom: 10,
-                    left: 'center',
-                    data: ['日K', '成交量', '卖出Setup', '买入Setup', '卖出Countdown', '买入Countdown', 'BOLL上轨', 'BOLL中轨', 'BOLL下轨']
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    },
-                    backgroundColor: 'rgba(245, 245, 245, 0.8)',
-                    borderWidth: 1,
-                    borderColor: '#ccc',
-                    textStyle: {
-                        color: '#000'
-                    },
-                    formatter: function (params) {
-                        const dataIndex = params[0].dataIndex;
-                        const klineItem = data.kline_data[dataIndex];
-                        const date = params[0].axisValue;
-                        
-                        let html = `<div style="font-weight: bold; margin-bottom: 5px;">${date}</div>`;
-                        
-                        // 查找K线数据参数
-                        const klineParam = params.find(p => p.seriesName === '日K');
-                        if (klineParam && klineParam.data) {
-                            const candlestickPrices = klineParam.data;
-                            
-                            // ECharts candlestick数据格式: [open, close, low, high]
-                            html += `<div style="color: #333; margin-bottom: 3px;">开盘: ¥${candlestickPrices[0].toFixed(2)}</div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">收盘: ¥${candlestickPrices[1].toFixed(2)}</div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">最低: ¥${candlestickPrices[2].toFixed(2)}</div>`;
-                            html += `<div style="color: #333; margin-bottom: 3px;">最高: ¥${candlestickPrices[3].toFixed(2)}</div>`;
-                        }
-                        
-                        // BOLL线数据
-                        const bollUpperParam = params.find(p => p.seriesName === 'BOLL上轨');
-                        const bollMidParam = params.find(p => p.seriesName === 'BOLL中轨');
-                        const bollLowerParam = params.find(p => p.seriesName === 'BOLL下轨');
-                        
-                        if (bollUpperParam && bollUpperParam.data !== null) {
-                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Upper: ${bollUpperParam.data.toFixed(2)}</div>`;
-                        }
-                        if (bollMidParam && bollMidParam.data !== null) {
-                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Mid: ${bollMidParam.data.toFixed(2)}</div>`;
-                        }
-                        if (bollLowerParam && bollLowerParam.data !== null) {
-                            html += `<div style="color: #1E90FF; margin-bottom: 3px;">BOLL Lower: ${bollLowerParam.data.toFixed(2)}</div>`;
-                        }
-                        
-                        // 成交额
-                        if (klineItem && klineItem.amount) {
-                            const amount = parseFloat(klineItem.amount);
-                            html += `<div style="color: #666; margin-bottom: 3px;">Amount: ${formatNumber(amount * 1000)}</div>`;
-                        }
-                        
-                        // 涨跌幅
-                        if (klineItem && klineItem.pct_chg !== undefined && klineItem.pct_chg !== null) {
-                            const pctChg = parseFloat(klineItem.pct_chg);
-                            const color = pctChg >= 0 ? '#ff4444' : '#44aa44';
-                            html += `<div style="color: ${color}; margin-bottom: 3px;">Change: ${pctChg >= 0 ? '+' : ''}${pctChg.toFixed(2)}%</div>`;
-                        }
-                        
-                        // 换手率（如果是最新一天的数据）
-                        if (dataIndex === data.kline_data.length - 1 && data.turnover_rate) {
-                            html += `<div style="color: #666; margin-bottom: 3px;">Turnover Rate: ${data.turnover_rate.toFixed(2)}%</div>`;
-                        }
-                        
-                        // 量比（如果是最新一天的数据）
-                        if (dataIndex === data.kline_data.length - 1 && data.volume_ratio) {
-                            html += `<div style="color: #666; margin-bottom: 3px;">Volume Ratio: ${data.volume_ratio.toFixed(2)}</div>`;
-                        }
-                        
-                        // 成交量数据
-                        const volumeParam = params.find(p => p.seriesName === '成交量');
-                        if (volumeParam) {
-                            const vol = volumeParam.data;
-                            html += `<div style="color: #888; margin-top: 5px;">Volume: ${formatNumber(vol * 100)}</div>`;
-                        }
-                        
-                        return html;
-                    }
-                },
-                axisPointer: {
-                    link: [
-                        {
-                            xAxisIndex: 'all'
-                        }
-                    ],
-                    label: {
-                        backgroundColor: '#777'
-                    }
-                },
-                toolbox: {
-                    feature: {
-                        dataZoom: {
-                            yAxisIndex: false
-                        },
-                        brush: {
-                            type: ['lineX', 'clear']
-                        }
-                    }
-                },
-                brush: {
-                    xAxisIndex: 'all',
-                    brushLink: 'all',
-                    outOfBrush: {
-                        colorAlpha: 0.1
-                    }
-                },
-                grid: [
-                    {
-                        left: '10%',
-                        right: '8%',
-                        height: '50%'
-                    },
-                    {
-                        left: '10%',
-                        right: '8%',
-                        top: '63%',
-                        height: '16%'
-                    }
-                ],
-                xAxis: [
-                    {
-                        type: 'category',
-                        data: dates,
-                        boundaryGap: false,
-                        axisLine: { onZero: false },
-                        splitLine: { show: false },
-                        min: 'dataMin',
-                        max: 'dataMax',
-                        axisPointer: {
-                            z: 100
-                        }
-                    },
-                    {
-                        type: 'category',
-                        gridIndex: 1,
-                        data: dates,
-                        boundaryGap: false,
-                        axisLine: { onZero: false },
-                        axisTick: { show: false },
-                        splitLine: { show: false },
-                        axisLabel: { show: false },
-                        min: 'dataMin',
-                        max: 'dataMax'
-                    }
-                ],
-                yAxis: [
-                    {
-                        scale: true,
-                        splitArea: {
-                            show: true
-                        }
-                    },
-                    {
-                        scale: true,
-                        gridIndex: 1,
-                        splitNumber: 2,
-                        axisLabel: { show: false },
-                        axisLine: { show: false },
-                        axisTick: { show: false },
-                        splitLine: { show: false }
-                    }
-                ],
-                dataZoom: [
-                    {
-                        type: 'inside',
-                        xAxisIndex: [0, 1],
-                        start: 0,
-                        end: 100
-                    },
-                    {
-                        show: true,
-                        xAxisIndex: [0, 1],
-                        type: 'slider',
-                        top: '85%',
-                        start: 0,
-                        end: 100
-                    }
-                ],
-                series: [
-                    {
-                        name: '日K',
-                        type: 'candlestick',
-                        data: klineData,
-                        itemStyle: {
-                            color: '#ef232a',
-                            color0: '#14b143',
-                            borderColor: '#ef232a',
-                            borderColor0: '#14b143'
-                        },
-                        markPoint: {
-                            symbol: 'circle',
-                            symbolSize: 8,
-                            label: {
-                                show: true,
-                                position: 'left',
-                                formatter: function (param) {
-                                    return param.value ? param.value.toFixed(2) : '';
-                                },
-                                color: '#000000',
-                                backgroundColor: 'rgba(255,255,255,0.9)',
-                                borderWidth: 1,
-                                borderColor: '#cccccc',
-                                borderRadius: 3,
-                                padding: [2, 4],
-                                fontSize: 12,
-                                fontWeight: 'bold'
-                            },
-                            data: [
-                                {
-                                    name: '最高价',
-                                    coord: [highestIndex, maxHigh],
-                                    value: maxHigh,
-                                    itemStyle: {
-                                        color: '#ff4444'
-                                    }
-                                },
-                                {
-                                    name: '最低价',
-                                    coord: [lowestIndex, minLow],
-                                    value: minLow,
-                                    itemStyle: {
-                                        color: '#44ff44'
-                                    }
-                                }
-                            ].filter(item => item.coord[0] >= 0), // 过滤掉无效的索引
-                            tooltip: {
-                                formatter: function (param) {
-                                    return param.name + '<br>¥' + (param.data.coord ? param.data.coord[1].toFixed(2) : '');
-                                }
-                            }
-                        }
-                    },
-                    {
-                        name: '成交量',
-                        type: 'bar',
-                        xAxisIndex: 1,
-                        yAxisIndex: 1,
-                        data: volumes,
-                        itemStyle: {
-                            color: function(params) {
-                                const dataIndex = params.dataIndex;
-                                if (dataIndex === 0) return '#14b143';
-                                return klineData[dataIndex][1] > klineData[dataIndex][0] ? '#ef232a' : '#14b143';
-                            }
-                        }
-                    },
-                    {
-                        name: '卖出Setup',
-                        type: 'scatter',
-                        data: nineTurnUp,
-                        symbolSize: 0, // 隐藏散点符号
-                        itemStyle: {
-                            color: 'transparent'
-                        },
-                        label: {
-                            show: true,
-                            position: 'inside',
-                            color: '#ef232a', // 红色数字
-                            fontWeight: 'bold',
-                            fontSize: 14,
-                            backgroundColor: 'rgba(255,255,255,0.8)',
-                            borderRadius: 3,
-                            padding: [2, 4],
-                            formatter: function(param) {
-                                return param.data[2]; // 数组的第三个元素是数值（1-9）
-                            }
-                        }
-                    },
-                    {
-                        name: '买入Setup',
-                        type: 'scatter',
-                        data: nineTurnDown,
-                        symbolSize: 0, // 隐藏散点符号
-                        itemStyle: {
-                            color: 'transparent'
-                        },
-                        label: {
-                            show: true,
-                            position: 'inside',
-                            color: '#00aa00', // 绿色数字
-                            fontWeight: 'bold',
-                            fontSize: 14,
-                            backgroundColor: 'rgba(255,255,255,0.8)',
-                            borderRadius: 3,
-                            padding: [2, 4],
-                            formatter: function(param) {
-                                return param.data[2]; // 数组的第三个元素是数值（1-9）
-                            }
-                        }
-                    },
-                    {
-                        name: '卖出Countdown',
-                        type: 'scatter',
-                        data: countdownUp,
-                        symbolSize: 0, // 隐藏散点符号
-                        itemStyle: {
-                            color: 'transparent'
-                        },
-                        label: {
-                            show: true,
-                            position: 'inside',
-                            color: '#8A2BE2', // 紫色数字 - 卖出信号
-                            fontWeight: 'bold',
-                            fontSize: 14,
-                            backgroundColor: 'rgba(255,255,255,0.8)',
-                            borderRadius: 3,
-                            padding: [2, 4],
-                            formatter: function(param) {
-                                return param.data[2]; // 数组的第三个元素是数值（1-13）
-                            }
-                        }
-                    },
-                    {
-                        name: '买入Countdown',
-                        type: 'scatter',
-                        data: countdownDown,
-                        symbolSize: 0, // 隐藏散点符号
-                        itemStyle: {
-                            color: 'transparent'
-                        },
-                        label: {
-                            show: true,
-                            position: 'inside',
-                            color: '#1E90FF', // 蓝色数字 - 买入信号
-                            fontWeight: 'bold',
-                            fontSize: 14,
-                            backgroundColor: 'rgba(255,255,255,0.8)',
-                            borderRadius: 3,
-                            padding: [2, 4],
-                            formatter: function(param) {
-                                return param.data[2]; // 数组的第三个元素是数值（1-13）
-                            }
-                        }
-                    },
-                    {
-                        name: 'BOLL上轨',
-                        type: 'line',
-                        data: bollUpper,
-                        lineStyle: {
-                            color: '#1E90FF',
-                            width: 1
-                        },
-                        symbol: 'none',
-                        smooth: true
-                    },
-                    {
-                        name: 'BOLL中轨',
-                        type: 'line',
-                        data: bollMid,
-                        lineStyle: {
-                            color: '#1E90FF',
-                            width: 1
-                        },
-                        symbol: 'none',
-                        smooth: true
-                    },
-                    {
-                        name: 'BOLL下轨',
-                        type: 'line',
-                        data: bollLower,
-                        lineStyle: {
-                            color: '#1E90FF',
-                            width: 1
-                        },
-                        symbol: 'none',
-                        smooth: true
-                    }
-                ]
-            };
-            
-            chart.setOption(option);
-            
-            window.addEventListener('resize', function() {
-                chart.resize();
-            });
+            hideLoading();
+            showContent();
         }
-        
-        function drawMacdChart(data) {
-            const chart = echarts.init(document.getElementById('macdChart'));
-            
-            const dates = data.kline_data.map(item => formatDate(item.trade_date));
-            
-            // 提取MACD数据
-            const macdDif = data.kline_data.map(item => item.macd_dif === null || item.macd_dif === undefined ? null : parseFloat(item.macd_dif));
-            const macdDea = data.kline_data.map(item => item.macd_dea === null || item.macd_dea === undefined ? null : parseFloat(item.macd_dea));
-            const macdHistogram = data.kline_data.map(item => item.macd_histogram === null || item.macd_histogram === undefined ? null : parseFloat(item.macd_histogram));
-            
-            const option = {
-                animation: false,
-                legend: {
-                    bottom: 10,
-                    left: 'center',
-                    data: ['DIF', 'DEA', 'MACD']
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                grid: {
-                    left: '10%',
-                    right: '8%',
-                    top: '10%',
-                    bottom: '15%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: dates,
-                    boundaryGap: false
-                },
-                yAxis: {
-                    scale: true,
-                    splitArea: {
-                        show: true
-                    }
-                },
-                dataZoom: [
-                    {
-                        type: 'inside',
-                        start: 0,
-                        end: 100
-                    },
-                    {
-                        show: true,
-                        type: 'slider',
-                        bottom: '5%',
-                        start: 0,
-                        end: 100
-                    }
-                ],
-                series: [
-                    {
-                        name: 'DIF',
-                        type: 'line',
-                        data: macdDif,
-                        lineStyle: {
-                            color: '#FF6B6B',
-                            width: 2
-                        },
-                        symbol: 'none',
-                        smooth: true
-                    },
-                    {
-                        name: 'DEA',
-                        type: 'line',
-                        data: macdDea,
-                        lineStyle: {
-                            color: '#4ECDC4',
-                            width: 2
-                        },
-                        symbol: 'none',
-                        smooth: true
-                    },
-                    {
-                        name: 'MACD',
-                        type: 'bar',
-                        data: macdHistogram,
-                        itemStyle: {
-                            color: function(params) {
-                                return params.value >= 0 ? '#FF6B6B' : '#4ECDC4';
-                            }
-                        }
-                    }
-                ]
-            };
-            
-            chart.setOption(option);
-            
-            window.addEventListener('resize', function() {
-                chart.resize();
-            });
-        }
-        
-        function drawKdjChart(data) {
-            const chart = echarts.init(document.getElementById('kdjChart'));
-            
-            const dates = data.kline_data.map(item => formatDate(item.trade_date));
-            
-            // 提取KDJ数据
-            const kdjK = data.kline_data.map(item => item.kdj_k === null || item.kdj_k === undefined ? null : parseFloat(item.kdj_k));
-            const kdjD = data.kline_data.map(item => item.kdj_d === null || item.kdj_d === undefined ? null : parseFloat(item.kdj_d));
-            const kdjJ = data.kline_data.map(item => item.kdj_j === null || item.kdj_j === undefined ? null : parseFloat(item.kdj_j));
-            
-            const option = {
-                animation: false,
-                legend: {
-                    bottom: 10,
-                    left: 'center',
-                    data: [
-                        {
-                            name: 'K',
-                            textStyle: {
-                                color: '#9C27B0'
-                            }
-                        },
-                        {
-                            name: 'D',
-                            textStyle: {
-                                color: '#45B7D1'
-                            }
-                        },
-                        {
-                            name: 'J',
-                            textStyle: {
-                                color: '#FF6B6B'
-                            }
-                        }
-                    ]
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                grid: {
-                    left: '10%',
-                    right: '8%',
-                    top: '10%',
-                    bottom: '15%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: dates,
-                    boundaryGap: false
-                },
-                yAxis: {
-                    scale: true,
-                    min: 0,
-                    max: 100,
-                    splitArea: {
-                        show: true
-                    },
-                    axisLine: {
-                        lineStyle: {
-                            color: '#ccc'
-                        }
-                    },
-                    splitLine: {
-                        lineStyle: {
-                            color: ['#20', '#80'],
-                            type: 'dashed'
-                        }
-                    }
-                },
-                dataZoom: [
-                    {
-                        type: 'inside',
-                        start: 0,
-                        end: 100
-                    },
-                    {
-                        show: true,
-                        type: 'slider',
-                        bottom: '5%',
-                        start: 0,
-                        end: 100
-                    }
-                ],
-                series: [
-                    {
-                        name: 'K',
-                        type: 'line',
-                        data: kdjK,
-                        lineStyle: {
-                            color: '#9C27B0',
-                            width: 2
-                        },
-                        symbol: 'none',
-                        smooth: true
-                    },
-                    {
-                        name: 'D',
-                        type: 'line',
-                        data: kdjD,
-                        lineStyle: {
-                            color: '#45B7D1',
-                            width: 2
-                        },
-                        symbol: 'none',
-                        smooth: true
-                    },
-                    {
-                        name: 'J',
-                        type: 'line',
-                        data: kdjJ,
-                        lineStyle: {
-                            color: '#FF6B6B',
-                            width: 2
-                        },
-                        symbol: 'none',
-                        smooth: true
-                    },
-                    {
-                        name: '超买超卖线',
-                        type: 'line',
-                        data: [],
-                        markLine: {
-                            silent: true,
-                            data: [
-                                {
-                                    yAxis: 20,
-                                    lineStyle: {
-                                        color: '#27ae60',
-                                        type: 'solid',
-                                        width: 2
-                                    },
-                                    label: {
-                                        formatter: '超卖区',
-                                        position: 'insideEndTop',
-                                        color: '#27ae60',
-                                        fontWeight: 'bold'
-                                    }
-                                },
-                                {
-                                    yAxis: 80,
-                                    lineStyle: {
-                                        color: '#e74c3c',
-                                        type: 'solid',
-                                        width: 2
-                                    },
-                                    label: {
-                                        formatter: '超买区',
-                                        position: 'insideEndBottom',
-                                        color: '#e74c3c',
-                                        fontWeight: 'bold'
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                ]
-            };
-            
-            chart.setOption(option);
-            
-            window.addEventListener('resize', function() {
-                chart.resize();
-            });
-        }
-        
-        function drawRsiChart(data) {
-            const chart = echarts.init(document.getElementById('rsiChart'));
-            
-            const dates = data.kline_data.map(item => formatDate(item.trade_date));
-            
-            // 提取RSI数据
-            const rsiData = data.kline_data.map(item => item.rsi === null || item.rsi === undefined ? null : parseFloat(item.rsi));
-            
-            const option = {
-                animation: false,
-                legend: {
-                    bottom: 10,
-                    left: 'center',
-                    data: ['RSI']
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    },
-                    formatter: function(params) {
-                        if (params && params.length > 0) {
-                            const value = params[0].value;
-                            return params[0].name + '<br/>RSI: ' + (value !== null ? value.toFixed(2) : '-');
-                        }
-                        return '';
-                    }
-                },
-                grid: {
-                    left: '10%',
-                    right: '8%',
-                    top: '10%',
-                    bottom: '15%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: dates,
-                    boundaryGap: false
-                },
-                yAxis: {
-                    scale: true,
-                    min: 0,
-                    max: 100,
-                    splitArea: {
-                        show: true
-                    },
-                    axisLine: {
-                        lineStyle: {
-                            color: '#ccc'
-                        }
-                    },
-                    splitLine: {
-                        lineStyle: {
-                            color: ['#30', '#70'],
-                            type: 'dashed'
-                        }
-                    }
-                },
-                dataZoom: [
-                    {
-                        type: 'inside',
-                        start: 0,
-                        end: 100
-                    },
-                    {
-                        show: true,
-                        type: 'slider',
-                        bottom: '5%',
-                        start: 0,
-                        end: 100
-                    }
-                ],
-                series: [
-                    {
-                        name: 'RSI',
-                        type: 'line',
-                        data: rsiData,
-                        lineStyle: {
-                            color: '#9C27B0',
-                            width: 2
-                        },
-                        symbol: 'none',
-                        smooth: true,
-                        areaStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0,
-                                y: 0,
-                                x2: 0,
-                                y2: 1,
-                                colorStops: [
-                                    {
-                                        offset: 0,
-                                        color: 'rgba(156, 39, 176, 0.3)'
-                                    },
-                                    {
-                                        offset: 1,
-                                        color: 'rgba(156, 39, 176, 0.1)'
-                                    }
-                                ]
-                            }
-                        },
-                        markLine: {
-                             silent: true,
-                             data: [
-                                 {
-                                     yAxis: 30,
-                                     lineStyle: {
-                                         color: '#27ae60',
-                                         type: 'dashed',
-                                         width: 2
-                                     },
-                                     label: {
-                                         formatter: '超卖区 30',
-                                         position: 'insideEndTop',
-                                         color: '#27ae60',
-                                         fontWeight: 'bold'
-                                     }
-                                 },
-                                 {
-                                     yAxis: 70,
-                                     lineStyle: {
-                                         color: '#e74c3c',
-                                         type: 'dashed',
-                                         width: 2
-                                     },
-                                     label: {
-                                         formatter: '超买区 70',
-                                         position: 'insideEndBottom',
-                                         color: '#e74c3c',
-                                         fontWeight: 'bold'
-                                     }
-                                 }
-                             ]
-                         }
-                    }
-                ]
-            };
-            
-            chart.setOption(option);
-            
-            window.addEventListener('resize', function() {
-                chart.resize();
-            });
-        }
-        
+
+        // 显示错误
         function showError(message) {
-            document.getElementById('loadingDiv').style.display = 'none';
             document.getElementById('errorDiv').textContent = message;
             document.getElementById('errorDiv').style.display = 'block';
+            hideLoading();
         }
-        
-        function refreshStockData() {
-            const refreshBtn = document.getElementById('refreshDataBtn');
-            const originalText = refreshBtn.textContent;
-            
-            // 显示加载状态
-            refreshBtn.textContent = '🔄 刷新中...';
-            refreshBtn.disabled = true;
-            
-            // 显示加载提示
-            document.getElementById('stockInfo').style.display = 'none';
-            document.getElementById('chartSection').style.display = 'none';
-            document.getElementById('macdSection').style.display = 'none';
-            document.getElementById('kdjSection').style.display = 'none';
-            document.getElementById('rsiSection').style.display = 'none';
-            document.getElementById('loadingDiv').style.display = 'block';
-            document.getElementById('loadingDiv').textContent = '正在强制刷新数据...';
-            document.getElementById('errorDiv').style.display = 'none';
-            
-            // 强制刷新数据（添加时间戳参数避免缓存）
-            const timestamp = new Date().getTime();
-            fetch(`/api/stock/${stockCode}?force_refresh=true&t=${timestamp}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        showError(data.error);
-                        return;
-                    }
-                    
-                    stockData = data;
-                    displayStockInfo(data);
-                    drawKlineChart(data);
-                    drawMacdChart(data);
-                    drawKdjChart(data);
-                    drawRsiChart(data);
-                    
-                    // 数据刷新成功，不显示提示框
-                })
-                .catch(error => {
-                    showError('刷新数据失败: ' + error.message);
-                })
-                .finally(() => {
-                    // 恢复按钮状态
-                    refreshBtn.textContent = originalText;
-                    refreshBtn.disabled = false;
-                });
+
+        // 显示/隐藏元素
+        function hideLoading() {
+            document.getElementById('loadingDiv').style.display = 'none';
         }
-        
-        function addToWatchlistWithPriority(priority) {
-            if (!priority) {
-                return; // 如果没有选择优先级，不执行任何操作
-            }
-            
-            if (!stockData) {
-                alert('股票数据尚未加载完成，请稍后再试');
-                // 重置选择器
-                document.getElementById('addToWatchlistSelect').selectedIndex = 0;
-                return;
-            }
-            
-            // 获取最新的九转序列数据
-            let nineTurnUp = 0;
-            let nineTurnDown = 0;
-            if (stockData.kline_data && stockData.kline_data.length > 0) {
-                const latestData = stockData.kline_data[stockData.kline_data.length - 1];
-                nineTurnUp = latestData.nine_turn_up || 0;
-                nineTurnDown = latestData.nine_turn_down || 0;
-            }
-            
-            // 生成自动备注：日期 + 九转数据和颜色
-            const today = new Date();
-            const dateStr = `${today.getDate()}号`;
-            let nineTurnNote = '';
-            
-            if (nineTurnUp > 0) {
-                nineTurnNote = `红色${nineTurnUp}`;
-            } else if (nineTurnDown > 0) {
-                nineTurnNote = `绿色${nineTurnDown}`;
-            } else {
-                nineTurnNote = '无九转信号';
-            }
-            
-            const autoNote = `${dateStr}加入，${nineTurnNote}`;
-            
-            const watchlistData = {
-                ts_code: stockData.ts_code,
-                name: stockData.name,
-                latest_price: stockData.latest_price,
-                pct_chg: stockData.pct_chg || 0,
-                industry: stockData.industry || '-',
-                turnover_rate: stockData.turnover_rate || 0,
-                volume_ratio: stockData.volume_ratio || 0,
-                pe: stockData.pe || 0,
-                amount: stockData.amount || 0,
-                total_mv: stockData.total_mv || 0,
-                nine_turn_up: nineTurnUp,
-                nine_turn_down: nineTurnDown,
-                priority: priority, // 添加优先级
-                note: autoNote, // 自动生成的备注
-                add_time: new Date().toISOString()
-            };
-            
-            fetch('/api/watchlist/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(watchlistData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // 更新UI状态为已添加
-                    updateWatchlistUI(true, priority);
-                    
-                    // 成功加入自选股，无需提示
-                } else {
-                    alert(data.message || '加入自选股失败');
-                    // 重置选择器
-                    document.getElementById('addToWatchlistSelect').selectedIndex = 0;
-                }
-            })
-            .catch(error => {
-                alert('加入自选股失败: ' + error.message);
-                // 重置选择器
-                document.getElementById('addToWatchlistSelect').selectedIndex = 0;
-            });
+
+        function showContent() {
+            document.getElementById('contentDiv').style.display = 'block';
         }
-        
-        function removeFromWatchlist() {
-            if (!stockData) {
-                alert('股票数据尚未加载完成，请稍后再试');
-                return;
-            }
-            
-            
-            fetch('/api/watchlist/remove', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    ts_code: stockData.ts_code
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // 更新UI状态为未添加
-                    updateWatchlistUI(false);
-                    
-                    // 成功删除自选股，无需提示
-                } else {
-                    alert(data.message || '删除失败');
-                }
-            })
-            .catch(error => {
-                alert('删除失败: ' + error.message);
-            });
+
+        function showChartLoading(show) {
+            document.getElementById('chartLoading').style.display = show ? 'block' : 'none';
         }
-        
-        // 页面加载时获取股票数据
-        loadStockData();
-        
-        // 页面加载完成后，延迟启动实时数据自动刷新
-        setTimeout(() => {
-            if (typeof startRealtimeAutoRefresh === 'function') {
-                startRealtimeAutoRefresh();
-            }
-        }, 2000); // 延迟2秒启动，确保页面完全加载
+
+        // 页面加载时自动加载数据
+        window.onload = function() {
+            loadStockData();
+        };
     </script>
 </body>
 </html>

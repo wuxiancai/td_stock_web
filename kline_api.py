@@ -48,7 +48,7 @@ def get_daily_kline(symbol):
     """
     try:
         # 获取参数
-        days = int(request.args.get('days', 90))
+        days = int(request.args.get('days', 1000))  # 默认获取更多天数的数据
         source = request.args.get('source', 'auto')
         
         # 参数验证
@@ -168,7 +168,7 @@ def get_technical_indicators(symbol):
         JSON: 技术指标数据
     """
     try:
-        days = int(request.args.get('days', 90))
+        days = int(request.args.get('days', 1000))  # 默认获取更多天数的数据
         indicators = request.args.get('indicators', 'boll,macd').split(',')
         
         logger.info(f"获取技术指标: symbol={symbol}, days={days}, indicators={indicators}")

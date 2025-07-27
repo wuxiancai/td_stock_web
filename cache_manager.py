@@ -399,7 +399,7 @@ class OptimizedCacheManager:
                                 original_kline_count = len(stock['kline_data'])
                                 stock['kline_data'] = [
                                     kline for kline in stock['kline_data']
-                                    if kline.get('trade_date', '99999999') >= keep_date
+                                    if kline.get('trade_date') and kline.get('trade_date') >= keep_date
                                 ]
                                 if len(stock['kline_data']) != original_kline_count:
                                     data_modified = True
