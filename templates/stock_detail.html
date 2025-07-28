@@ -1422,6 +1422,11 @@
             document.getElementById('stockCode').textContent = stock_info.ts_code || '';
             document.getElementById('tradeDate').textContent = formatDate(stock_info.trade_date);
             
+            // 更新页面标题
+            const stockName = stock_info.name || '股票名称';
+            const stockCode = stock_info.ts_code || '';
+            document.title = `${stockName} - ${stockCode}`;
+            
             // 更新价格信息（优先使用实时数据）
             const currentPrice = realtimeData.price || dailyData.close;
             const changeAmount = realtimeData.change || 0;
