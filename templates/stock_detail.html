@@ -141,6 +141,164 @@
             color: #6c757d;
         }
 
+        /* 实时交易数据样式 */
+        .realtime-section {
+            background: white;
+            border-radius: 8px;
+            padding: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .realtime-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .realtime-refresh-btn {
+            padding: 6px 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .realtime-refresh-btn:hover {
+            background: #0056b3;
+        }
+
+        .realtime-refresh-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .realtime-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .realtime-item {
+            padding: 12px 10px;
+            text-align: center;
+            border-right: 1px solid #e9ecef;
+            transition: background-color 0.2s ease;
+        }
+
+        .realtime-item:last-child {
+            border-right: none;
+        }
+
+        .realtime-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .realtime-label {
+            font-size: 11px;
+            color: #6c757d;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+
+        .realtime-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #212529;
+            line-height: 1.2;
+        }
+
+        .realtime-loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .realtime-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px 20px;
+            border: 1px solid #f5c6cb;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* 技术指标图表样式 */
+        .indicators-charts-section {
+            background: white;
+            border-radius: 8px;
+            padding: 0;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .indicators-charts-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .indicators-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .indicator-btn {
+            padding: 6px 12px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .indicator-btn:hover {
+            background: #e9ecef;
+        }
+
+        .indicator-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .indicators-charts-container {
+            padding: 20px;
+        }
+
+        .indicator-chart {
+            width: 100%;
+        }
+
+        .indicator-section {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* 确保所有图表容器宽度一致 */
+        #candlestickChart, #volumeChart, #macdChart, #kdjChart, #rsiChart {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+
         /* 蜡烛图样式 */
         .chart-section {
             background: white;
@@ -327,23 +485,143 @@
                 </div>
             </div>
 
-            <!-- 蜡烛图部分 -->
+            <!-- 实时交易数据部分 -->
+            <div class="realtime-section">
+                <div class="realtime-header">
+                    <span>实时交易数据</span>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span id="realtimeTimestamp" style="font-size: 12px; color: #6c757d;">--</span>
+                        <button id="realtimeRefreshBtn" class="realtime-refresh-btn" onclick="refreshRealtimeData()">刷新</button>
+                    </div>
+                </div>
+                <div id="realtimeContent">
+                    <div id="realtimeLoading" class="realtime-loading" style="display: block;">
+                        正在加载实时交易数据...
+                    </div>
+                    <div id="realtimeError" class="realtime-error" style="display: none;"></div>
+                    <div id="realtimeGrid" class="realtime-grid" style="display: none;">
+                        <!-- 第一行 -->
+                        <div class="realtime-item">
+                            <div class="realtime-label">最新价</div>
+                            <div id="rt_最新价" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">涨跌幅</div>
+                            <div id="rt_涨跌幅" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">涨跌额</div>
+                            <div id="rt_涨跌额" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">量比</div>
+                            <div id="rt_量比" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">换手率</div>
+                            <div id="rt_换手率" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">成交量</div>
+                            <div id="rt_成交量" class="realtime-value">--</div>
+                        </div>
+                        <!-- 第二行 -->
+                        <div class="realtime-item">
+                            <div class="realtime-label">成交额</div>
+                            <div id="rt_成交额" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">振幅</div>
+                            <div id="rt_振幅" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">最高</div>
+                            <div id="rt_最高" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">最低</div>
+                            <div id="rt_最低" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">今开</div>
+                            <div id="rt_今开" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">昨收</div>
+                            <div id="rt_昨收" class="realtime-value">--</div>
+                        </div>
+                        <!-- 第三行 -->
+                        <div class="realtime-item">
+                            <div class="realtime-label">市盈率-动态</div>
+                            <div id="rt_市盈率_动态" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">市净率</div>
+                            <div id="rt_市净率" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">总市值</div>
+                            <div id="rt_总市值" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">流通市值</div>
+                            <div id="rt_流通市值" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">涨速</div>
+                            <div id="rt_涨速" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">5分钟涨跌</div>
+                            <div id="rt_5分钟涨跌" class="realtime-value">--</div>
+                        </div>
+                        <!-- 第四行 -->
+                        <div class="realtime-item">
+                            <div class="realtime-label">60日涨跌幅</div>
+                            <div id="rt_60日涨跌幅" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">年初至今涨跌幅</div>
+                            <div id="rt_年初至今涨跌幅" class="realtime-value">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- K线图和技术指标组合部分 -->
             <div class="chart-section">
                 <div class="chart-header">
-                    <span>K线图</span>
+                    <span>K线图与技术指标</span>
                     <div class="chart-controls">
-                        <button class="chart-btn" onclick="setDisplayRange(50)">50根</button>
-                        <button class="chart-btn active" onclick="setDisplayRange(100)">100根</button>
-                        <button class="chart-btn" onclick="setDisplayRange(200)">200根</button>
-                        <button class="chart-btn" onclick="setDisplayRange(-1)">全部</button>
+                        <button class="chart-btn" onclick="setDisplayRange(50, event)">50根</button>
+                        <button class="chart-btn active" onclick="setDisplayRange(100, event)">100根</button>
+                        <button class="chart-btn" onclick="setDisplayRange(200, event)">200根</button>
+                        <button class="chart-btn" onclick="setDisplayRange(-1, event)">全部</button>
+                        <div style="margin-left: 20px; display: flex; align-items: center; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: #495057;">
+                                <input type="checkbox" id="showBOLL" checked onchange="toggleBOLL()">
+                                BOLL指标
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="chart-container">
                     <div id="chartLoading" class="chart-loading" style="display: none;">
                         正在加载K线数据...
                     </div>
-                    <div id="candlestickChart" style="height: 400px;"></div>
-                <div id="volumeChart" style="height: 150px; margin-top: 5px;"></div>
+                    <!-- K线图 -->
+                    <div id="candlestickChart" style="width: 100%; height: 400px;"></div>
+                    <!-- 成交量图 -->
+                    <div id="volumeChart" style="width: 100%; height: 150px; margin-top: 5px;"></div>
+                    
+                    <!-- MACD指标 -->
+                    <div id="macdChart" style="width: 100%; height: 150px; margin-top: 5px;"></div>
+                    
+                    <!-- KDJ指标 -->
+                    <div id="kdjChart" style="width: 100%; height: 150px; margin-top: 5px;"></div>
+                    
+                    <!-- RSI指标 -->
+                    <div id="rsiChart" style="width: 100%; height: 150px; margin-top: 5px;"></div>
                 </div>
             </div>
         </div>
@@ -356,15 +634,15 @@
         let currentDisplayRange = 100;
         let currentStockCode = '';
 
-        // 从URL参数或后端传递的变量获取股票代码
+        // 从URL参数获取股票代码
         function getStockCodeFromUrl() {
-            // 首先尝试从后端传递的变量获取
-            const backendStockCode = '{{ stock_code }}';
-            if (backendStockCode && backendStockCode !== '') {
-                return backendStockCode;
+            // 从URL路径获取股票代码 (例如: /stock/300354)
+            const pathParts = window.location.pathname.split('/');
+            if (pathParts.length >= 3 && pathParts[1] === 'stock') {
+                return pathParts[2];
             }
             
-            // 如果后端没有传递，则从URL参数获取
+            // 如果路径中没有，则从URL参数获取
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('code') || '300354';
         }
@@ -468,11 +746,257 @@
                 
                 displayStockData(dailyBasicResult, realtimeResult);
                 
+                // 加载实时交易数据
+                await loadRealtimeData();
+                
                 // 加载K线数据
                 await loadChartData();
                 
             } catch (error) {
                 showError('数据加载失败: ' + error.message);
+            }
+        }
+
+        // 加载实时交易数据
+        async function loadRealtimeData() {
+            try {
+                showRealtimeLoading(true);
+                
+                const response = await fetch(`/api/stock/realtime_trading_data`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    // 显示后端返回的具体错误信息
+                    const errorMsg = result.error || '获取实时交易数据失败';
+                    const detailMsg = result.details ? ` (${result.details})` : '';
+                    throw new Error(errorMsg + detailMsg);
+                }
+                
+                displayRealtimeData(result.data, result);
+                
+            } catch (error) {
+                console.error('实时交易数据加载失败:', error);
+                
+                // 根据错误类型显示不同的错误信息
+                let errorMessage = '实时交易数据加载失败';
+                
+                if (error.message.includes('网络连接')) {
+                    errorMessage = '网络连接失败，请检查网络连接后重试';
+                } else if (error.message.includes('代理连接')) {
+                    errorMessage = '代理连接失败，请检查网络设置';
+                } else if (error.message.includes('AkShare')) {
+                    errorMessage = 'AkShare服务暂时不可用，请稍后重试';
+                } else if (error.message.includes('API调用失败')) {
+                    errorMessage = 'API调用失败，请稍后重试';
+                } else if (error.message.includes('HTTP')) {
+                    errorMessage = `服务器错误: ${error.message}`;
+                } else {
+                    errorMessage = error.message || '未知错误，请稍后重试';
+                }
+                
+                showRealtimeError(errorMessage);
+            } finally {
+                showRealtimeLoading(false);
+            }
+        }
+
+        // 刷新实时交易数据
+        async function refreshRealtimeData() {
+            const refreshBtn = document.getElementById('realtimeRefreshBtn');
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = '刷新中...';
+            
+            try {
+                await loadRealtimeData();
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '刷新';
+            }
+        }
+
+        // 显示实时交易数据
+        function displayRealtimeData(data, result = null) {
+            if (!data || data.length === 0) {
+                showRealtimeError('暂无实时交易数据');
+                return;
+            }
+
+            // 找到当前股票的数据
+            const stockData = data.find(item => {
+                const code = item['代码'];
+                return code && (code === currentStockCode || code === currentStockCode.substring(0, 6));
+            });
+
+            if (!stockData) {
+                showRealtimeError('未找到当前股票的实时交易数据');
+                return;
+            }
+
+            // 显示数据
+            const fieldMapping = {
+                '序号': '序号',
+                '代码': '代码', 
+                '名称': '名称',
+                '最新价': '最新价',
+                '涨跌幅': '涨跌幅',
+                '涨跌额': '涨跌额',
+                '成交量': '成交量',
+                '成交额': '成交额',
+                '振幅': '振幅',
+                '最高': '最高',
+                '最低': '最低',
+                '今开': '今开',
+                '昨收': '昨收',
+                '量比': '量比',
+                '换手率': '换手率',
+                '市盈率-动态': '市盈率-动态',
+                '市净率': '市净率',
+                '总市值': '总市值',
+                '流通市值': '流通市值',
+                '涨速': '涨速',
+                '5分钟涨跌': '5分钟涨跌',
+                '60日涨跌幅': '60日涨跌幅',
+                '年初至今涨跌幅': '年初至今涨跌幅'
+            };
+
+            Object.entries(fieldMapping).forEach(([field, key]) => {
+                const element = document.getElementById(`rt_${field}`);
+                if (element && stockData[key] !== undefined) {
+                    let value = stockData[key];
+                    
+                    // 格式化数值
+                    if (field === '最新价' || field === '涨跌额' || field === '最高' || field === '最低' || field === '今开' || field === '昨收') {
+                        value = formatRealtimeValue(value, 'currency');
+                    } else if (field === '涨跌幅' || field === '振幅' || field === '换手率' || field === '涨速' || field === '5分钟涨跌' || field === '60日涨跌幅' || field === '年初至今涨跌幅') {
+                        value = formatRealtimeValue(value, 'percentage');
+                    } else if (field === '成交量') {
+                        value = formatRealtimeValue(value, 'volume');
+                    } else if (field === '成交额' || field === '总市值' || field === '流通市值') {
+                        value = formatRealtimeValue(value, 'amount');
+                    } else {
+                        value = formatRealtimeValue(value, 'number');
+                    }
+                    
+                    element.textContent = value;
+                    
+                    // 设置颜色
+                    if (field === '涨跌幅' || field === '涨跌额' || field === '涨速' || field === '5分钟涨跌' || field === '60日涨跌幅' || field === '年初至今涨跌幅') {
+                        setRealtimeValueColor(element, stockData[key], field);
+                    }
+                }
+            });
+
+            // 显示数据网格
+            document.getElementById('realtimeGrid').style.display = 'grid';
+            document.getElementById('realtimeError').style.display = 'none';
+            
+            // 更新时间戳，如果是最后交易日数据，显示特殊提示
+            updateRealtimeTimestamp(result);
+            
+            // 使用实时交易数据更新每日指标
+            updateDailyIndicatorsFromRealtimeData(data);
+        }
+
+        // 格式化实时数据值
+        function formatRealtimeValue(value, type = 'number') {
+            if (value === null || value === undefined || value === '' || value === '-') {
+                return '--';
+            }
+            
+            const num = parseFloat(value);
+            if (isNaN(num)) return value;
+            
+            switch (type) {
+                case 'currency':
+                    return `¥${num.toFixed(2)}`;
+                case 'percentage':
+                    return `${num.toFixed(2)}%`;
+                case 'volume':
+                    if (num >= 100000000) {
+                        return `${(num / 100000000).toFixed(2)}亿手`;
+                    } else if (num >= 10000) {
+                        return `${(num / 10000).toFixed(2)}万手`;
+                    }
+                    return `${num.toFixed(0)}手`;
+                case 'amount':
+                    if (num >= 100000000) {
+                        return `${(num / 100000000).toFixed(2)}亿`;
+                    } else if (num >= 10000) {
+                        return `${(num / 10000).toFixed(2)}万`;
+                    }
+                    return num.toFixed(2);
+                case 'number':
+                default:
+                    return num.toFixed(2);
+            }
+        }
+
+        // 设置实时数据值颜色
+        function setRealtimeValueColor(element, value, field) {
+            // 涨跌相关字段使用红涨绿跌
+            const changeFields = ['涨跌幅', '涨跌额', '涨速', '5分钟涨跌', '60日涨跌幅', '年初至今涨跌幅'];
+            
+            if (changeFields.includes(field)) {
+                const numValue = parseFloat(value);
+                if (!isNaN(numValue)) {
+                    element.classList.remove('positive', 'negative', 'neutral');
+                    if (numValue > 0) {
+                        element.classList.add('positive');
+                        element.style.color = '#ff4444'; // 红色
+                    } else if (numValue < 0) {
+                        element.classList.add('negative');
+                        element.style.color = '#00aa00'; // 绿色
+                    } else {
+                        element.classList.add('neutral');
+                        element.style.color = '#666'; // 灰色
+                    }
+                } else {
+                    element.style.color = '#333'; // 默认颜色
+                }
+            } else {
+                // 其他字段使用默认颜色
+                element.style.color = '#333';
+            }
+        }
+
+        // 显示实时数据加载状态
+        function showRealtimeLoading(show) {
+            document.getElementById('realtimeLoading').style.display = show ? 'block' : 'none';
+            document.getElementById('realtimeGrid').style.display = show ? 'none' : 'grid';
+            document.getElementById('realtimeError').style.display = 'none';
+        }
+
+        // 显示实时数据错误
+        function showRealtimeError(message) {
+            document.getElementById('realtimeError').textContent = message;
+            document.getElementById('realtimeError').style.display = 'block';
+            document.getElementById('realtimeLoading').style.display = 'none';
+            document.getElementById('realtimeGrid').style.display = 'none';
+        }
+
+        // 更新实时数据时间戳
+        function updateRealtimeTimestamp(result = null) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            const timestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            
+            // 检查是否是最后交易日数据
+            if (result && result.is_last_trading_day) {
+                document.getElementById('realtimeTimestamp').innerHTML = 
+                    `<span style="color: #ff6600;">📅 非交易时间，显示最后交易日(2025-07-25)收盘数据</span><br>更新时间: ${timestamp}`;
+            } else {
+                document.getElementById('realtimeTimestamp').textContent = `更新时间: ${timestamp}`;
             }
         }
 
@@ -505,12 +1029,55 @@
                     console.log('[神奇九转] 暂无数据或获取失败');
                 }
                 
+                // 注释掉K线图hover的每日指标数据获取，只在页面顶部显示前一交易日的每日指标
+                // await loadDailyBasicDataForChart();
+                
                 createCandlestickChart();
                 
             } catch (error) {
                 console.error('数据加载失败:', error);
             } finally {
                 showChartLoading(false);
+            }
+        }
+
+        // 获取每日指标数据用于K线图
+        async function loadDailyBasicDataForChart() {
+            try {
+                // 为每个交易日获取daily_basic数据
+                const dailyBasicPromises = allChartData.map(async (item) => {
+                    try {
+                        const response = await fetch(`/api/stock/${currentStockCode}/daily_basic?trade_date=${item.trade_date.replace(/-/g, '')}`);
+                        const result = await response.json();
+                        if (result.success) {
+                            return {
+                                trade_date: item.trade_date,
+                                ...result.data
+                            };
+                        }
+                        return null;
+                    } catch (error) {
+                        console.warn(`获取${item.trade_date}的daily_basic数据失败:`, error);
+                        return null;
+                    }
+                });
+                
+                // 等待所有请求完成
+                const dailyBasicResults = await Promise.all(dailyBasicPromises);
+                
+                // 创建日期到daily_basic数据的映射
+                window.dailyBasicMap = {};
+                dailyBasicResults.forEach(result => {
+                    if (result) {
+                        window.dailyBasicMap[result.trade_date] = result;
+                    }
+                });
+                
+                console.log(`[每日指标] 成功获取${Object.keys(window.dailyBasicMap).length}条每日指标数据`);
+                
+            } catch (error) {
+                console.error('获取每日指标数据失败:', error);
+                window.dailyBasicMap = {};
             }
         }
 
@@ -552,13 +1119,13 @@
                     line: { color: '#00aa00', width: 1 },
                     fillcolor: '#00aa00'
                 },
-                hovertemplate: 
-                    '日期: %{x}<br>' +
-                    '开盘: %{open:.2f}<br>' +
-                    '最高: %{high:.2f}<br>' +
-                    '最低: %{low:.2f}<br>' +
-                    '收盘: %{close:.2f}<br>' +
-                    '<extra></extra>'
+                customdata: displayData.map(item => {
+                    return {
+                        pct_chg: item.pct_chg || 0,
+                        amount: item.amount || 0
+                    };
+                }),
+                hovertemplate: '<b>K线数据</b><br>📅 %{x}<br>💰 开盘: %{open:.2f}<br>📈 最高: %{high:.2f}<br>📉 最低: %{low:.2f}<br>🎯 收盘: %{close:.2f}<br>📊 涨幅: %{customdata.pct_chg:.2f}%<br>💎 成交额: %{customdata.amount:.0f}千元<extra></extra>'
             };
 
             // 准备神奇九转指标数据
@@ -617,11 +1184,7 @@
                             family: 'Arial, sans-serif',
                             weight: 'bold'
                         },
-                        hovertemplate: 
-                            '日期: %{x}<br>' +
-                            '九转买入信号: %{text}<br>' +
-                            '价格: %{y:.2f}<br>' +
-                            '<extra></extra>',
+                        hovertemplate: '<b>🟢 九转买入信号</b><br>📅 日期: %{x}<br>📊 信号: 第%{text}天<br>💰 价格: %{y:.2f}元<extra></extra>',
                         showlegend: false
                     });
                 }
@@ -642,11 +1205,71 @@
                             family: 'Arial, sans-serif',
                             weight: 'bold'
                         },
-                        hovertemplate: 
-                            '日期: %{x}<br>' +
-                            '九转卖出信号: %{text}<br>' +
-                            '价格: %{y:.2f}<br>' +
-                            '<extra></extra>',
+                        hovertemplate: '<b>🔴 九转卖出信号</b><br>📅 日期: %{x}<br>📊 信号: 第%{text}天<br>💰 价格: %{y:.2f}元<extra></extra>',
+                        showlegend: false
+                    });
+                }
+            }
+
+            // 添加BOLL指标
+            const showBOLLElement = document.getElementById('showBOLL');
+            const showBOLL = showBOLLElement ? showBOLLElement.checked : false;
+            if (showBOLL) {
+                // 准备BOLL数据
+                const bollUpper = displayData.map(item => item.boll_upper);
+                const bollMid = displayData.map(item => item.boll_mid);
+                const bollLower = displayData.map(item => item.boll_lower);
+
+                // 检查是否有有效的BOLL数据
+                const hasValidBollData = bollUpper.some(val => val !== null && val !== undefined) ||
+                                       bollMid.some(val => val !== null && val !== undefined) ||
+                                       bollLower.some(val => val !== null && val !== undefined);
+
+                if (hasValidBollData) {
+                    // BOLL上轨
+                    traces.push({
+                        x: dates,
+                        y: bollUpper,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: 'BOLL上轨',
+                        line: {
+                            color: '#ff6b6b',
+                            width: 1,
+                            dash: 'dot'
+                        },
+                        hovertemplate: '<b>📈 BOLL上轨</b><br>📅 日期: %{x}<br>💰 价格: %{y:.2f}元<extra></extra>',
+                        showlegend: false
+                    });
+
+                    // BOLL中轨（移动平均线）
+                    traces.push({
+                        x: dates,
+                        y: bollMid,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: 'BOLL中轨',
+                        line: {
+                            color: '#4ecdc4',
+                            width: 1.5
+                        },
+                        hovertemplate: '<b>📊 BOLL中轨(MA20)</b><br>📅 日期: %{x}<br>💰 价格: %{y:.2f}元<extra></extra>',
+                        showlegend: false
+                    });
+
+                    // BOLL下轨
+                    traces.push({
+                        x: dates,
+                        y: bollLower,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: 'BOLL下轨',
+                        line: {
+                            color: '#45b7d1',
+                            width: 1,
+                            dash: 'dot'
+                        },
+                        hovertemplate: '<b>📉 BOLL下轨</b><br>📅 日期: %{x}<br>💰 价格: %{y:.2f}元<extra></extra>',
                         showlegend: false
                     });
                 }
@@ -683,7 +1306,7 @@
                 staticPlot: false,
                 modeBarButtonsToRemove: ['toImage', 'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d'],
                 displaylogo: false,
-                showTips: false
+                showTips: true
             };
 
             // 绘制蜡烛图（包含神奇九转指标）
@@ -691,8 +1314,8 @@
 
             // 创建成交额图
             const amountTrace = {
-                x: dates, // 使用原来的日期数据
-                y: amounts.map(amount => amount / 10), // 将千元转换为万元
+                x: dates,
+                y: amounts.map(amount => amount / 10),
                 type: 'bar',
                 name: '成交额',
                 marker: {
@@ -701,10 +1324,7 @@
                     ),
                     opacity: 0.7
                 },
-                hovertemplate: 
-                    '日期: %{x}<br>' +
-                    '成交额: %{customdata}<br>' +
-                    '<extra></extra>',
+                hovertemplate: '<b>💎 成交额</b><br>📅 日期: %{x}<br>💰 金额: %{customdata}<extra></extra>',
                 customdata: amounts.map(amount => formatAmount(amount))
             };
 
@@ -738,16 +1358,29 @@
         }
 
         // 设置显示范围
-        function setDisplayRange(range) {
+        function setDisplayRange(range, event) {
             currentDisplayRange = range;
             
             // 更新按钮状态
             document.querySelectorAll('.chart-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
             
             // 重新绘制图表
+            createCandlestickChart();
+            
+            // 如果技术指标数据已加载，也重新绘制技术指标图表
+            if (indicatorData) {
+                drawAllIndicatorCharts();
+            }
+        }
+
+        // 切换BOLL指标显示
+        function toggleBOLL() {
+            // 重新绘制图表以应用BOLL指标的显示/隐藏
             createCandlestickChart();
         }
 
@@ -777,7 +1410,7 @@
             setValueColor(changeAmountEl, changeAmount);
             setValueColor(changePctEl, changePct);
             
-            // 更新指标数据
+            // 更新指标数据（优先使用实时交易数据中的指标）
             document.getElementById('totalMv').textContent = formatValue(dailyData.total_mv, 'large_number');
             document.getElementById('amount').textContent = formatAmount(realtimeData.amount || 0);
             document.getElementById('netInflow').textContent = formatValue(realtimeData.net_inflow || 0, 'large_number');
@@ -800,6 +1433,59 @@
             showContent();
         }
 
+        // 更新每日指标数据（使用实时交易数据）
+        function updateDailyIndicatorsFromRealtimeData(realtimeData) {
+            if (!realtimeData) return;
+            
+            // 找到当前股票的实时数据
+            const stockData = realtimeData.find(item => {
+                const code = item['代码'];
+                return code && (code === currentStockCode || code === currentStockCode.substring(0, 6));
+            });
+            
+            if (!stockData) return;
+            
+            // 更新每日指标中可以从实时数据获取的字段
+            const totalMvElement = document.getElementById('totalMv');
+            const amountElement = document.getElementById('amount');
+            const turnoverRateElement = document.getElementById('turnoverRate');
+            const volumeRatioElement = document.getElementById('volumeRatio');
+            const peTtmElement = document.getElementById('peTtm');
+            const pbElement = document.getElementById('pb');
+            
+            // 更新总市值（从实时数据获取）
+            if (stockData['总市值'] && totalMvElement) {
+                totalMvElement.textContent = formatValue(stockData['总市值'], 'large_number');
+            }
+            
+            // 更新成交额（从实时数据获取）
+            if (stockData['成交额'] && amountElement) {
+                amountElement.textContent = formatValue(stockData['成交额'], 'large_number');
+            }
+            
+            // 更新换手率（从实时数据获取）
+            if (stockData['换手率'] && turnoverRateElement) {
+                turnoverRateElement.textContent = formatValue(stockData['换手率'], 'percentage');
+            }
+            
+            // 更新量比（从实时数据获取）
+            if (stockData['量比'] && volumeRatioElement) {
+                volumeRatioElement.textContent = formatValue(stockData['量比'], 'ratio');
+            }
+            
+            // 更新市盈率（从实时数据获取）
+            if (stockData['市盈率-动态'] && peTtmElement) {
+                peTtmElement.textContent = formatValue(stockData['市盈率-动态'], 'ratio');
+            }
+            
+            // 更新市净率（从实时数据获取）
+            if (stockData['市净率'] && pbElement) {
+                pbElement.textContent = formatValue(stockData['市净率'], 'ratio');
+            }
+            
+            console.log('[每日指标] 已使用实时交易数据更新每日指标');
+        }
+
         // 显示错误
         function showError(message) {
             document.getElementById('errorDiv').textContent = message;
@@ -820,9 +1506,464 @@
             document.getElementById('chartLoading').style.display = show ? 'block' : 'none';
         }
 
+        // 技术指标相关函数
+        let indicatorData = null;
+
+        // 测试加载技术指标数据（调试用）
+        function testLoadIndicators() {
+            console.log('=== 手动测试技术指标加载 ===');
+            console.log('当前股票代码:', currentStockCode);
+            console.log('开始调用loadIndicatorData函数...');
+            loadIndicatorData();
+        }
+
+        // 加载技术指标数据
+        async function loadIndicatorData() {
+            try {
+                // 显示图表加载状态
+                showChartLoading(true);
+                
+                console.log('开始加载技术指标数据，股票代码:', currentStockCode);
+                const response = await fetch(`/api/kline/indicators/${currentStockCode}?indicators=macd,kdj,rsi&limit=200`);
+                console.log('API响应状态:', response.status);
+                
+                const result = await response.json();
+                console.log('API响应数据:', result);
+                
+                if (!result.success) {
+                    throw new Error(result.message || result.error || '获取技术指标数据失败');
+                }
+                
+                indicatorData = result.data;
+                console.log('技术指标数据:', indicatorData);
+                
+                // 绘制所有技术指标
+                drawAllIndicatorCharts();
+                
+            } catch (error) {
+                console.error('技术指标数据加载失败:', error);
+                showIndicatorError('技术指标数据加载失败: ' + error.message);
+            } finally {
+                // 隐藏图表加载状态
+                showChartLoading(false);
+            }
+        }
+
+        // 绘制所有技术指标图表
+        function drawAllIndicatorCharts() {
+            console.log('开始绘制技术指标图表');
+            console.log('indicatorData:', indicatorData);
+            
+            if (!indicatorData || !indicatorData.kline_data) {
+                console.error('技术指标数据为空或缺少kline_data');
+                showIndicatorError('技术指标数据为空');
+                return;
+            }
+            
+            let klineData = indicatorData.kline_data;
+            console.log('原始K线数据长度:', klineData.length);
+            
+            // 应用与K线图相同的显示范围过滤
+            if (currentDisplayRange > 0 && klineData.length > currentDisplayRange) {
+                klineData = klineData.slice(-currentDisplayRange);
+                console.log('应用显示范围过滤后的数据长度:', klineData.length);
+            }
+            
+            console.log('K线数据样例:', klineData.slice(0, 2));
+            
+            const dates = klineData.map(item => item.trade_date); // 使用原始日期格式，与K线图保持一致
+            
+            const config = {
+                displayModeBar: false,
+                responsive: true
+            };
+            
+            // 获取K线图的实际宽度作为参考
+            const candlestickElement = document.getElementById('candlestickChart');
+            const referenceWidth = candlestickElement ? candlestickElement.offsetWidth : null;
+            console.log('K线图参考宽度:', referenceWidth);
+            
+            // 强制设置技术指标图表容器宽度
+            const indicatorChartIds = ['macdChart', 'kdjChart', 'rsiChart'];
+            indicatorChartIds.forEach(chartId => {
+                const element = document.getElementById(chartId);
+                if (element && referenceWidth) {
+                    element.style.width = referenceWidth + 'px';
+                    console.log(`设置${chartId}宽度为:`, referenceWidth + 'px');
+                }
+            });
+            
+            // 绘制所有指标
+            console.log('开始绘制MACD图表');
+            drawMACDChart(dates, klineData, config);
+            console.log('开始绘制KDJ图表');
+            drawKDJChart(dates, klineData, config);
+            console.log('开始绘制RSI图表');
+            drawRSIChart(dates, klineData, config);
+            console.log('所有技术指标图表绘制完成');
+            
+            // 强制重绘以确保对齐 - 延迟执行以确保DOM完全渲染
+            setTimeout(() => {
+                console.log('执行技术指标图表强制重绘');
+                Plotly.Plots.resize('macdChart');
+                Plotly.Plots.resize('kdjChart');
+                Plotly.Plots.resize('rsiChart');
+                console.log('技术指标图表强制重绘完成');
+            }, 100);
+        }
+
+        // 绘制MACD图表
+        function drawMACDChart(dates, klineData, config) {
+            const macdDif = klineData.map(item => item.macd_dif || 0);
+            const macdDea = klineData.map(item => item.macd_dea || 0);
+            const macdHistogram = klineData.map(item => item.macd_histogram || 0);
+            
+            const formattedDates = dates.map(date => formatChartDate(date)); // 格式化日期用于显示
+            
+            const traces = [
+                {
+                    x: dates,
+                    y: macdDif,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'DIF',
+                    line: { color: '#2196F3', width: 2 },
+                    hovertemplate: '<b>DIF</b><br>日期: %{x}<br>值: %{y:.4f}<extra></extra>'
+                },
+                {
+                    x: dates,
+                    y: macdDea,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'DEA',
+                    line: { color: '#FF9800', width: 2 },
+                    hovertemplate: '<b>DEA</b><br>日期: %{x}<br>值: %{y:.4f}<extra></extra>'
+                },
+                {
+                    x: dates,
+                    y: macdHistogram,
+                    type: 'bar',
+                    name: 'MACD',
+                    marker: {
+                        color: macdHistogram.map(val => val >= 0 ? '#ff4444' : '#00aa00'),
+                        opacity: 0.7
+                    },
+                    hovertemplate: '<b>MACD</b><br>日期: %{x}<br>值: %{y:.4f}<extra></extra>'
+                }
+            ];
+            
+            const layout = {
+                xaxis: {
+                    type: 'category',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    categoryorder: 'array',
+                    categoryarray: dates,
+                    range: [-0.5, dates.length - 0.5],
+                    ticktext: formattedDates, // 显示格式化的日期标签（只显示月日）
+                    tickvals: dates // 对应的原始日期值
+                },
+                yaxis: {
+                    title: 'MACD',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    zeroline: true,
+                    zerolinecolor: '#666',
+                    zerolinewidth: 1
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Arial, sans-serif', size: 12 },
+                margin: { l: 50, r: 20, t: 20, b: 40 },
+                showlegend: false
+            };
+            
+            // 绘制MACD图
+            Plotly.newPlot('macdChart', traces, layout, config);
+        }
+
+        // 绘制KDJ图表
+        function drawKDJChart(dates, klineData, config) {
+            const kdjK = klineData.map(item => item.kdj_k || 0);
+            const kdjD = klineData.map(item => item.kdj_d || 0);
+            const kdjJ = klineData.map(item => item.kdj_j || 0);
+            
+            const formattedDates = dates.map(date => formatChartDate(date)); // 格式化日期用于显示
+            
+            const traces = [
+                {
+                    x: dates,
+                    y: kdjK,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'K线',
+                    line: { color: '#FF9800', width: 2 },
+                    hovertemplate: '<b>K线</b><br>日期: %{x}<br>值: %{y:.2f}<extra></extra>'
+                },
+                {
+                    x: dates,
+                    y: kdjD,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'D线',
+                    line: { color: '#2196F3', width: 2 },
+                    hovertemplate: '<b>D线</b><br>日期: %{x}<br>值: %{y:.2f}<extra></extra>'
+                },
+                {
+                    x: dates,
+                    y: kdjJ,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'J线',
+                    line: { color: '#f44336', width: 2 },
+                    hovertemplate: '<b>J线</b><br>日期: %{x}<br>值: %{y:.2f}<extra></extra>'
+                }
+            ];
+            
+            const layout = {
+                xaxis: {
+                    type: 'category',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    categoryorder: 'array',
+                    categoryarray: dates,
+                    range: [-0.5, dates.length - 0.5],
+                    ticktext: formattedDates, // 显示格式化的日期标签（只显示月日）
+                    tickvals: dates // 对应的原始日期值
+                },
+                yaxis: {
+                    title: 'KDJ',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    range: [0, 100],
+                    tickvals: [20, 50, 80],
+                    ticktext: ['超卖区', '50', '超买区']
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Arial, sans-serif', size: 12 },
+                margin: { l: 50, r: 20, t: 20, b: 40 },
+                showlegend: false,
+                shapes: [
+                    // 超买区域背景（红色）
+                    {
+                        type: 'rect',
+                        x0: 0, x1: 1, xref: 'paper',
+                        y0: 80, y1: 100,
+                        fillcolor: 'rgba(244, 67, 54, 0.1)',
+                        line: { width: 0 },
+                        layer: 'below'
+                    },
+                    // 超卖区域背景（绿色）
+                    {
+                        type: 'rect',
+                        x0: 0, x1: 1, xref: 'paper',
+                        y0: 0, y1: 20,
+                        fillcolor: 'rgba(76, 175, 80, 0.1)',
+                        line: { width: 0 },
+                        layer: 'below'
+                    },
+                    // 超买线（实线）
+                    {
+                        type: 'line',
+                        x0: 0, x1: 1, xref: 'paper',
+                        y0: 80, y1: 80,
+                        line: { color: '#f44336', width: 2 }
+                    },
+                    // 超卖线（实线）
+                    {
+                        type: 'line',
+                        x0: 0, x1: 1, xref: 'paper',
+                        y0: 20, y1: 20,
+                        line: { color: '#4caf50', width: 2 }
+                    }
+                ],
+                annotations: [
+                    // 超买标注
+                    {
+                        x: 0.95,
+                        y: 90,
+                        xref: 'paper',
+                        yref: 'y',
+                        text: '超买',
+                        showarrow: false,
+                        font: {
+                            color: '#f44336',
+                            size: 12,
+                            family: 'Arial, sans-serif'
+                        },
+                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                        bordercolor: '#f44336',
+                        borderwidth: 1
+                    },
+                    // 超卖标注
+                    {
+                        x: 0.95,
+                        y: 10,
+                        xref: 'paper',
+                        yref: 'y',
+                        text: '超卖',
+                        showarrow: false,
+                        font: {
+                            color: '#4caf50',
+                            size: 12,
+                            family: 'Arial, sans-serif'
+                        },
+                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                        bordercolor: '#4caf50',
+                        borderwidth: 1
+                    }
+                ]
+            };
+            
+            // 绘制KDJ图
+            Plotly.newPlot('kdjChart', traces, layout, config);
+        }
+
+        // 绘制RSI图表
+        function drawRSIChart(dates, klineData, config) {
+            const rsiValues = klineData.map(item => item.rsi || 50);
+            
+            const formattedDates = dates.map(date => formatChartDate(date)); // 格式化日期用于显示
+            
+            const traces = [
+                {
+                    x: dates,
+                    y: rsiValues,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'RSI',
+                    line: { color: '#9c27b0', width: 2 },
+                    fill: 'tonexty',
+                    fillcolor: 'rgba(156, 39, 176, 0.1)',
+                    hovertemplate: '<b>RSI</b><br>日期: %{x}<br>值: %{y:.2f}<extra></extra>'
+                }
+            ];
+            
+            const layout = {
+                xaxis: {
+                    type: 'category',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    categoryorder: 'array',
+                    categoryarray: dates,
+                    range: [-0.5, dates.length - 0.5],
+                    ticktext: formattedDates, // 显示格式化的日期标签（只显示月日）
+                    tickvals: dates // 对应的原始日期值
+                },
+                yaxis: {
+                    title: 'RSI',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    range: [0, 100],
+                    tickvals: [30, 50, 70],
+                    ticktext: ['超卖区', '50', '超买区']
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Arial, sans-serif', size: 12 },
+                margin: { l: 50, r: 20, t: 20, b: 40 },
+                showlegend: false,
+                shapes: [
+                    // 超买区域背景（红色）
+                    {
+                        type: 'rect',
+                        x0: 0, x1: 1, xref: 'paper',
+                        y0: 70, y1: 100,
+                        fillcolor: 'rgba(244, 67, 54, 0.1)',
+                        line: { width: 0 },
+                        layer: 'below'
+                    },
+                    // 超卖区域背景（绿色）
+                    {
+                        type: 'rect',
+                        x0: 0, x1: 1, xref: 'paper',
+                        y0: 0, y1: 30,
+                        fillcolor: 'rgba(76, 175, 80, 0.1)',
+                        line: { width: 0 },
+                        layer: 'below'
+                    },
+                    // 超买线
+                    {
+                        type: 'line',
+                        x0: 0, x1: 1, xref: 'paper',
+                        y0: 70, y1: 70,
+                        line: { color: '#f44336', width: 1, dash: 'dash' }
+                    },
+                    // 超卖线
+                    {
+                        type: 'line',
+                        x0: 0, x1: 1, xref: 'paper',
+                        y0: 30, y1: 30,
+                        line: { color: '#4caf50', width: 1, dash: 'dash' }
+                    }
+                ],
+                annotations: [
+                    // 超买标注
+                    {
+                        x: 0.95,
+                        y: 85,
+                        xref: 'paper',
+                        yref: 'y',
+                        text: '超买',
+                        showarrow: false,
+                        font: {
+                            color: '#f44336',
+                            size: 12,
+                            family: 'Arial, sans-serif'
+                        },
+                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                        bordercolor: '#f44336',
+                        borderwidth: 1
+                    },
+                    // 超卖标注
+                    {
+                        x: 0.95,
+                        y: 15,
+                        xref: 'paper',
+                        yref: 'y',
+                        text: '超卖',
+                        showarrow: false,
+                        font: {
+                            color: '#4caf50',
+                            size: 12,
+                            family: 'Arial, sans-serif'
+                        },
+                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                        bordercolor: '#4caf50',
+                        borderwidth: 1
+                    }
+                ]
+            };
+            
+            // 绘制RSI图
+            Plotly.newPlot('rsiChart', traces, layout, config);
+        }
+
+        // 显示指标错误
+        function showIndicatorError(message) {
+            console.error('显示技术指标错误:', message);
+            
+            // 在每个指标图表容器中显示错误信息
+            const chartIds = ['macdChart', 'kdjChart', 'rsiChart'];
+            chartIds.forEach(chartId => {
+                const chartElement = document.getElementById(chartId);
+                if (chartElement) {
+                    chartElement.innerHTML = `<div style="padding: 20px; text-align: center; color: #dc3545; border: 1px solid #f5c6cb; background-color: #f8d7da; border-radius: 4px;">${message}</div>`;
+                }
+            });
+        }
+
         // 页面加载时自动加载数据
         window.onload = function() {
+            console.log('页面加载完成，开始初始化');
             loadStockData();
+            // 延迟加载技术指标数据，避免同时请求过多API
+            console.log('设置技术指标数据延迟加载');
+            setTimeout(() => {
+                console.log('开始延迟加载技术指标数据');
+                loadIndicatorData();
+            }, 1000);
         };
     </script>
 </body>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技术指标修复测试</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .chart { height: 300px; margin: 10px 0; border: 1px solid #e9ecef; }
+    </style>
+</head>
+<body>
+    <h1>技术指标修复测试页面</h1>
+    
+    <div class="test-section">
+        <h3>API测试</h3>
+        <button onclick="testAPI()">测试技术指标API</button>
+        <div id="apiResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>图表测试</h3>
+        <button onclick="testCharts()">测试技术指标图表</button>
+        <div id="macdChart" class="chart"></div>
+        <div id="kdjChart" class="chart"></div>
+        <div id="rsiChart" class="chart"></div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '正在测试API...';
+            
+            try {
+                const response = await fetch('/api/kline/indicators/000001?indicators=macd,kdj,rsi&limit=5');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ API测试成功</h4>
+                            <p>获取到 ${data.data.total_count} 条数据</p>
+                            <p>更新时间: ${data.data.update_time}</p>
+                            <details>
+                                <summary>查看数据样例</summary>
+                                <pre>${JSON.stringify(data.data.kline_data[0], null, 2)}</pre>
+                            </details>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ API测试失败</h4>
+                            <p>错误信息: ${data.message}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ API请求失败</h4>
+                        <p>错误信息: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testCharts() {
+            try {
+                const response = await fetch('/api/kline/indicators/000001?indicators=macd,kdj,rsi&limit=30');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message);
+                }
+                
+                const klineData = data.data.kline_data;
+                const dates = klineData.map(item => item.trade_date);
+                
+                // MACD图表
+                const macdTrace1 = {
+                    x: dates,
+                    y: klineData.map(item => item.macd_dif),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'DIF',
+                    line: { color: '#FF6B6B' }
+                };
+                
+                const macdTrace2 = {
+                    x: dates,
+                    y: klineData.map(item => item.macd_dea),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'DEA',
+                    line: { color: '#4ECDC4' }
+                };
+                
+                const macdTrace3 = {
+                    x: dates,
+                    y: klineData.map(item => item.macd_histogram),
+                    type: 'bar',
+                    name: 'MACD',
+                    marker: { color: '#45B7D1' }
+                };
+                
+                Plotly.newPlot('macdChart', [macdTrace1, macdTrace2, macdTrace3], {
+                    title: 'MACD指标',
+                    xaxis: { title: '日期' },
+                    yaxis: { title: '数值' }
+                });
+                
+                // KDJ图表
+                const kdjTrace1 = {
+                    x: dates,
+                    y: klineData.map(item => item.kdj_k),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'K',
+                    line: { color: '#FF6B6B' }
+                };
+                
+                const kdjTrace2 = {
+                    x: dates,
+                    y: klineData.map(item => item.kdj_d),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'D',
+                    line: { color: '#4ECDC4' }
+                };
+                
+                const kdjTrace3 = {
+                    x: dates,
+                    y: klineData.map(item => item.kdj_j),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'J',
+                    line: { color: '#45B7D1' }
+                };
+                
+                Plotly.newPlot('kdjChart', [kdjTrace1, kdjTrace2, kdjTrace3], {
+                    title: 'KDJ指标',
+                    xaxis: { title: '日期' },
+                    yaxis: { title: '数值' }
+                });
+                
+                // RSI图表
+                const rsiTrace = {
+                    x: dates,
+                    y: klineData.map(item => item.rsi),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'RSI',
+                    line: { color: '#FF6B6B' }
+                };
+                
+                Plotly.newPlot('rsiChart', [rsiTrace], {
+                    title: 'RSI指标',
+                    xaxis: { title: '日期' },
+                    yaxis: { title: 'RSI值', range: [0, 100] },
+                    shapes: [
+                        { type: 'line', x0: dates[0], x1: dates[dates.length-1], y0: 70, y1: 70, line: { color: 'red', dash: 'dash' } },
+                        { type: 'line', x0: dates[0], x1: dates[dates.length-1], y0: 30, y1: 30, line: { color: 'green', dash: 'dash' } }
+                    ]
+                });
+                
+                console.log('✅ 所有图表绘制成功');
+                
+            } catch (error) {
+                console.error('❌ 图表绘制失败:', error);
+                alert('图表绘制失败: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

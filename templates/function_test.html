@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>函数测试页面</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+    <div id="content">
+        <h1>函数测试页面</h1>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        // 全局错误处理
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('JavaScript错误:', {
+                message: message,
+                source: source,
+                line: lineno,
+                column: colno,
+                error: error
+            });
+            
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML += `<p style="color: red;">错误: ${message} (行: ${lineno}, 列: ${colno})</p>`;
+            return true;
+        };
+        
+        // 测试displayRealtimeData函数的简化版本
+        function testDisplayRealtimeData() {
+            try {
+                console.log('开始测试displayRealtimeData函数');
+                
+                // 模拟数据
+                const data = [{
+                    '代码': '300354',
+                    '名称': '东华测试',
+                    '最新价': 10.50,
+                    '涨跌幅': 2.5,
+                    '涨跌额': 0.25,
+                    '成交量': 1000000,
+                    '成交额': 10500000
+                }];
+                
+                const currentStockCode = '300354';
+                
+                // 找到当前股票的数据
+                const stockData = data.find(item => {
+                    const code = item['代码'];
+                    return code && (code === currentStockCode || code === currentStockCode.substring(0, 6));
+                });
+                
+                if (!stockData) {
+                    throw new Error('未找到当前股票的实时交易数据');
+                }
+                
+                // 字段映射
+                const fieldMapping = {
+                    '最新价': '最新价',
+                    '涨跌幅': '涨跌幅',
+                    '涨跌额': '涨跌额',
+                    '成交量': '成交量',
+                    '成交额': '成交额'
+                };
+                
+                // 测试格式化逻辑
+                Object.entries(fieldMapping).forEach(([field, key]) => {
+                    if (stockData[key] !== undefined) {
+                        let value = stockData[key];
+                        
+                        // 格式化数值
+                        if (field === '最新价' || field === '涨跌额') {
+                            value = formatRealtimeValue(value, 'currency');
+                        } else if (field === '涨跌幅') {
+                            value = formatRealtimeValue(value, 'percentage');
+                        } else if (field === '成交量') {
+                            value = formatRealtimeValue(value, 'volume');
+                        } else if (field === '成交额') {
+                            value = formatRealtimeValue(value, 'amount');
+                        } else {
+                            value = formatRealtimeValue(value, 'number');
+                        }
+                        
+                        console.log(`${field}: ${value}`);
+                    }
+                });
+                
+                console.log('displayRealtimeData函数测试成功');
+                document.getElementById('test-results').innerHTML += '<p style="color: green;">displayRealtimeData函数测试成功</p>';
+                
+            } catch (error) {
+                console.error('测试过程中发生错误:', error);
+                document.getElementById('test-results').innerHTML += `<p style="color: red;">测试错误: ${error.message}</p>`;
+            }
+        }
+        
+        // 格式化实时数据值
+        function formatRealtimeValue(value, type = 'number') {
+            if (value === null || value === undefined || value === '' || value === '-') {
+                return '--';
+            }
+            
+            const num = parseFloat(value);
+            if (isNaN(num)) return value;
+            
+            switch (type) {
+                case 'currency':
+                    return `¥${num.toFixed(2)}`;
+                case 'percentage':
+                    return `${num.toFixed(2)}%`;
+                case 'volume':
+                    if (num >= 100000000) {
+                        return `${(num / 100000000).toFixed(2)}亿手`;
+                    } else if (num >= 10000) {
+                        return `${(num / 10000).toFixed(2)}万手`;
+                    }
+                    return `${num.toFixed(0)}手`;
+                case 'amount':
+                    if (num >= 100000000) {
+                        return `${(num / 100000000).toFixed(2)}亿`;
+                    } else if (num >= 10000) {
+                        return `${(num / 10000).toFixed(2)}万`;
+                    }
+                    return num.toFixed(2);
+                case 'number':
+                default:
+                    return num.toFixed(2);
+            }
+        }
+        
+        // 页面加载完成后执行测试
+        window.onload = function() {
+            console.log('页面加载完成，开始函数测试');
+            testDisplayRealtimeData();
+        };
+    </script>
+</body>
+</html>

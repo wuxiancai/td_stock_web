@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逐步调试页面</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+    <div id="content">
+        <h1>逐步调试页面</h1>
+        <p>测试JavaScript代码</p>
+    </div>
+
+    <script>
+        console.log('开始测试JavaScript');
+        
+        // 测试基本函数定义
+        function testBasicFunction() {
+            console.log('基本函数测试成功');
+        }
+        
+        // 测试字符串模板
+        function testStringTemplate() {
+            const testStr = `这是一个模板字符串测试`;
+            console.log(testStr);
+        }
+        
+        // 测试对象定义
+        function testObjectDefinition() {
+            const testObj = {
+                name: '测试对象',
+                value: 123,
+                method: function() {
+                    return '对象方法测试';
+                }
+            };
+            console.log(testObj);
+        }
+        
+        // 页面加载完成后执行测试
+        window.onload = function() {
+            console.log('页面加载完成，开始执行测试');
+            testBasicFunction();
+            testStringTemplate();
+            testObjectDefinition();
+            console.log('所有测试完成');
+        };
+    </script>
+</body>
+</html>

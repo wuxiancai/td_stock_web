@@ -34,123 +34,22 @@ TUSHARE_TOKEN = os.getenv('TUSHARE_TOKEN', 'your_tushare_token_here')
 @kline_api.route('/api/kline/daily/<symbol>')
 def get_daily_kline(symbol):
     """
-    获取日K线数据
-    
-    Args:
-        symbol: 股票代码，如 000001
-        
-    Query Parameters:
-        days: 获取天数，默认90
-        source: 数据源，akshare/tushare/auto，默认auto
-        
-    Returns:
-        JSON: K线数据
+    获取日K线数据 - 暂时禁用，避免kline_manager未定义错误
     """
-    try:
-        # 获取参数
-        days = int(request.args.get('days', 1000))  # 默认获取更多天数的数据
-        source = request.args.get('source', 'auto')
-        
-        # 参数验证
-        if days <= 0 or days > 500:
-            return jsonify({
-                'success': False,
-                'message': '天数参数错误，应在1-500之间'
-            }), 400
-        
-        logger.info(f"获取K线数据: symbol={symbol}, days={days}, source={source}")
-        
-        # 根据数据源获取数据（直接使用原始数据）
-        if source == 'akshare':
-            df = kline_manager.get_kline_data_akshare(symbol, days)
-        elif source == 'tushare':
-            # 转换股票代码格式
-            ts_code = convert_to_tushare_code(symbol)
-            df = kline_manager.get_kline_data_tushare(ts_code, days)
-        else:  # auto
-            ts_code = convert_to_tushare_code(symbol)
-            df = kline_manager.get_kline_data_with_fallback(symbol, ts_code, days)
-        
-        if df.empty:
-            return jsonify({
-                'success': False,
-                'message': f'未获取到股票 {symbol} 的K线数据'
-            }), 404
-        
-        # 添加技术指标
-        df = kline_manager.add_technical_indicators(df)
-        
-        # 转换为JSON格式
-        kline_data = df.to_dict('records')
-        
-        # 计算统计信息
-        latest_data = kline_data[-1] if kline_data else {}
-        stats = calculate_kline_stats(kline_data)
-        
-        return jsonify({
-            'success': True,
-            'data': {
-                'symbol': symbol,
-                'kline_data': kline_data,
-                'latest': latest_data,
-                'stats': stats,
-                'data_source': df.iloc[0]['data_source'] if not df.empty else 'unknown',
-                'total_count': len(kline_data),
-                'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            }
-        })
-        
-    except Exception as e:
-        logger.error(f"获取K线数据失败: {symbol}, 错误: {e}")
-        logger.error(traceback.format_exc())
-        return jsonify({
-            'success': False,
-            'message': f'获取K线数据失败: {str(e)}'
-        }), 500
+    return jsonify({
+        'success': False,
+        'message': '此接口暂时不可用，请使用 /api/stock/<symbol>/daily_history'
+    }), 503
 
 @kline_api.route('/api/kline/realtime/<symbol>')
 def get_realtime_kline(symbol):
     """
-    获取实时K线数据（分钟级）
-    
-    Args:
-        symbol: 股票代码
-        
-    Returns:
-        JSON: 实时K线数据
+    获取实时K线数据 - 暂时禁用，避免kline_manager未定义错误
     """
-    try:
-        # 这里可以实现实时K线数据获取逻辑
-        # 暂时返回日K线数据的最新一条作为示例
-        
-        logger.info(f"获取实时K线数据: symbol={symbol}")
-        
-        # 获取最新的日K线数据（直接使用原始数据）
-        df = kline_manager.get_kline_data_akshare(symbol, days=1)
-        
-        if df.empty:
-            return jsonify({
-                'success': False,
-                'message': f'未获取到股票 {symbol} 的实时数据'
-            }), 404
-        
-        latest_data = df.iloc[-1].to_dict()
-        
-        return jsonify({
-            'success': True,
-            'data': {
-                'symbol': symbol,
-                'realtime_data': latest_data,
-                'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            }
-        })
-        
-    except Exception as e:
-        logger.error(f"获取实时K线数据失败: {symbol}, 错误: {e}")
-        return jsonify({
-            'success': False,
-            'message': f'获取实时K线数据失败: {str(e)}'
-        }), 500
+    return jsonify({
+        'success': False,
+        'message': '此接口暂时不可用，请使用 /api/stock/<symbol>/realtime'
+    }), 503
 
 @kline_api.route('/api/kline/indicators/<symbol>')
 def get_technical_indicators(symbol):
@@ -161,63 +60,92 @@ def get_technical_indicators(symbol):
         symbol: 股票代码
         
     Query Parameters:
-        days: 获取天数，默认90
-        indicators: 指标列表，逗号分隔，如 boll,macd,kdj,rsi
+        days: 获取天数，默认100
+        indicators: 指标列表，逗号分隔，如 macd,kdj,rsi
         
     Returns:
         JSON: 技术指标数据
     """
     try:
-        days = int(request.args.get('days', 1000))  # 默认获取更多天数的数据
-        indicators = request.args.get('indicators', 'boll,macd').split(',')
+        days = int(request.args.get('days', 100))
+        limit = int(request.args.get('limit', 100))  # 支持limit参数
+        indicators = request.args.get('indicators', 'macd,kdj,rsi').split(',')
         
         logger.info(f"获取技术指标: symbol={symbol}, days={days}, indicators={indicators}")
         
-        # 获取K线数据（直接使用原始数据）
-        ts_code = convert_to_tushare_code(symbol)
-        df = kline_manager.get_kline_data_with_fallback(symbol, ts_code, days)
+        # 导入app.py中的函数
+        import sys
+        import os
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
         
-        if df.empty:
-            return jsonify({
-                'success': False,
-                'message': f'未获取到股票 {symbol} 的数据'
-            }), 404
+        # 获取股票历史数据 - 调用现有的API
+        import requests
+        import json
         
-        # 计算技术指标
-        df = kline_manager.add_technical_indicators(df)
+        # 构建内部API调用URL
+        base_url = 'http://127.0.0.1:8080'
+        history_url = f"{base_url}/api/stock/{symbol}/daily_history?days={max(days, limit)}"
         
-        # 提取指定的技术指标
-        result_data = {}
+        try:
+            response = requests.get(history_url, timeout=30)
+            if response.status_code != 200:
+                raise Exception(f"获取历史数据失败: HTTP {response.status_code}")
+            
+            history_data = response.json()
+            if not history_data.get('success'):
+                raise Exception(f"获取历史数据失败: {history_data.get('message', '未知错误')}")
+            
+            kline_data = history_data['data']
+            if not kline_data:
+                raise Exception("历史数据为空")
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"内部API调用失败: {e}")
+            raise Exception(f"获取历史数据失败: {str(e)}")
         
-        for indicator in indicators:
-            indicator = indicator.strip().lower()
-            if indicator == 'boll':
-                result_data['boll'] = {
-                    'upper': df['boll_upper'].tolist(),
-                    'mid': df['boll_mid'].tolist(),
-                    'lower': df['boll_lower'].tolist()
-                }
-            elif indicator == 'macd':
-                result_data['macd'] = {
-                    'dif': df['macd_dif'].tolist(),
-                    'dea': df['macd_dea'].tolist(),
-                    'histogram': df['macd_histogram'].tolist()
-                }
-            elif indicator == 'kdj':
-                result_data['kdj'] = {
-                    'k': df['kdj_k'].tolist(),
-                    'd': df['kdj_d'].tolist(),
-                    'j': df['kdj_j'].tolist()
-                }
-            elif indicator == 'rsi':
-                result_data['rsi'] = df['rsi'].tolist()
+        # 转换为DataFrame进行技术指标计算
+        import pandas as pd
+        df = pd.DataFrame(kline_data)
+        
+        # 确保数据类型正确
+        df['close'] = pd.to_numeric(df['close'], errors='coerce')
+        df['high'] = pd.to_numeric(df['high'], errors='coerce')
+        df['low'] = pd.to_numeric(df['low'], errors='coerce')
+        df['open'] = pd.to_numeric(df['open'], errors='coerce')
+        df['vol'] = pd.to_numeric(df['vol'], errors='coerce')
+        
+        # 按日期排序
+        df = df.sort_values('trade_date').reset_index(drop=True)
+        
+        # 计算技术指标 - 使用app.py中的函数
+        from app import calculate_macd, calculate_kdj, calculate_rsi
+        
+        # 计算各项技术指标
+        if 'macd' in [i.strip().lower() for i in indicators]:
+            df = calculate_macd(df)
+        if 'kdj' in [i.strip().lower() for i in indicators]:
+            df = calculate_kdj(df)
+        if 'rsi' in [i.strip().lower() for i in indicators]:
+            df = calculate_rsi(df)
+        
+        # 限制返回的数据量
+        if len(df) > limit:
+            df = df.tail(limit)
+        
+        # 处理NaN值，避免JSON序列化问题
+        import numpy as np
+        df = df.replace({np.nan: None})
+        df = df.where(pd.notna(df), None)
+        
+        # 转换回字典格式
+        result_kline_data = df.to_dict('records')
         
         return jsonify({
             'success': True,
             'data': {
                 'symbol': symbol,
-                'indicators': result_data,
-                'dates': df['trade_date'].tolist(),
+                'kline_data': result_kline_data,
+                'total_count': len(result_kline_data),
                 'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
         })
@@ -232,32 +160,34 @@ def get_technical_indicators(symbol):
 @kline_api.route('/api/kline/status')
 def get_kline_status():
     """
-    获取K线数据服务状态
+    获取K线数据源状态
     
     Returns:
-        JSON: 服务状态信息
+        JSON: 各数据源的状态信息
     """
     try:
-        # 检查数据源状态
+        # 检查各数据源状态
         akshare_status = check_akshare_status()
         tushare_status = check_tushare_status()
         
+        status_info = {
+            'service_status': 'running',
+            'akshare_available': akshare_status,
+            'tushare_available': tushare_status,
+            'preferred_source': 'akshare' if akshare_status else 'tushare' if tushare_status else 'none',
+            'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
         return jsonify({
             'success': True,
-            'data': {
-                'service_status': 'running',
-                'akshare_available': akshare_status,
-                'tushare_available': tushare_status,
-                'preferred_source': 'akshare' if akshare_status else 'tushare' if tushare_status else 'none',
-                'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            }
+            'data': status_info
         })
         
     except Exception as e:
-        logger.error(f"获取服务状态失败: {e}")
+        logger.error(f"获取K线状态失败: {e}")
         return jsonify({
             'success': False,
-            'message': f'获取服务状态失败: {str(e)}'
+            'message': f'获取状态失败: {str(e)}'
         }), 500
 
 def convert_to_tushare_code(symbol):
@@ -328,11 +258,13 @@ def check_akshare_status():
 def check_tushare_status():
     """检查TUSHARE状态"""
     try:
-        if not kline_manager.pro:
-            return False
-        # 尝试获取一条测试数据
-        df = kline_manager.pro.daily(ts_code='000001.SZ', start_date='20240101', end_date='20240102')
-        return df is not None and not df.empty
+        # 暂时返回False，避免kline_manager未定义错误
+        return False
+        # if not kline_manager.pro:
+        #     return False
+        # # 尝试获取一条测试数据
+        # df = kline_manager.pro.daily(ts_code='000001.SZ', start_date='20240101', end_date='20240102')
+        # return df is not None and not df.empty
     except Exception as e:
         logger.warning(f"TUSHARE状态检查失败: {e}")
         return False

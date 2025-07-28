@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票详情调试页面</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+    <div id="content">
+        <h1>股票详情调试页面</h1>
+        <p>如果这个页面正常显示，说明基本HTML结构没有问题。</p>
+        
+        <div>
+            <label>
+                <input type="checkbox" id="showBOLL"> 显示BOLL指标
+            </label>
+        </div>
+        
+        <div id="candlestickChart" style="width:100%;height:400px;"></div>
+    </div>
+
+    <script>
+        console.log('调试页面JavaScript开始执行');
+        
+        // 简单的测试函数
+        function testFunction() {
+            console.log('测试函数执行成功');
+            return true;
+        }
+        
+        // 测试Plotly
+        function testPlotly() {
+            const testData = [{
+                x: ['2024-01-01', '2024-01-02', '2024-01-03'],
+                y: [10, 15, 13],
+                type: 'scatter'
+            }];
+            
+            const layout = {
+                title: '测试图表'
+            };
+            
+            Plotly.newPlot('candlestickChart', testData, layout);
+        }
+        
+        // 页面加载完成后执行测试
+        window.onload = function() {
+            console.log('页面加载完成');
+            testFunction();
+            testPlotly();
+        };
+    </script>
+</body>
+</html>

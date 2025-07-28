@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错误捕获测试页面</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+    <div id="content">
+        <h1>错误捕获测试页面</h1>
+        <div id="error-log"></div>
+    </div>
+
+    <script>
+        // 全局错误处理
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('JavaScript错误:', {
+                message: message,
+                source: source,
+                line: lineno,
+                column: colno,
+                error: error
+            });
+            
+            const errorDiv = document.getElementById('error-log');
+            errorDiv.innerHTML += `<p style="color: red;">错误: ${message} (行: ${lineno}, 列: ${colno})</p>`;
+            return true;
+        };
+        
+        // 测试可能有问题的代码模式
+        function testProblematicPatterns() {
+            try {
+                // 测试模板字符串
+                const testTemplate = `测试模板字符串 ${new Date()}`;
+                console.log('模板字符串测试:', testTemplate);
+                
+                // 测试对象定义（类似原始代码中的trace定义）
+                const testTrace = {
+                    x: ['2024-01-01', '2024-01-02'],
+                    y: [10, 15],
+                    type: 'scatter',
+                    hovertemplate: '<b>测试数据</b><br>日期: %{x}<br>值: %{y}<extra></extra>'
+                };
+                console.log('对象定义测试:', testTrace);
+                
+                // 测试函数调用链
+                const result = ['a', 'b', 'c'].map(item => item.toUpperCase());
+                console.log('函数调用链测试:', result);
+                
+                console.log('所有测试模式通过');
+                
+            } catch (error) {
+                console.error('测试过程中发生错误:', error);
+                const errorDiv = document.getElementById('error-log');
+                errorDiv.innerHTML += `<p style="color: red;">捕获的错误: ${error.message}</p>`;
+            }
+        }
+        
+        // 页面加载完成后执行测试
+        window.onload = function() {
+            console.log('页面加载完成，开始错误捕获测试');
+            testProblematicPatterns();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语法测试</title>
+</head>
+<body>
+    <h1>语法测试页面</h1>
+    <div id="result"></div>
+
+    <script>
+        // 测试可能有问题的语法
+        const dates = ['2024-01-01', '2024-01-02'];
+        const amounts = [1000, 2000];
+        const closes = [10, 12];
+        const opens = [9, 11];
+        
+        try {
+            // 这是原始代码中可能有问题的部分
+            const amountTrace = {
+                x: dates,
+                y: amounts.map(amount => amount / 10),
+                type: 'bar',
+                name: '成交额',
+                marker: {
+                    color: amounts.map((amount, i) => 
+                        closes[i] >= opens[i] ? '#ff4444' : '#00aa00'
+                    ),
+                    opacity: 0.7
+                }
+            };
+            
+            document.getElementById('result').innerHTML = '<p style="color: green;">语法正确！</p>';
+            console.log('amountTrace:', amountTrace);
+        } catch (error) {
+            document.getElementById('result').innerHTML = '<p style="color: red;">语法错误: ' + error.message + '</p>';
+            console.error('语法错误:', error);
+        }
+    </script>
+</body>
+</html>

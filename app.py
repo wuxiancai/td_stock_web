@@ -162,15 +162,63 @@ except ImportError:
     AKSHARE_AVAILABLE = False
     print("警告：AkShare库未安装，分时图功能将不可用")
 
-def safe_akshare_call(func, cache_key, *args, **kwargs):
-    """安全的AkShare API调用"""
+def safe_akshare_call(func, cache_key, *args, max_retries=3, retry_delay=2, **kwargs):
+    """安全的AkShare API调用，带重试机制"""
     if not AKSHARE_AVAILABLE or ak is None:
+        print("AkShare不可用")
         return None
-    try:
-        return func(*args, **kwargs)
-    except Exception as e:
-        print(f"AkShare API调用失败: {e}")
-        return None
+    
+    import time
+    import requests
+    
+    for attempt in range(max_retries):
+        try:
+            print(f"[AkShare] 尝试调用 {func.__name__} (第{attempt + 1}次)")
+            result = func(*args, **kwargs)
+            print(f"[AkShare] {func.__name__} 调用成功")
+            return result
+            
+        except requests.exceptions.ProxyError as e:
+            print(f"[AkShare] 代理连接错误 (第{attempt + 1}次): {e}")
+            if attempt < max_retries - 1:
+                print(f"[AkShare] {retry_delay}秒后重试...")
+                time.sleep(retry_delay)
+                continue
+            else:
+                print(f"[AkShare] 代理连接失败，已重试{max_retries}次")
+                return None
+                
+        except requests.exceptions.ConnectionError as e:
+            print(f"[AkShare] 网络连接错误 (第{attempt + 1}次): {e}")
+            if attempt < max_retries - 1:
+                print(f"[AkShare] {retry_delay}秒后重试...")
+                time.sleep(retry_delay)
+                continue
+            else:
+                print(f"[AkShare] 网络连接失败，已重试{max_retries}次")
+                return None
+                
+        except requests.exceptions.Timeout as e:
+            print(f"[AkShare] 请求超时 (第{attempt + 1}次): {e}")
+            if attempt < max_retries - 1:
+                print(f"[AkShare] {retry_delay}秒后重试...")
+                time.sleep(retry_delay)
+                continue
+            else:
+                print(f"[AkShare] 请求超时，已重试{max_retries}次")
+                return None
+                
+        except Exception as e:
+            print(f"[AkShare] API调用失败 (第{attempt + 1}次): {e}")
+            if attempt < max_retries - 1:
+                print(f"[AkShare] {retry_delay}秒后重试...")
+                time.sleep(retry_delay)
+                continue
+            else:
+                print(f"[AkShare] API调用失败，已重试{max_retries}次")
+                return None
+    
+    return None
 
 def find_available_port(start_port=8080):
     """查找可用端口"""
@@ -938,6 +986,36 @@ def candlestick_chart(stock_code):
     """股票蜡烛图页面"""
     return render_template('candlestick_chart.html', stock_code=stock_code)
 
+@app.route('/stock/debug')
+def stock_debug():
+    """股票详情调试页面"""
+    return render_template('stock_detail_debug.html')
+
+@app.route('/test/simple')
+def simple_test():
+    """最简单的测试页面"""
+    return render_template('simple_test.html')
+
+@app.route('/test/step')
+def step_debug():
+    """逐步调试页面"""
+    return render_template('step_debug.html')
+
+@app.route('/test/error')
+def error_catch_test():
+    """错误捕获测试页面"""
+    return render_template('error_catch_test.html')
+
+@app.route('/test/function')
+def function_test():
+    """函数测试页面"""
+    return render_template('function_test.html')
+
+@app.route('/test/syntax')
+def syntax_test():
+    """语法测试页面"""
+    return render_template('syntax_test.html')
+
 
 
 @app.route('/watchlist')
@@ -968,6 +1046,16 @@ def top_list():
 def kline_test():
     """K线图重构测试页面"""
     return render_template('kline_test.html')
+
+@app.route('/indicator-test')
+def indicator_test():
+    """技术指标测试页面"""
+    return render_template('indicator_test.html')
+
+@app.route('/indicator-fix-test')
+def indicator_fix_test():
+    """技术指标修复测试页面"""
+    return render_template('indicator_fix_test.html')
 
 def get_stock_from_cache(ts_code):
     """从缓存中查找股票数据"""
@@ -1042,6 +1130,60 @@ def trigger_indices_failure():
         'trigger_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'next_retry_time': (datetime.now() + timedelta(seconds=retry_interval)).strftime('%Y-%m-%d %H:%M:%S')
     })
+
+@app.route('/api/indices/test_akshare_realtime')
+def test_akshare_realtime_indices():
+    """测试AKShare实时指数数据获取"""
+    try:
+        # 定义要获取的指数代码和名称
+        indices = {
+            'sh000001': '上证指数',
+            'sz399001': '深证成指', 
+            'sz399006': '创业板指',
+            'sh000688': '科创板'
+        }
+        
+        print("[测试] 开始测试AKShare实时指数数据获取...")
+        indices_data = get_indices_from_akshare_realtime(indices)
+        
+        if indices_data:
+            # 转换数据格式以匹配前端期望
+            formatted_data = {}
+            current_time = datetime.now().strftime('%H:%M:%S')
+            
+            for code, data in indices_data.items():
+                formatted_data[code] = {
+                    'name': data['name'],
+                    'current_price': data['price'],
+                    'change_pct': data['change_percent'],
+                    'change_amount': data['change'],
+                    'volume': data['volume'],
+                    'update_time': current_time
+                }
+            
+            return jsonify({
+                'success': True,
+                'data': formatted_data,
+                'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'source': 'akshare_realtime',
+                'message': f'AKShare实时数据获取成功，共获取到 {len(indices_data)} 个指数'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'data': {},
+                'message': 'AKShare实时数据获取失败',
+                'source': 'akshare_realtime'
+            })
+            
+    except Exception as e:
+        print(f"测试AKShare实时指数数据异常: {e}")
+        return jsonify({
+            'success': False,
+            'data': {},
+            'message': f'测试异常: {str(e)}',
+            'source': 'akshare_realtime'
+        })
 
 @app.route('/api/indices/test_tushare')
 def test_tushare_indices():
@@ -1148,11 +1290,16 @@ def get_indices_realtime():
         
         if is_trading_time:
             print(f"[指数数据] 交易时间 {current_time}，获取实时数据...")
-            # 交易时间：尝试获取实时数据
-            indices_data = get_indices_from_tushare(indices)
+            # 交易时间：优先使用AKShare获取实时数据
+            indices_data = get_indices_from_akshare_realtime(indices)
+            
+            # 如果AKShare获取失败，回退到Tushare
+            if not indices_data:
+                print("[指数数据] AKShare实时数据获取失败，回退到Tushare...")
+                indices_data = get_indices_from_tushare(indices)
             
             if not indices_data:
-                print("[指数数据] 实时数据获取失败，返回全0数据等待重试")
+                print("[指数数据] 所有数据源获取失败，返回全0数据等待重试")
                 return get_zero_indices_data(indices)
             
             # 转换数据格式以匹配前端期望
@@ -1258,7 +1405,150 @@ def save_indices_cache(data, fetch_time):
         print(f"保存指数缓存失败: {e}")
         return False
 
-# AkShare相关函数已删除，现在只使用Tushare获取指数数据
+def get_indices_from_akshare_realtime(indices):
+    """使用AKShare获取实时指数数据"""
+    if not AKSHARE_AVAILABLE:
+        print("[AKShare] AKShare不可用，跳过AKShare获取")
+        return None
+        
+    if 'ak' not in globals() or ak is None:
+        print("[AKShare] akshare模块未正确导入，跳过AKShare获取")
+        return None
+        
+    indices_data = {}
+    current_time = datetime.now().strftime('%H:%M:%S')
+    
+    print(f"[AKShare] 开始获取实时指数数据 {current_time}")
+    
+    try:
+        # 定义指数代码映射关系
+        index_mapping = {
+            'sh000001': {'name': '上证指数', 'search_name': '上证指数'},
+            'sz399001': {'name': '深证成指', 'search_name': '深证成指'},
+            'sz399006': {'name': '创业板指', 'search_name': '创业板指'},
+            'sh000688': {'name': '科创板', 'search_name': '科创50'}
+        }
+        
+        # 获取沪深重要指数实时数据
+        print("[AKShare] 获取沪深重要指数...")
+        df_important = safe_akshare_call(ak.stock_zh_index_spot_em, 'akshare_important_indices', symbol="沪深重要指数")
+        
+        if df_important is not None and not df_important.empty:
+            print(f"[AKShare] 沪深重要指数数据获取成功，共{len(df_important)}条记录")
+            for _, row in df_important.iterrows():
+                index_name = row['名称']
+                print(f"[AKShare] 处理指数: {index_name}")
+                
+                # 匹配指数
+                for code, info in index_mapping.items():
+                    if info['search_name'] in index_name or index_name in info['search_name']:
+                        try:
+                            current_price = float(row['最新价'])
+                            change_amount = float(row['涨跌额'])
+                            change_percent = float(row['涨跌幅'])
+                            volume = float(row['成交额']) if pd.notna(row['成交额']) else 0
+                            
+                            indices_data[code] = {
+                                'name': info['name'],
+                                'code': row['代码'],
+                                'price': current_price,
+                                'change': change_amount,
+                                'change_percent': change_percent,
+                                'volume': volume / 100000000  # 转换为亿元
+                            }
+                            print(f"[AKShare] {info['name']} 获取成功: 价格={current_price}, 涨跌幅={change_percent}%")
+                        except Exception as e:
+                            print(f"[AKShare] 处理{info['name']}数据失败: {e}")
+                        break
+        
+        # 如果沪深重要指数没有获取到所有数据，尝试获取上证系列指数
+        if 'sh000001' not in indices_data or 'sh000688' not in indices_data:
+            print("[AKShare] 获取上证系列指数...")
+            df_sh = safe_akshare_call(ak.stock_zh_index_spot_em, 'akshare_sh_indices', symbol="上证系列指数")
+            
+            if df_sh is not None and not df_sh.empty:
+                print(f"[AKShare] 上证系列指数数据获取成功，共{len(df_sh)}条记录")
+                for _, row in df_sh.iterrows():
+                    index_name = row['名称']
+                    
+                    # 匹配上证指数和科创板
+                    if 'sh000001' not in indices_data and ('上证指数' in index_name or index_name == '上证指数'):
+                        try:
+                            indices_data['sh000001'] = {
+                                'name': '上证指数',
+                                'code': row['代码'],
+                                'price': float(row['最新价']),
+                                'change': float(row['涨跌额']),
+                                'change_percent': float(row['涨跌幅']),
+                                'volume': float(row['成交额']) / 100000000 if pd.notna(row['成交额']) else 0
+                            }
+                            print(f"[AKShare] 上证指数获取成功: 价格={row['最新价']}, 涨跌幅={row['涨跌幅']}%")
+                        except Exception as e:
+                            print(f"[AKShare] 处理上证指数数据失败: {e}")
+                    
+                    elif 'sh000688' not in indices_data and ('科创50' in index_name or '科创板' in index_name):
+                        try:
+                            indices_data['sh000688'] = {
+                                'name': '科创板',
+                                'code': row['代码'],
+                                'price': float(row['最新价']),
+                                'change': float(row['涨跌额']),
+                                'change_percent': float(row['涨跌幅']),
+                                'volume': float(row['成交额']) / 100000000 if pd.notna(row['成交额']) else 0
+                            }
+                            print(f"[AKShare] 科创板获取成功: 价格={row['最新价']}, 涨跌幅={row['涨跌幅']}%")
+                        except Exception as e:
+                            print(f"[AKShare] 处理科创板数据失败: {e}")
+        
+        # 如果深证成指和创业板指没有获取到，尝试获取深证系列指数
+        if 'sz399001' not in indices_data or 'sz399006' not in indices_data:
+            print("[AKShare] 获取深证系列指数...")
+            df_sz = safe_akshare_call(ak.stock_zh_index_spot_em, 'akshare_sz_indices', symbol="深证系列指数")
+            
+            if df_sz is not None and not df_sz.empty:
+                print(f"[AKShare] 深证系列指数数据获取成功，共{len(df_sz)}条记录")
+                for _, row in df_sz.iterrows():
+                    index_name = row['名称']
+                    
+                    # 匹配深证成指和创业板指
+                    if 'sz399001' not in indices_data and ('深证成指' in index_name or index_name == '深证成指'):
+                        try:
+                            indices_data['sz399001'] = {
+                                'name': '深证成指',
+                                'code': row['代码'],
+                                'price': float(row['最新价']),
+                                'change': float(row['涨跌额']),
+                                'change_percent': float(row['涨跌幅']),
+                                'volume': float(row['成交额']) / 100000000 if pd.notna(row['成交额']) else 0
+                            }
+                            print(f"[AKShare] 深证成指获取成功: 价格={row['最新价']}, 涨跌幅={row['涨跌幅']}%")
+                        except Exception as e:
+                            print(f"[AKShare] 处理深证成指数据失败: {e}")
+                    
+                    elif 'sz399006' not in indices_data and ('创业板指' in index_name or index_name == '创业板指'):
+                        try:
+                            indices_data['sz399006'] = {
+                                'name': '创业板指',
+                                'code': row['代码'],
+                                'price': float(row['最新价']),
+                                'change': float(row['涨跌额']),
+                                'change_percent': float(row['涨跌幅']),
+                                'volume': float(row['成交额']) / 100000000 if pd.notna(row['成交额']) else 0
+                            }
+                            print(f"[AKShare] 创业板指获取成功: 价格={row['最新价']}, 涨跌幅={row['涨跌幅']}%")
+                        except Exception as e:
+                            print(f"[AKShare] 处理创业板指数据失败: {e}")
+        
+        if indices_data:
+            print(f"[AKShare] 实时数据获取成功，共获取到 {len(indices_data)} 个指数数据")
+            return indices_data
+        else:
+            print("[AKShare] 未获取到任何实时指数数据")
+            return None
+            
+    except Exception as e:
+        print(f"[AKShare] 获取实时指数数据异常: {e}")
+        return None
 
 def get_indices_from_tushare(indices):
     """使用Tushare获取指数数据"""
@@ -2095,6 +2385,235 @@ def get_realtime_stock_data(stock_code):
     except Exception as e:
         print(f"[实时数据] 获取失败: {e}")
         return jsonify({'error': f'获取实时数据失败: {str(e)}'}), 500
+
+def get_last_trading_day_data():
+    """
+    获取最后交易日的收盘数据，用于非交易时间显示
+    返回格式与实时交易数据API相同
+    """
+    try:
+        print("[最后交易日数据] 开始获取最后交易日的收盘数据...")
+        
+        # 获取最后交易日期 (20250725)
+        last_trading_date = '20250725'
+        
+        # 获取股票基本信息列表
+        stock_basic = safe_tushare_call(pro.stock_basic, exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+        
+        if stock_basic.empty:
+            print("[最后交易日数据] 无法获取股票基本信息")
+            return jsonify({
+                'success': False,
+                'error': '无法获取股票基本信息',
+                'data': [],
+                'message': '数据源暂时不可用'
+            }), 503
+        
+        # 获取最后交易日的日线数据
+        daily_data = safe_tushare_call(pro.daily, trade_date=last_trading_date)
+        
+        if daily_data.empty:
+            print(f"[最后交易日数据] {last_trading_date}无日线数据")
+            return jsonify({
+                'success': False,
+                'error': f'无法获取{last_trading_date}的交易数据',
+                'data': [],
+                'message': '最后交易日数据不可用'
+            }), 404
+        
+        # 获取每日指标数据
+        daily_basic = safe_tushare_call(pro.daily_basic, trade_date=last_trading_date)
+        
+        print(f"[最后交易日数据] 获取到{len(daily_data)}条日线数据，{len(daily_basic)}条每日指标数据")
+        
+        # 合并数据
+        if not daily_basic.empty:
+            merged_data = daily_data.merge(daily_basic, on=['ts_code', 'trade_date'], how='left')
+        else:
+            merged_data = daily_data.copy()
+            # 添加缺失的每日指标字段
+            for col in ['turnover_rate', 'turnover_rate_f', 'volume_ratio', 'pe', 'pe_ttm', 'pb', 'ps', 'ps_ttm', 'dv_ratio', 'dv_ttm', 'total_share', 'float_share', 'free_share', 'total_mv', 'circ_mv']:
+                if col not in merged_data.columns:
+                    merged_data[col] = None
+        
+        # 转换为实时交易数据格式
+        data_list = []
+        for idx, row in merged_data.iterrows():
+            try:
+                # 获取股票名称
+                stock_info = stock_basic[stock_basic['ts_code'] == row['ts_code']]
+                stock_name = stock_info['name'].iloc[0] if not stock_info.empty else row['ts_code']
+                
+                # 计算涨跌幅和涨跌额
+                close_price = float(row.get('close', 0)) if pd.notna(row.get('close')) else 0.0
+                pre_close = float(row.get('pre_close', 0)) if pd.notna(row.get('pre_close')) else close_price
+                
+                if pre_close > 0:
+                    pct_chg = ((close_price - pre_close) / pre_close) * 100
+                    change = close_price - pre_close
+                else:
+                    pct_chg = 0.0
+                    change = 0.0
+                
+                # 构造实时交易数据格式
+                data_item = {
+                    '序号': idx + 1,
+                    '代码': row['ts_code'].split('.')[0],  # 去掉后缀
+                    '名称': stock_name,
+                    '最新价': close_price,
+                    '涨跌幅': pct_chg,
+                    '涨跌额': change,
+                    '成交量': float(row.get('vol', 0)) if pd.notna(row.get('vol')) else 0.0,
+                    '成交额': float(row.get('amount', 0)) if pd.notna(row.get('amount')) else 0.0,
+                    '振幅': float(row.get('high', 0) - row.get('low', 0)) / pre_close * 100 if pre_close > 0 and pd.notna(row.get('high')) and pd.notna(row.get('low')) else 0.0,
+                    '最高': float(row.get('high', 0)) if pd.notna(row.get('high')) else 0.0,
+                    '最低': float(row.get('low', 0)) if pd.notna(row.get('low')) else 0.0,
+                    '今开': float(row.get('open', 0)) if pd.notna(row.get('open')) else 0.0,
+                    '昨收': pre_close,
+                    '量比': float(row.get('volume_ratio', 0)) if pd.notna(row.get('volume_ratio')) else 0.0,
+                    '换手率': float(row.get('turnover_rate', 0)) if pd.notna(row.get('turnover_rate')) else 0.0,
+                    '市盈率-动态': float(row.get('pe_ttm', 0)) if pd.notna(row.get('pe_ttm')) else 0.0,
+                    '市净率': float(row.get('pb', 0)) if pd.notna(row.get('pb')) else 0.0,
+                    '总市值': float(row.get('total_mv', 0)) if pd.notna(row.get('total_mv')) else 0.0,
+                    '流通市值': float(row.get('circ_mv', 0)) if pd.notna(row.get('circ_mv')) else 0.0,
+                    '涨速': 0.0,  # 收盘数据无涨速
+                    '5分钟涨跌': 0.0,  # 收盘数据无5分钟涨跌
+                    '60日涨跌幅': 0.0,  # 需要额外计算，暂时设为0
+                    '年初至今涨跌幅': 0.0  # 需要额外计算，暂时设为0
+                }
+                data_list.append(data_item)
+            except Exception as e:
+                print(f"[最后交易日数据] 处理数据行失败: {e}")
+                continue
+        
+        if not data_list:
+            return jsonify({
+                'success': False,
+                'error': '数据处理失败',
+                'data': [],
+                'message': '获取到数据但处理过程中出现错误'
+            }), 500
+        
+        print(f"[最后交易日数据] 成功处理{len(data_list)}条数据")
+        
+        return jsonify({
+            'success': True,
+            'data': data_list,
+            'total_records': len(data_list),
+            'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'data_source': f'Tushare - 最后交易日({last_trading_date})收盘数据',
+            'message': f'成功获取{len(data_list)}条最后交易日数据',
+            'is_last_trading_day': True
+        })
+        
+    except Exception as e:
+        print(f"[最后交易日数据] 获取失败: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'获取最后交易日数据失败: {str(e)}',
+            'data': [],
+            'message': '服务器内部错误，请稍后重试'
+        }), 500
+
+
+@app.route('/api/stock/realtime_trading_data')
+def get_realtime_trading_data():
+    """
+    获取沪深京A股实时交易数据
+    基于AKShare的stock_zh_a_spot_em接口
+    当获取不到实时数据时，使用最后交易日的收盘数据
+    
+    Returns:
+        JSON: 实时交易数据，包含AKShare官方文档中的所有输出参数
+    """
+    try:
+        if not AKSHARE_AVAILABLE:
+            return jsonify({
+                'success': False,
+                'error': 'AKShare库未安装，无法获取实时交易数据',
+                'data': [],
+                'message': '请安装AKShare库以获取实时数据'
+            }), 500
+        
+        print("[实时交易数据] 开始获取沪深京A股实时交易数据...")
+        
+        # 调用AKShare接口获取实时交易数据，增加重试机制
+        realtime_data = safe_akshare_call(
+            ak.stock_zh_a_spot_em, 
+            'realtime_trading_data',
+            max_retries=3,
+            retry_delay=1
+        )
+        
+        # 如果获取不到实时数据，使用最后交易日的收盘数据
+        if realtime_data is None or realtime_data.empty:
+            print("[实时交易数据] 无法获取实时数据，尝试使用最后交易日的收盘数据...")
+            return get_last_trading_day_data()
+            
+        print(f"[实时交易数据] 成功获取{len(realtime_data)}条实时交易数据")
+        
+        print(f"[实时交易数据] 成功获取{len(realtime_data)}条实时交易数据")
+        
+        # 转换数据格式，确保所有字段都包含
+        data_list = []
+        for _, row in realtime_data.iterrows():
+            try:
+                data_item = {
+                    '序号': int(row.get('序号', 0)) if pd.notna(row.get('序号')) else 0,
+                    '代码': str(row.get('代码', '')),
+                    '名称': str(row.get('名称', '')),
+                    '最新价': float(row.get('最新价', 0)) if pd.notna(row.get('最新价')) else 0.0,
+                    '涨跌幅': float(row.get('涨跌幅', 0)) if pd.notna(row.get('涨跌幅')) else 0.0,
+                    '涨跌额': float(row.get('涨跌额', 0)) if pd.notna(row.get('涨跌额')) else 0.0,
+                    '成交量': float(row.get('成交量', 0)) if pd.notna(row.get('成交量')) else 0.0,
+                    '成交额': float(row.get('成交额', 0)) if pd.notna(row.get('成交额')) else 0.0,
+                    '振幅': float(row.get('振幅', 0)) if pd.notna(row.get('振幅')) else 0.0,
+                    '最高': float(row.get('最高', 0)) if pd.notna(row.get('最高')) else 0.0,
+                    '最低': float(row.get('最低', 0)) if pd.notna(row.get('最低')) else 0.0,
+                    '今开': float(row.get('今开', 0)) if pd.notna(row.get('今开')) else 0.0,
+                    '昨收': float(row.get('昨收', 0)) if pd.notna(row.get('昨收')) else 0.0,
+                    '量比': float(row.get('量比', 0)) if pd.notna(row.get('量比')) else 0.0,
+                    '换手率': float(row.get('换手率', 0)) if pd.notna(row.get('换手率')) else 0.0,
+                    '市盈率-动态': float(row.get('市盈率-动态', 0)) if pd.notna(row.get('市盈率-动态')) else 0.0,
+                    '市净率': float(row.get('市净率', 0)) if pd.notna(row.get('市净率')) else 0.0,
+                    '总市值': float(row.get('总市值', 0)) if pd.notna(row.get('总市值')) else 0.0,
+                    '流通市值': float(row.get('流通市值', 0)) if pd.notna(row.get('流通市值')) else 0.0,
+                    '涨速': float(row.get('涨速', 0)) if pd.notna(row.get('涨速')) else 0.0,
+                    '5分钟涨跌': float(row.get('5分钟涨跌', 0)) if pd.notna(row.get('5分钟涨跌')) else 0.0,
+                    '60日涨跌幅': float(row.get('60日涨跌幅', 0)) if pd.notna(row.get('60日涨跌幅')) else 0.0,
+                    '年初至今涨跌幅': float(row.get('年初至今涨跌幅', 0)) if pd.notna(row.get('年初至今涨跌幅')) else 0.0
+                }
+                data_list.append(data_item)
+            except Exception as e:
+                print(f"[实时交易数据] 处理数据行失败: {e}")
+                continue
+        
+        if not data_list:
+            return jsonify({
+                'success': False,
+                'error': '数据处理失败',
+                'data': [],
+                'message': '获取到数据但处理过程中出现错误'
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'data': data_list,
+            'total_records': len(data_list),
+            'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'data_source': 'AKShare - stock_zh_a_spot_em',
+            'message': f'成功获取{len(data_list)}条实时交易数据'
+        })
+        
+    except Exception as e:
+        print(f"[实时交易数据] 获取失败: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'获取实时交易数据失败: {str(e)}',
+            'data': [],
+            'message': '服务器内部错误，请稍后重试'
+        }), 500
+
 
 @app.route('/api/stock/<stock_code>/daily_basic')
 def get_stock_daily_basic(stock_code):

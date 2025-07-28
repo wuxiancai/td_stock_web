@@ -269,11 +269,11 @@
             <div id="error" class="error" style="display: none;"></div>
             <div id="stockInfo" class="stock-info" style="display: none;"></div>
             <div class="chart-controls" id="chartControls" style="display: none;">
-                <button class="chart-btn active" onclick="setDisplayRange(50)">50根</button>
-                <button class="chart-btn" onclick="setDisplayRange(100)">100根</button>
-                <button class="chart-btn" onclick="setDisplayRange(200)">200根</button>
-                <button class="chart-btn" onclick="setDisplayRange(500)">500根</button>
-                <button class="chart-btn" onclick="setDisplayRange(-1)">全部</button>
+                <button class="chart-btn active" onclick="setDisplayRange(50, event)">50根</button>
+                    <button class="chart-btn" onclick="setDisplayRange(100, event)">100根</button>
+                    <button class="chart-btn" onclick="setDisplayRange(200, event)">200根</button>
+                    <button class="chart-btn" onclick="setDisplayRange(500, event)">500根</button>
+                    <button class="chart-btn" onclick="setDisplayRange(-1, event)">全部</button>
             </div>
             <div class="range-info" id="rangeInfo" style="display: none;"></div>
             <div id="candlestickChart"></div>
@@ -382,14 +382,7 @@
                     line: { color: '#00aa00', width: 1 },
                     fillcolor: '#00aa00'
                 },
-                hovertemplate: 
-                    '<b>%{fullData.name}</b><br>' +
-                    '日期: %{x}<br>' +
-                    '开盘: %{open:.2f}<br>' +
-                    '最高: %{high:.2f}<br>' +
-                    '最低: %{low:.2f}<br>' +
-                    '收盘: %{close:.2f}<br>' +
-                    '<extra></extra>'
+                hovertemplate: '<b>%{fullData.name}</b><br>日期: %{x}<br>开盘: %{open:.2f}<br>最高: %{high:.2f}<br>最低: %{low:.2f}<br>收盘: %{close:.2f}<br><extra></extra>'
             };
 
             // 创建成交量图
@@ -405,10 +398,7 @@
                     ),
                     opacity: 0.6
                 },
-                hovertemplate: 
-                    '日期: %{x}<br>' +
-                    '成交量: %{y:.0f}手<br>' +
-                    '<extra></extra>'
+                hovertemplate: '日期: %{x}<br>成交量: %{y:.0f}手<br><extra></extra>'
             };
 
             const layout = {
@@ -469,14 +459,16 @@
             updateRangeInfo();
         }
 
-        function setDisplayRange(range) {
+        function setDisplayRange(range, event) {
             currentDisplayRange = range;
             
             // 更新按钮状态
             document.querySelectorAll('.chart-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
             
             // 重新绘制图表
             createCandlestickChart();
