@@ -600,6 +600,8 @@
                         <th class="sortable" onclick="sortTable('amount')" style="cursor: pointer;">成交额(亿元) <span id="sort-amount">↕</span></th>
                         <th class="sortable" onclick="sortTable('market_cap')" style="cursor: pointer;">市值(亿元) <span id="sort-market_cap">↕</span></th>
                         <th class="sortable" onclick="sortTable('net_mf_amount')" style="cursor: pointer;">净流入额 <span id="sort-net_mf_amount">↕</span></th>
+                        <th class="sortable" onclick="sortTable('consecutive_rising_days')" style="cursor: pointer;">连涨天数 <span id="sort-consecutive_rising_days">↕</span></th>
+                        <th class="sortable" onclick="sortTable('volume_price_rising_days')" style="cursor: pointer;">量价齐升天数 <span id="sort-volume_price_rising_days">↕</span></th>
                         <th class="sortable" onclick="sortTable('nine_turn')" style="cursor: pointer;">九转买入 <span id="sort-nine_turn">↕</span></th>
                     </tr>
                 </thead>
@@ -880,6 +882,12 @@
                     <td>${hasRealTimeData ? (stock.net_mf_amount !== undefined ? 
                         `<span style="color: ${stock.net_mf_amount > 0 ? '#ff4444' : (stock.net_mf_amount < 0 ? '#44aa44' : '#666')}; font-weight: ${stock.net_mf_amount !== 0 ? 'bold' : 'normal'}">${formatNetMfAmount(stock.net_mf_amount)}</span>` 
                         : '-') : '-'}</td>
+                    <td>${hasRealTimeData ? (stock.consecutive_rising_days !== undefined ? 
+                        `<span style="color: ${stock.consecutive_rising_days > 0 ? '#ff4444' : '#666'}; font-weight: ${stock.consecutive_rising_days > 0 ? 'bold' : 'normal'}">${stock.consecutive_rising_days}天</span>` 
+                        : '-') : '-'}</td>
+                    <td>${hasRealTimeData ? (stock.volume_price_rising_days !== undefined ? 
+                        `<span style="color: ${stock.volume_price_rising_days > 0 ? '#ff4444' : '#666'}; font-weight: ${stock.volume_price_rising_days > 0 ? 'bold' : 'normal'}">${stock.volume_price_rising_days}天</span>` 
+                        : '-') : '-'}</td>
                     <td>${nineTurnDisplay}</td>
                 `;
                 
@@ -928,6 +936,12 @@
                     <td>${(stock.market_cap / 10000).toFixed(2)}</td>
                     <td>${stock.net_mf_amount !== undefined ? 
                         `<span style="color: ${stock.net_mf_amount > 0 ? '#ff4444' : (stock.net_mf_amount < 0 ? '#44aa44' : '#666')}; font-weight: ${stock.net_mf_amount !== 0 ? 'bold' : 'normal'}">${formatNetMfAmount(stock.net_mf_amount)}</span>` 
+                        : '-'}</td>
+                    <td>${stock.consecutive_rising_days !== undefined ? 
+                        `<span style="color: ${stock.consecutive_rising_days > 0 ? '#ff4444' : '#666'}; font-weight: ${stock.consecutive_rising_days > 0 ? 'bold' : 'normal'}">${stock.consecutive_rising_days}天</span>` 
+                        : '-'}</td>
+                    <td>${stock.volume_price_rising_days !== undefined ? 
+                        `<span style="color: ${stock.volume_price_rising_days > 0 ? '#ff4444' : '#666'}; font-weight: ${stock.volume_price_rising_days > 0 ? 'bold' : 'normal'}">${stock.volume_price_rising_days}天</span>` 
                         : '-'}</td>
                     <td>${nineTurnDisplay}</td>
                 `;
@@ -1350,6 +1364,14 @@
                          valueA = a.net_mf_amount || 0;
                          valueB = b.net_mf_amount || 0;
                          break;
+                     case 'consecutive_rising_days':
+                         valueA = a.consecutive_rising_days || 0;
+                         valueB = b.consecutive_rising_days || 0;
+                         break;
+                     case 'volume_price_rising_days':
+                         valueA = a.volume_price_rising_days || 0;
+                         valueB = b.volume_price_rising_days || 0;
+                         break;
                      default:
                          return 0;
                  }
@@ -1380,7 +1402,7 @@
          
          function updateSortIcons(activeField, order) {
              // 重置所有排序图标
-             const sortFields = ['stock_code', 'pct_chg', 'latest_price', 'turnover_rate', 'volume_ratio', 'pe_ratio', 'amount', 'market_cap', 'nine_turn', 'net_mf_amount'];
+             const sortFields = ['stock_code', 'pct_chg', 'latest_price', 'turnover_rate', 'volume_ratio', 'pe_ratio', 'amount', 'market_cap', 'nine_turn', 'net_mf_amount', 'consecutive_rising_days', 'volume_price_rising_days'];
              sortFields.forEach(field => {
                  const icon = document.getElementById(`sort-${field}`);
                  if (icon) {

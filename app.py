@@ -2394,8 +2394,9 @@ def get_last_trading_day_data():
     try:
         print("[最后交易日数据] 开始获取最后交易日的收盘数据...")
         
-        # 获取最后交易日期 (20250725)
-        last_trading_date = '20250725'
+        # 动态获取最后交易日期
+        last_trading_date = get_latest_trading_day()
+        print(f"[最后交易日数据] 动态获取的最后交易日: {last_trading_date}")
         
         # 获取股票基本信息列表
         stock_basic = safe_tushare_call(pro.stock_basic, exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
@@ -2413,13 +2414,20 @@ def get_last_trading_day_data():
         daily_data = safe_tushare_call(pro.daily, trade_date=last_trading_date)
         
         if daily_data.empty:
-            print(f"[最后交易日数据] {last_trading_date}无日线数据")
-            return jsonify({
-                'success': False,
-                'error': f'无法获取{last_trading_date}的交易数据',
-                'data': [],
-                'message': '最后交易日数据不可用'
-            }), 404
+            print(f"[最后交易日数据] {last_trading_date}无日线数据，尝试获取前一个交易日数据")
+            # 如果当天没有数据，尝试前一个交易日
+            prev_date = (datetime.strptime(last_trading_date, '%Y%m%d') - timedelta(days=1)).strftime('%Y%m%d')
+            daily_data = safe_tushare_call(pro.daily, trade_date=prev_date)
+            if not daily_data.empty:
+                last_trading_date = prev_date
+                print(f"[最后交易日数据] 使用前一个交易日数据: {last_trading_date}")
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f'无法获取{last_trading_date}的交易数据',
+                    'data': [],
+                    'message': '最后交易日数据不可用'
+                }), 404
         
         # 获取每日指标数据
         daily_basic = safe_tushare_call(pro.daily_basic, trade_date=last_trading_date)
@@ -2445,8 +2453,47 @@ def get_last_trading_day_data():
                 stock_name = stock_info['name'].iloc[0] if not stock_info.empty else row['ts_code']
                 
                 # 计算涨跌幅和涨跌额
-                close_price = float(row.get('close', 0)) if pd.notna(row.get('close')) else 0.0
-                pre_close = float(row.get('pre_close', 0)) if pd.notna(row.get('pre_close')) else close_price
+                close_raw = row.get('close')
+                pre_close_raw = row.get('pre_close')
+                
+                # 检查当前时间是否在收盘后的时间段（15:00-18:00）
+                now = datetime.now()
+                current_time = now.time()
+                afternoon_end = datetime.strptime('15:00', '%H:%M').time()
+                evening_cutoff = datetime.strptime('18:00', '%H:%M').time()
+                is_after_close = afternoon_end < current_time <= evening_cutoff
+                is_weekday = now.weekday() < 5
+                
+                # 如果close字段为空，说明可能是非交易日或数据问题
+                if pd.notna(close_raw) and close_raw is not None:
+                    close_price = float(close_raw)
+                    pre_close = float(pre_close_raw) if pd.notna(pre_close_raw) and pre_close_raw is not None else close_price
+                else:
+                    # close字段为空的处理策略
+                    if is_weekday and is_after_close:
+                        # 收盘后时间段：尝试使用更合理的收盘价估算
+                        # 优先级：(high + low) / 2 -> open -> pre_close
+                        high_raw = row.get('high')
+                        low_raw = row.get('low') 
+                        open_raw = row.get('open')
+                        
+                        if (pd.notna(high_raw) and high_raw is not None and high_raw > 0 and 
+                            pd.notna(low_raw) and low_raw is not None and low_raw > 0):
+                            # 使用最高价和最低价的平均值作为收盘价的估算
+                            close_price = (float(high_raw) + float(low_raw)) / 2
+                            print(f"[收盘后数据] 股票 {row['ts_code']} close字段为空，使用(high+low)/2作为收盘价: {close_price} (high:{high_raw}, low:{low_raw})")
+                        elif pd.notna(open_raw) and open_raw is not None and open_raw > 0:
+                            close_price = float(open_raw)
+                            print(f"[收盘后数据] 股票 {row['ts_code']} close字段为空，使用open作为收盘价: {close_price}")
+                        else:
+                            close_price = float(pre_close_raw) if pd.notna(pre_close_raw) and pre_close_raw is not None else 0.0
+                            print(f"[收盘后数据] 股票 {row['ts_code']} 所有价格字段都为空，使用pre_close: {close_price}")
+                        
+                        pre_close = float(pre_close_raw) if pd.notna(pre_close_raw) and pre_close_raw is not None else close_price
+                    else:
+                        # 非收盘后时间段：使用pre_close作为最新价
+                        close_price = float(pre_close_raw) if pd.notna(pre_close_raw) and pre_close_raw is not None else 0.0
+                        pre_close = close_price  # 在这种情况下，涨跌幅为0
                 
                 if pre_close > 0:
                     pct_chg = ((close_price - pre_close) / pre_close) * 100
@@ -2516,12 +2563,53 @@ def get_last_trading_day_data():
         }), 500
 
 
+def save_realtime_data_cache(data):
+    """保存实时交易数据到缓存"""
+    try:
+        cache_dir = 'cache'
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+        
+        cache_file = os.path.join(cache_dir, 'realtime_trading_data_cache.json')
+        cache_data = {
+            'data': data,
+            'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'cache_date': datetime.now().strftime('%Y-%m-%d'),
+            'cache_time': datetime.now().strftime('%H:%M:%S')
+        }
+        
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(cache_data, f, ensure_ascii=False, indent=2)
+        
+        print(f"[实时交易数据缓存] 已保存{len(data)}条数据到缓存")
+        
+    except Exception as e:
+        print(f"[实时交易数据缓存] 保存失败: {e}")
+
+def load_realtime_data_cache():
+    """加载实时交易数据缓存"""
+    try:
+        cache_file = os.path.join('cache', 'realtime_trading_data_cache.json')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                cached_data = json.load(f)
+                
+                print(f"[实时交易数据缓存] 找到缓存数据，缓存时间: {cached_data.get('fetch_time', '未知')}")
+                return cached_data
+        
+        print("[实时交易数据缓存] 未找到缓存文件")
+        return None
+        
+    except Exception as e:
+        print(f"[实时交易数据缓存] 加载失败: {e}")
+        return None
+
 @app.route('/api/stock/realtime_trading_data')
 def get_realtime_trading_data():
     """
     获取沪深京A股实时交易数据
     基于AKShare的stock_zh_a_spot_em接口
-    当获取不到实时数据时，使用最后交易日的收盘数据
+    当获取不到实时数据时，使用最后一次成功获取的AKShare缓存数据
     
     Returns:
         JSON: 实时交易数据，包含AKShare官方文档中的所有输出参数
@@ -2545,10 +2633,28 @@ def get_realtime_trading_data():
             retry_delay=1
         )
         
-        # 如果获取不到实时数据，使用最后交易日的收盘数据
+        # 如果获取不到实时数据，使用最后一次成功获取的AKShare缓存数据
         if realtime_data is None or realtime_data.empty:
-            print("[实时交易数据] 无法获取实时数据，尝试使用最后交易日的收盘数据...")
-            return get_last_trading_day_data()
+            print("[实时交易数据] 无法获取AKShare实时数据，尝试使用最后一次成功获取的缓存数据...")
+            cached_data = load_realtime_data_cache()
+            if cached_data and 'data' in cached_data:
+                print(f"[实时交易数据] 使用缓存数据，缓存时间: {cached_data.get('fetch_time', '未知')}")
+                return jsonify({
+                    'success': True,
+                    'data': cached_data['data'],
+                    'total_records': len(cached_data['data']),
+                    'fetch_time': cached_data.get('fetch_time', '未知'),
+                    'data_source': f"AKShare缓存数据 - 缓存时间: {cached_data.get('fetch_time', '未知')}",
+                    'message': f'AKShare实时接口暂时不可用，使用最后一次成功获取的缓存数据({len(cached_data["data"])}条)',
+                    'is_cached_data': True
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'AKShare实时接口暂时不可用，且无可用的缓存数据',
+                    'data': [],
+                    'message': '请稍后重试或联系管理员'
+                }), 503
             
         print(f"[实时交易数据] 成功获取{len(realtime_data)}条实时交易数据")
         
@@ -2581,7 +2687,9 @@ def get_realtime_trading_data():
                     '涨速': float(row.get('涨速', 0)) if pd.notna(row.get('涨速')) else 0.0,
                     '5分钟涨跌': float(row.get('5分钟涨跌', 0)) if pd.notna(row.get('5分钟涨跌')) else 0.0,
                     '60日涨跌幅': float(row.get('60日涨跌幅', 0)) if pd.notna(row.get('60日涨跌幅')) else 0.0,
-                    '年初至今涨跌幅': float(row.get('年初至今涨跌幅', 0)) if pd.notna(row.get('年初至今涨跌幅')) else 0.0
+                    '年初至今涨跌幅': float(row.get('年初至今涨跌幅', 0)) if pd.notna(row.get('年初至今涨跌幅')) else 0.0,
+                    '连涨天数': int(row.get('连涨天数', 0)) if pd.notna(row.get('连涨天数')) else 0,
+                    '量价齐升天数': int(row.get('量价齐升天数', 0)) if pd.notna(row.get('量价齐升天数')) else 0
                 }
                 data_list.append(data_item)
             except Exception as e:
@@ -2595,6 +2703,13 @@ def get_realtime_trading_data():
                 'data': [],
                 'message': '获取到数据但处理过程中出现错误'
             }), 500
+        
+        # 成功获取数据后，保存到缓存
+        try:
+            save_realtime_data_cache(data_list)
+            print(f"[实时交易数据] 已保存{len(data_list)}条数据到缓存")
+        except Exception as cache_error:
+            print(f"[实时交易数据] 保存缓存失败: {cache_error}")
         
         return jsonify({
             'success': True,

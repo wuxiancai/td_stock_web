@@ -584,6 +584,14 @@
                             <div class="realtime-label">年初至今涨跌幅</div>
                             <div id="rt_年初至今涨跌幅" class="realtime-value">--</div>
                         </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">连涨天数</div>
+                            <div id="rt_连涨天数" class="realtime-value">--</div>
+                        </div>
+                        <div class="realtime-item">
+                            <div class="realtime-label">量价齐升天数</div>
+                            <div id="rt_量价齐升天数" class="realtime-value">--</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -612,7 +620,7 @@
                     <!-- K线图 -->
                     <div id="candlestickChart" style="width: 100%; height: 400px;"></div>
                     <!-- 成交量图 -->
-                    <div id="volumeChart" style="width: 100%; height: 150px; margin-top: 5px;"></div>
+                    <div id="volumeChart" style="width: 100%; height: 150px; margin-top: 2px;"></div>
                     
                     <!-- MACD指标 -->
                     <div id="macdChart" style="width: 100%; height: 150px; margin-top: 5px;"></div>
@@ -861,7 +869,9 @@
                 '涨速': '涨速',
                 '5分钟涨跌': '5分钟涨跌',
                 '60日涨跌幅': '60日涨跌幅',
-                '年初至今涨跌幅': '年初至今涨跌幅'
+                '年初至今涨跌幅': '年初至今涨跌幅',
+                '连涨天数': '连涨天数',
+                '量价齐升天数': '量价齐升天数'
             };
 
             Object.entries(fieldMapping).forEach(([field, key]) => {
@@ -878,6 +888,8 @@
                         value = formatRealtimeValue(value, 'volume');
                     } else if (field === '成交额' || field === '总市值' || field === '流通市值') {
                         value = formatRealtimeValue(value, 'amount');
+                    } else if (field === '连涨天数' || field === '量价齐升天数') {
+                        value = formatRealtimeValue(value, 'days');
                     } else {
                         value = formatRealtimeValue(value, 'number');
                     }
@@ -886,6 +898,8 @@
                     
                     // 设置颜色
                     if (field === '涨跌幅' || field === '涨跌额' || field === '涨速' || field === '5分钟涨跌' || field === '60日涨跌幅' || field === '年初至今涨跌幅') {
+                        setRealtimeValueColor(element, stockData[key], field);
+                    } else if (field === '连涨天数' || field === '量价齐升天数') {
                         setRealtimeValueColor(element, stockData[key], field);
                     }
                 }
@@ -930,6 +944,8 @@
                         return `${(num / 10000).toFixed(2)}万`;
                     }
                     return num.toFixed(2);
+                case 'days':
+                    return `${Math.floor(num)}天`;
                 case 'number':
                 default:
                     return num.toFixed(2);
@@ -954,6 +970,20 @@
                     } else {
                         element.classList.add('neutral');
                         element.style.color = '#666'; // 灰色
+                    }
+                } else {
+                    element.style.color = '#333'; // 默认颜色
+                }
+            } else if (field === '连涨天数' || field === '量价齐升天数') {
+                const numValue = parseFloat(value);
+                if (!isNaN(numValue)) {
+                    element.classList.remove('positive', 'negative', 'neutral');
+                    if (numValue > 0) {
+                        element.classList.add('positive');
+                        element.style.color = '#ff4444'; // 红色，表示连续上涨或量价齐升
+                    } else {
+                        element.classList.add('neutral');
+                        element.style.color = '#666'; // 灰色，表示没有连涨或量价齐升
                     }
                 } else {
                     element.style.color = '#333'; // 默认颜色
