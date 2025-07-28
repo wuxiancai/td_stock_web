@@ -398,9 +398,10 @@ class KlineChartManager {
                     type: 'line',
                     data: data.bollUpper,
                     lineStyle: {
-                        opacity: 0.3,
+                        opacity: 0.6,
                         width: 1,
-                        color: '#fac858'
+                        color: '#ec0000',
+                        type: 'solid'
                     },
                     symbol: 'none'
                 },
@@ -420,9 +421,10 @@ class KlineChartManager {
                     type: 'line',
                     data: data.bollLower,
                     lineStyle: {
-                        opacity: 0.3,
+                        opacity: 0.6,
                         width: 1,
-                        color: '#73c0de'
+                        color: '#ec0000',
+                        type: 'solid'
                     },
                     symbol: 'none'
                 }
@@ -493,9 +495,9 @@ class KlineChartManager {
         // 添加BOLL指标信息
         if (rawItem.boll_upper !== undefined && rawItem.boll_upper !== null) {
             html += '<div style="margin-top: 8px; border-top: 1px solid #ddd; padding-top: 5px;">';
-            html += `<div style="margin-bottom: 2px;">BOLL上轨: <span style="color: #fac858; font-weight: bold;">${parseFloat(rawItem.boll_upper).toFixed(2)}</span></div>`;
+            html += `<div style="margin-bottom: 2px;">BOLL上轨: <span style="color: #ec0000; font-weight: bold;">${parseFloat(rawItem.boll_upper).toFixed(2)}</span></div>`;
             html += `<div style="margin-bottom: 2px;">BOLL中轨: <span style="color: #ee6666; font-weight: bold;">${parseFloat(rawItem.boll_mid).toFixed(2)}</span></div>`;
-            html += `<div style="margin-bottom: 2px;">BOLL下轨: <span style="color: #73c0de; font-weight: bold;">${parseFloat(rawItem.boll_lower).toFixed(2)}</span></div>`;
+            html += `<div style="margin-bottom: 2px;">BOLL下轨: <span style="color: #ec0000; font-weight: bold;">${parseFloat(rawItem.boll_lower).toFixed(2)}</span></div>`;
             html += '</div>';
         }
         

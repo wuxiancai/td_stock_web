@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOLL指标测试验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BOLL指标测试验证</h1>
+        <p>这个页面用于验证BOLL指标是否正确计算和返回。</p>
+        
+        <button onclick="testBollData()">测试BOLL数据</button>
+        <button onclick="testOriginalPage()">测试原始页面</button>
+        
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        async function testBollData() {
+            document.getElementById('testResults').innerHTML = '';
+            addResult('开始测试BOLL数据...', 'info');
+            
+            try {
+                // 测试API是否返回BOLL数据
+                const response = await fetch('/api/stock/300354/daily_history?days=50');
+                const result = await response.json();
+                
+                if (!result.success) {
+                    addResult(`API调用失败: ${result.error}`, 'error');
+                    return;
+                }
+                
+                const data = result.data;
+                addResult(`✅ 成功获取${data.length}条历史数据`, 'success');
+                
+                // 检查BOLL字段是否存在
+                const firstRecord = data[0];
+                const bollFields = ['boll_upper', 'boll_mid', 'boll_lower'];
+                const missingFields = bollFields.filter(field => !(field in firstRecord));
+                
+                if (missingFields.length > 0) {
+                    addResult(`❌ 缺少BOLL字段: ${missingFields.join(', ')}`, 'error');
+                } else {
+                    addResult('✅ 所有BOLL字段都存在', 'success');
+                }
+                
+                // 检查BOLL数据的有效性
+                const validBollRecords = data.filter(record => 
+                    record.boll_upper !== null && 
+                    record.boll_mid !== null && 
+                    record.boll_lower !== null
+                );
+                
+                addResult(`📊 有效BOLL数据记录: ${validBollRecords.length}/${data.length}`, 'info');
+                
+                if (validBollRecords.length > 0) {
+                    addResult('✅ BOLL数据计算正常', 'success');
+                    
+                    // 显示最近几条BOLL数据
+                    const recentData = data.slice(-5);
+                    const bollSample = recentData.map(record => ({
+                        date: record.trade_date,
+                        close: record.close,
+                        boll_upper: record.boll_upper,
+                        boll_mid: record.boll_mid,
+                        boll_lower: record.boll_lower
+                    }));
+                    
+                    addResult(`📈 最近5天BOLL数据样本:<pre>${JSON.stringify(bollSample, null, 2)}</pre>`, 'info');
+                } else {
+                    addResult('❌ 没有有效的BOLL数据', 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ 测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testOriginalPage() {
+            addResult('🔗 打开原始股票详情页面进行测试...', 'info');
+            window.open('/stock_detail?code=300354', '_blank');
+        }
+
+        // 页面加载时自动运行测试
+        window.addEventListener('load', () => {
+            testBollData();
+        });
+    </script>
+</body>
+</html>

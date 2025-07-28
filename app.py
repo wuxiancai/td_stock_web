@@ -1057,6 +1057,16 @@ def indicator_fix_test():
     """技术指标修复测试页面"""
     return render_template('indicator_fix_test.html')
 
+@app.route('/boll-debug')
+def boll_debug():
+    """BOLL指标调试页面"""
+    return render_template('boll_debug.html')
+
+@app.route('/boll-test')
+def boll_test():
+    """BOLL指标测试验证页面"""
+    return render_template('boll_test.html')
+
 def get_stock_from_cache(ts_code):
     """从缓存中查找股票数据"""
     # 确定股票所属市场
@@ -2905,7 +2915,10 @@ def get_stock_daily_history(stock_code):
         if daily_data.empty:
             return jsonify({'error': '无法获取历史日线数据'}), 404
         
-        # 转换为JSON格式，保持Tushare官方文档的字段格式
+        # 计算BOLL指标
+        daily_data = calculate_boll(daily_data)
+        
+        # 转换为JSON格式，保持Tushare官方文档的字段格式，并添加BOLL指标
         data_list = []
         for _, row in daily_data.iterrows():
             data_list.append({
@@ -2919,7 +2932,11 @@ def get_stock_daily_history(stock_code):
                 'change': float(row['change']) if pd.notna(row['change']) else None,
                 'pct_chg': float(row['pct_chg']) if pd.notna(row['pct_chg']) else None,
                 'vol': float(row['vol']) if pd.notna(row['vol']) else None,
-                'amount': float(row['amount']) if pd.notna(row['amount']) else None
+                'amount': float(row['amount']) if pd.notna(row['amount']) else None,
+                # 添加BOLL指标数据
+                'boll_upper': float(row['boll_upper']) if pd.notna(row['boll_upper']) else None,
+                'boll_mid': float(row['boll_mid']) if pd.notna(row['boll_mid']) else None,
+                'boll_lower': float(row['boll_lower']) if pd.notna(row['boll_lower']) else None
             })
         
         # 获取股票基本信息
