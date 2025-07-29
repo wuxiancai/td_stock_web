@@ -596,6 +596,29 @@
                 </div>
             </div>
 
+            <!-- 分时图部分 -->
+            <div class="realtime-section">
+                <div class="realtime-header">
+                    <span>分时图</span>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span id="intradayTimestamp" style="font-size: 12px; color: #6c757d;">--</span>
+                        <button id="intradayRefreshBtn" class="realtime-refresh-btn" onclick="refreshIntradayChart()">刷新</button>
+                    </div>
+                </div>
+                <div id="intradayContent">
+                    <div id="intradayLoading" class="realtime-loading" style="display: block;">
+                        正在加载分时数据...
+                    </div>
+                    <div id="intradayError" class="realtime-error" style="display: none;"></div>
+                    <div id="intradayChartContainer" style="display: none;">
+                        <!-- 分时图 -->
+                        <div id="intradayChart" style="width: 100%; height: 400px; padding: 10px;"></div>
+                        <!-- 分时成交量图 -->
+                        <div id="intradayVolumeChart" style="width: 100%; height: 150px; padding: 10px;"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- K线图和技术指标组合部分 -->
             <div class="chart-section">
                 <div class="chart-header">
@@ -756,6 +779,9 @@
                 
                 // 加载实时交易数据
                 await loadRealtimeData();
+                
+                // 加载分时图数据
+                await loadIntradayChart();
                 
                 // 加载K线数据
                 await loadChartData();
@@ -1383,6 +1409,9 @@
 
             // 绘制成交额图
             Plotly.newPlot('volumeChart', [amountTrace], amountLayout, config);
+            
+            // 添加图表同步机制
+            setupChartSync();
         }
 
         // 设置显示范围
@@ -1642,6 +1671,9 @@
                 Plotly.Plots.resize('kdjChart');
                 Plotly.Plots.resize('rsiChart');
                 console.log('技术指标图表强制重绘完成');
+                
+                // 添加图表同步机制
+                setupChartSync();
             }, 100);
         }
 
@@ -1693,8 +1725,7 @@
                     categoryorder: 'array',
                     categoryarray: dates,
                     range: [-0.5, dates.length - 0.5],
-                    ticktext: formattedDates, // 显示格式化的日期标签（只显示月日）
-                    tickvals: dates // 对应的原始日期值
+                    showticklabels: false // 隐藏日期标签
                 },
                 yaxis: {
                     title: 'MACD',
@@ -1761,8 +1792,7 @@
                     categoryorder: 'array',
                     categoryarray: dates,
                     range: [-0.5, dates.length - 0.5],
-                    ticktext: formattedDates, // 显示格式化的日期标签（只显示月日）
-                    tickvals: dates // 对应的原始日期值
+                    showticklabels: false // 隐藏日期标签
                 },
                 yaxis: {
                     title: 'KDJ',
@@ -1881,8 +1911,7 @@
                     categoryorder: 'array',
                     categoryarray: dates,
                     range: [-0.5, dates.length - 0.5],
-                    ticktext: formattedDates, // 显示格式化的日期标签（只显示月日）
-                    tickvals: dates // 对应的原始日期值
+                    showticklabels: false // 隐藏日期标签
                 },
                 yaxis: {
                     title: 'RSI',
@@ -1972,6 +2001,296 @@
             // 绘制RSI图
             Plotly.newPlot('rsiChart', traces, layout, config);
         }
+
+        // ==================== 分时图相关函数 ====================
+        
+        // 加载分时图数据
+        async function loadIntradayChart() {
+            try {
+                showIntradayLoading(true);
+                
+                console.log('开始加载分时图数据，股票代码:', currentStockCode);
+                const response = await fetch(`/api/stock/${currentStockCode}/intraday?period=1&adjust=qfq`);
+                console.log('分时图API响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('分时图API响应数据:', result);
+                
+                if (!result.success) {
+                    throw new Error(result.error || '获取分时图数据失败');
+                }
+                
+                displayIntradayChart(result.data);
+                
+            } catch (error) {
+                console.error('分时图数据加载失败:', error);
+                showIntradayError('分时图数据加载失败: ' + error.message);
+            } finally {
+                showIntradayLoading(false);
+            }
+        }
+
+        // 刷新分时图数据
+        async function refreshIntradayChart() {
+            const refreshBtn = document.getElementById('intradayRefreshBtn');
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = '刷新中...';
+            
+            try {
+                await loadIntradayChart();
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '刷新';
+            }
+        }
+
+        // 显示分时图
+        function displayIntradayChart(data) {
+            if (!data || data.length === 0) {
+                showIntradayError('暂无分时图数据');
+                return;
+            }
+
+            console.log('分时图数据长度:', data.length);
+            console.log('分时图数据样例:', data.slice(0, 3));
+
+            // 准备数据
+            const times = data.map(item => item.time);
+            const prices = data.map(item => item.price);
+            const volumes = data.map(item => item.volume);
+            const vwaps = data.map(item => item.vwap);
+
+            // 计算价格范围（±5%）
+            const firstPrice = prices[0];
+            const priceRange = firstPrice * 0.05;
+            const yMin = firstPrice - priceRange;
+            const yMax = firstPrice + priceRange;
+
+            // 创建分时图
+            const priceTrace = {
+                x: times,
+                y: prices,
+                type: 'scatter',
+                mode: 'lines',
+                name: '分时价格',
+                line: {
+                    color: '#2196F3',
+                    width: 2
+                },
+                fill: 'tonexty',
+                fillcolor: 'rgba(33, 150, 243, 0.1)',
+                hovertemplate: '<b>分时价格</b><br>时间: %{x}<br>价格: ¥%{y:.2f}<extra></extra>'
+            };
+
+            const vwapTrace = {
+                x: times,
+                y: vwaps,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'VWAP均价',
+                line: {
+                    color: '#FF9800',
+                    width: 1,
+                    dash: 'dash'
+                },
+                hovertemplate: '<b>VWAP均价</b><br>时间: %{x}<br>价格: ¥%{y:.2f}<extra></extra>'
+            };
+
+            const priceLayout = {
+                title: {
+                    text: '分时走势',
+                    font: { size: 16, family: 'Arial, sans-serif' }
+                },
+                xaxis: {
+                    type: 'category',
+                    title: '时间',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    tickangle: -45,
+                    categoryorder: 'array',
+                    categoryarray: times,
+                    range: [-0.5, times.length - 0.5],
+                    showticklabels: true
+                },
+                yaxis: {
+                    title: '价格 (元)',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    range: [yMin, yMax],
+                    tickformat: '.2f'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Arial, sans-serif', size: 12 },
+                margin: { l: 60, r: 20, t: 50, b: 80 },
+                showlegend: true,
+                legend: {
+                    x: 0,
+                    y: 1,
+                    bgcolor: 'rgba(255, 255, 255, 0.8)',
+                    bordercolor: '#ddd',
+                    borderwidth: 1
+                }
+            };
+
+            const config = {
+                displayModeBar: false,
+                responsive: true
+            };
+
+            // 绘制分时图
+            Plotly.newPlot('intradayChart', [priceTrace, vwapTrace], priceLayout, config);
+
+            // 创建成交量图
+            const volumeTrace = {
+                x: times,
+                y: volumes,
+                type: 'bar',
+                name: '成交量',
+                marker: {
+                    color: volumes.map((vol, index) => {
+                        if (index === 0) return '#666';
+                        return prices[index] >= prices[index - 1] ? '#ff4444' : '#00aa00';
+                    })
+                },
+                hovertemplate: '<b>成交量</b><br>时间: %{x}<br>成交量: %{y}<extra></extra>'
+            };
+
+            const volumeLayout = {
+                title: {
+                    text: '成交量',
+                    font: { size: 14, family: 'Arial, sans-serif' }
+                },
+                xaxis: {
+                    type: 'category',
+                    title: '时间',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    tickangle: -45,
+                    categoryorder: 'array',
+                    categoryarray: times,
+                    range: [-0.5, times.length - 0.5],
+                    showticklabels: true
+                },
+                yaxis: {
+                    title: '成交量',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Arial, sans-serif', size: 12 },
+                margin: { l: 60, r: 20, t: 50, b: 80 },
+                showlegend: false
+            };
+
+            // 绘制成交量图
+            Plotly.newPlot('intradayVolumeChart', [volumeTrace], volumeLayout, config);
+
+            // 添加图表同步机制
+            setupChartSync();
+
+            // 显示图表，隐藏错误信息
+            document.getElementById('intradayChartContainer').style.display = 'block';
+            document.getElementById('intradayError').style.display = 'none';
+            
+            // 更新时间戳
+            updateIntradayTimestamp();
+        }
+
+        // 显示/隐藏分时图加载状态
+        function showIntradayLoading(show) {
+            document.getElementById('intradayLoading').style.display = show ? 'block' : 'none';
+        }
+
+        // 显示分时图错误
+        function showIntradayError(message) {
+            document.getElementById('intradayError').textContent = message;
+            document.getElementById('intradayError').style.display = 'block';
+            document.getElementById('intradayChartContainer').style.display = 'none';
+        }
+
+        // 更新分时图时间戳
+        function updateIntradayTimestamp() {
+            const now = new Date();
+            const timestamp = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('intradayTimestamp').textContent = `更新时间: ${timestamp}`;
+        }
+
+        // 设置图表同步机制
+        function setupChartSync() {
+            console.log('设置图表同步机制');
+            
+            // 获取所有图表元素
+            const chartIds = [
+                'candlestickChart', 'volumeChart', 
+                'macdChart', 'kdjChart', 'rsiChart',
+                'intradayChart', 'intradayVolumeChart'
+            ];
+            
+            // 为每个图表添加缩放和平移事件监听器
+            chartIds.forEach(chartId => {
+                const chartElement = document.getElementById(chartId);
+                if (chartElement && chartElement._fullLayout) {
+                    // 监听图表的缩放和平移事件
+                    chartElement.on('plotly_relayout', function(eventData) {
+                        console.log(`图表 ${chartId} 发生布局变化:`, eventData);
+                        
+                        // 检查是否是x轴范围变化
+                        if (eventData['xaxis.range[0]'] !== undefined && eventData['xaxis.range[1]'] !== undefined) {
+                            const newRange = [eventData['xaxis.range[0]'], eventData['xaxis.range[1]']];
+                            console.log(`同步x轴范围到其他图表:`, newRange);
+                            
+                            // 同步到其他图表
+                            chartIds.forEach(otherChartId => {
+                                if (otherChartId !== chartId) {
+                                    const otherChart = document.getElementById(otherChartId);
+                                    if (otherChart && otherChart._fullLayout) {
+                                        Plotly.relayout(otherChart, {
+                                            'xaxis.range': newRange
+                                        }).catch(err => {
+                                            console.warn(`同步图表 ${otherChartId} 失败:`, err);
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // 处理自动缩放重置
+                        if (eventData['xaxis.autorange'] === true) {
+                            console.log('重置所有图表的x轴范围');
+                            chartIds.forEach(otherChartId => {
+                                if (otherChartId !== chartId) {
+                                    const otherChart = document.getElementById(otherChartId);
+                                    if (otherChart && otherChart._fullLayout) {
+                                        Plotly.relayout(otherChart, {
+                                            'xaxis.autorange': true
+                                        }).catch(err => {
+                                            console.warn(`重置图表 ${otherChartId} 失败:`, err);
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+            
+            console.log('图表同步机制设置完成');
+        }
+
+        // ==================== 分时图相关函数结束 ====================
 
         // 显示指标错误
         function showIndicatorError(message) {

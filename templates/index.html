@@ -1904,9 +1904,9 @@
      function refreshIndicesData() {
          checkMarketStatus().then(isMarketOpen => {
              if (isMarketOpen) {
-                 console.log('市场开盘中，启动实时数据刷新（每3秒）');
+                 console.log('市场开盘中，启动实时数据刷新（每10秒）');
                  fetchIndicesData();
-                 // 交易时间，设置3秒刷新一次
+                 // 交易时间，设置10秒刷新一次
                  if (!indicesRefreshTimer) {
                      indicesRefreshTimer = setInterval(() => {
                          checkMarketStatus().then(stillOpen => {
@@ -1920,7 +1920,7 @@
                                  fetchIndicesData();
                              }
                          });
-                     }, 3000); // 3秒刷新一次
+                     }, 10000); // 10秒刷新一次
                  }
              } else {
                  console.log('市场非开盘时间，获取今日收盘数据（不自动刷新）');

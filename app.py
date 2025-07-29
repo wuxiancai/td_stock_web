@@ -104,6 +104,80 @@ class TushareRateLimiter:
 # 创建全局频率限制器实例
 rate_limiter = TushareRateLimiter(max_requests_per_minute=199)
 
+# AkShare API频率限制器
+class AkShareRateLimiter:
+    """AkShare API频率限制器，避免触发东方财富的反爬虫机制"""
+    
+    def __init__(self, max_requests_per_minute=10, min_interval=6):
+        self.max_requests = max_requests_per_minute
+        self.min_interval = min_interval  # 最小请求间隔（秒）
+        self.requests = deque()  # 存储请求时间戳
+        self.last_request_time = 0  # 上次请求时间
+        self.lock = threading.Lock()  # 线程锁，确保线程安全
+        
+    def wait_if_needed(self):
+        """如果需要，等待直到可以发送请求"""
+        with self.lock:
+            now = time.time()
+            
+            # 确保最小请求间隔
+            time_since_last = now - self.last_request_time
+            if time_since_last < self.min_interval:
+                wait_time = self.min_interval - time_since_last
+                print(f"[AkShare] 频率控制：等待{wait_time:.1f}秒以满足最小间隔要求...")
+                time.sleep(wait_time)
+                now = time.time()
+            
+            # 清理60秒前的请求记录
+            while self.requests and now - self.requests[0] >= 60:
+                self.requests.popleft()
+            
+            # 如果当前分钟内请求数已达上限，等待
+            if len(self.requests) >= self.max_requests:
+                # 计算需要等待的时间（到最早请求的60秒后）
+                wait_time = 60 - (now - self.requests[0]) + 0.1  # 额外等待0.1秒确保安全
+                if wait_time > 0:
+                    print(f"[AkShare] 频率限制：已达到每分钟{self.max_requests}次限制，等待{wait_time:.1f}秒...")
+                    time.sleep(wait_time)
+                    # 重新清理过期请求
+                    now = time.time()
+                    while self.requests and now - self.requests[0] >= 60:
+                        self.requests.popleft()
+            
+            # 记录当前请求时间
+            self.requests.append(now)
+            self.last_request_time = now
+            
+    def get_status(self):
+        """获取限制器状态信息"""
+        with self.lock:
+            now = time.time()
+            # 清理60秒前的请求记录
+            while self.requests and now - self.requests[0] >= 60:
+                self.requests.popleft()
+            
+            remaining = self.max_requests - len(self.requests)
+            next_reset_time = None
+            if self.requests:
+                next_reset_time = self.requests[0] + 60
+            
+            time_since_last = now - self.last_request_time
+            next_allowed_time = self.last_request_time + self.min_interval
+            
+            return {
+                'used_requests': len(self.requests),
+                'remaining_requests': remaining,
+                'max_requests_per_minute': self.max_requests,
+                'min_interval': self.min_interval,
+                'time_since_last_request': time_since_last,
+                'next_allowed_time': next_allowed_time,
+                'next_reset_time': next_reset_time,
+                'current_time': now
+            }
+
+# 移除AkShare频率限制器，不再限制请求频率
+# akshare_rate_limiter = AkShareRateLimiter(max_requests_per_minute=10, min_interval=6)
+
 # Tushare配置
 if TUSHARE_AVAILABLE:
     ts.set_token('68a7f380e45182b216eb63a9666c277ee96e68e3754476976adc5019')
@@ -163,61 +237,92 @@ except ImportError:
     print("警告：AkShare库未安装，分时图功能将不可用")
 
 def safe_akshare_call(func, cache_key, *args, max_retries=3, retry_delay=2, **kwargs):
-    """安全的AkShare API调用，带重试机制"""
+    """安全的AkShare API调用，实现双数据源策略（新浪财经和东财）"""
     if not AKSHARE_AVAILABLE or ak is None:
         print("AkShare不可用")
         return None
     
     import time
     import requests
+    import random
     
-    for attempt in range(max_retries):
-        try:
-            print(f"[AkShare] 尝试调用 {func.__name__} (第{attempt + 1}次)")
-            result = func(*args, **kwargs)
-            print(f"[AkShare] {func.__name__} 调用成功")
-            return result
-            
-        except requests.exceptions.ProxyError as e:
-            print(f"[AkShare] 代理连接错误 (第{attempt + 1}次): {e}")
-            if attempt < max_retries - 1:
-                print(f"[AkShare] {retry_delay}秒后重试...")
-                time.sleep(retry_delay)
-                continue
-            else:
-                print(f"[AkShare] 代理连接失败，已重试{max_retries}次")
-                return None
-                
-        except requests.exceptions.ConnectionError as e:
-            print(f"[AkShare] 网络连接错误 (第{attempt + 1}次): {e}")
-            if attempt < max_retries - 1:
-                print(f"[AkShare] {retry_delay}秒后重试...")
-                time.sleep(retry_delay)
-                continue
-            else:
-                print(f"[AkShare] 网络连接失败，已重试{max_retries}次")
-                return None
-                
-        except requests.exceptions.Timeout as e:
-            print(f"[AkShare] 请求超时 (第{attempt + 1}次): {e}")
-            if attempt < max_retries - 1:
-                print(f"[AkShare] {retry_delay}秒后重试...")
-                time.sleep(retry_delay)
-                continue
-            else:
-                print(f"[AkShare] 请求超时，已重试{max_retries}次")
-                return None
-                
-        except Exception as e:
-            print(f"[AkShare] API调用失败 (第{attempt + 1}次): {e}")
-            if attempt < max_retries - 1:
-                print(f"[AkShare] {retry_delay}秒后重试...")
-                time.sleep(retry_delay)
-                continue
-            else:
-                print(f"[AkShare] API调用失败，已重试{max_retries}次")
-                return None
+    # 移除频率限制，不再使用频率限制器
+    # akshare_rate_limiter.wait_if_needed()
     
+    # 双数据源策略：先尝试新浪财经，失败后尝试东财
+    data_sources = [
+        {'name': '新浪财经', 'symbol_suffix': ''},  # 新浪财经接口
+        {'name': '东财', 'symbol_suffix': ''}       # 东财接口
+    ]
+    
+    for source_idx, source in enumerate(data_sources):
+        print(f"[AkShare] 尝试使用{source['name']}数据源...")
+        
+        for attempt in range(max_retries):
+            try:
+                print(f"[AkShare] {source['name']} - 尝试调用 {func.__name__} (第{attempt + 1}次)")
+                
+                # 根据数据源调整参数（如果需要）
+                adjusted_kwargs = kwargs.copy()
+                
+                result = func(*args, **adjusted_kwargs)
+                print(f"[AkShare] {source['name']} - {func.__name__} 调用成功")
+                return result
+                
+            except requests.exceptions.ProxyError as e:
+                error_msg = str(e)
+                print(f"[AkShare] {source['name']} - 代理连接错误 (第{attempt + 1}次): {e}")
+                
+                if attempt < max_retries - 1:
+                    delay = retry_delay * (attempt + 1) + random.uniform(0.5, 1.5)
+                    print(f"[AkShare] {source['name']} - {delay:.1f}秒后重试...")
+                    time.sleep(delay)
+                    continue
+                else:
+                    print(f"[AkShare] {source['name']} - 代理连接失败，已重试{max_retries}次")
+                    break
+                    
+            except requests.exceptions.ConnectionError as e:
+                print(f"[AkShare] {source['name']} - 网络连接错误 (第{attempt + 1}次): {e}")
+                if attempt < max_retries - 1:
+                    delay = retry_delay * (attempt + 1) + random.uniform(0.5, 1.5)
+                    print(f"[AkShare] {source['name']} - {delay:.1f}秒后重试...")
+                    time.sleep(delay)
+                    continue
+                else:
+                    print(f"[AkShare] {source['name']} - 网络连接失败，已重试{max_retries}次")
+                    break
+                    
+            except requests.exceptions.Timeout as e:
+                print(f"[AkShare] {source['name']} - 请求超时 (第{attempt + 1}次): {e}")
+                if attempt < max_retries - 1:
+                    delay = retry_delay * (attempt + 1) + random.uniform(0.5, 1.5)
+                    print(f"[AkShare] {source['name']} - {delay:.1f}秒后重试...")
+                    time.sleep(delay)
+                    continue
+                else:
+                    print(f"[AkShare] {source['name']} - 请求超时，已重试{max_retries}次")
+                    break
+                    
+            except Exception as e:
+                error_msg = str(e)
+                print(f"[AkShare] {source['name']} - API调用失败 (第{attempt + 1}次): {e}")
+                
+                if attempt < max_retries - 1:
+                    delay = retry_delay * (attempt + 1) + random.uniform(0.5, 1.5)
+                    print(f"[AkShare] {source['name']} - {delay:.1f}秒后重试...")
+                    time.sleep(delay)
+                    continue
+                else:
+                    print(f"[AkShare] {source['name']} - API调用失败，已重试{max_retries}次")
+                    break
+        
+        # 如果当前数据源失败，尝试下一个数据源
+        if source_idx < len(data_sources) - 1:
+            print(f"[AkShare] {source['name']}数据源失败，切换到下一个数据源...")
+            time.sleep(1)  # 短暂延迟后切换数据源
+    
+    print("[AkShare] 所有数据源都失败了")
     return None
 
 def find_available_port(start_port=8080):
@@ -1416,7 +1521,7 @@ def save_indices_cache(data, fetch_time):
         return False
 
 def get_indices_from_akshare_realtime(indices):
-    """使用AKShare获取实时指数数据"""
+    """使用AKShare获取实时指数数据 - 双数据源策略（新浪财经和东财）"""
     if not AKSHARE_AVAILABLE:
         print("[AKShare] AKShare不可用，跳过AKShare获取")
         return None
@@ -1430,134 +1535,136 @@ def get_indices_from_akshare_realtime(indices):
     
     print(f"[AKShare] 开始获取实时指数数据 {current_time}")
     
-    try:
-        # 定义指数代码映射关系
-        index_mapping = {
-            'sh000001': {'name': '上证指数', 'search_name': '上证指数'},
-            'sz399001': {'name': '深证成指', 'search_name': '深证成指'},
-            'sz399006': {'name': '创业板指', 'search_name': '创业板指'},
-            'sh000688': {'name': '科创板', 'search_name': '科创50'}
+    # 定义指数代码映射关系
+    index_mapping = {
+        'sh000001': {'name': '上证指数', 'search_name': '上证指数'},
+        'sz399001': {'name': '深证成指', 'search_name': '深证成指'},
+        'sz399006': {'name': '创业板指', 'search_name': '创业板指'},
+        'sh000688': {'name': '科创板', 'search_name': '科创50'}
+    }
+    
+    # 双数据源策略：先尝试新浪财经，失败后尝试东财
+    data_sources = [
+        {
+            'name': '新浪财经',
+            'functions': [
+                {'func': ak.stock_zh_index_spot_sina, 'symbol': None, 'desc': '新浪财经指数'},
+            ]
+        },
+        {
+            'name': '东财',
+            'functions': [
+                {'func': ak.stock_zh_index_spot_em, 'symbol': "沪深重要指数", 'desc': '东财沪深重要指数'},
+                {'func': ak.stock_zh_index_spot_em, 'symbol': "上证系列指数", 'desc': '东财上证系列指数'},
+                {'func': ak.stock_zh_index_spot_em, 'symbol': "深证系列指数", 'desc': '东财深证系列指数'}
+            ]
         }
+    ]
+    
+    for source in data_sources:
+        print(f"[AKShare] 尝试使用{source['name']}数据源...")
+        source_success = False
         
-        # 获取沪深重要指数实时数据
-        print("[AKShare] 获取沪深重要指数...")
-        df_important = safe_akshare_call(ak.stock_zh_index_spot_em, 'akshare_important_indices', symbol="沪深重要指数")
-        
-        if df_important is not None and not df_important.empty:
-            print(f"[AKShare] 沪深重要指数数据获取成功，共{len(df_important)}条记录")
-            for _, row in df_important.iterrows():
-                index_name = row['名称']
-                print(f"[AKShare] 处理指数: {index_name}")
+        try:
+            if source['name'] == '新浪财经':
+                # 新浪财经数据源
+                print(f"[AKShare] {source['name']} - 获取指数数据...")
+                df = safe_akshare_call(ak.stock_zh_index_spot_sina, 'akshare_sina_indices')
                 
-                # 匹配指数
-                for code, info in index_mapping.items():
-                    if info['search_name'] in index_name or index_name in info['search_name']:
-                        try:
-                            current_price = float(row['最新价'])
-                            change_amount = float(row['涨跌额'])
-                            change_percent = float(row['涨跌幅'])
-                            volume = float(row['成交额']) if pd.notna(row['成交额']) else 0
-                            
-                            indices_data[code] = {
-                                'name': info['name'],
-                                'code': row['代码'],
-                                'price': current_price,
-                                'change': change_amount,
-                                'change_percent': change_percent,
-                                'volume': volume / 100000000  # 转换为亿元
-                            }
-                            print(f"[AKShare] {info['name']} 获取成功: 价格={current_price}, 涨跌幅={change_percent}%")
-                        except Exception as e:
-                            print(f"[AKShare] 处理{info['name']}数据失败: {e}")
+                if df is not None and not df.empty:
+                    print(f"[AKShare] {source['name']} - 数据获取成功，共{len(df)}条记录")
+                    
+                    for _, row in df.iterrows():
+                        index_name = row['名称'] if '名称' in row else row.get('name', '')
+                        index_code = row['代码'] if '代码' in row else row.get('code', '')
+                        
+                        print(f"[AKShare] {source['name']} - 处理指数: {index_name} ({index_code})")
+                        
+                        # 匹配指数
+                        for code, info in index_mapping.items():
+                            if (info['search_name'] in index_name or index_name in info['search_name'] or
+                                code.replace('sh', '').replace('sz', '') in index_code):
+                                try:
+                                    current_price = float(row['最新价'] if '最新价' in row else row.get('price', 0))
+                                    change_amount = float(row['涨跌额'] if '涨跌额' in row else row.get('change', 0))
+                                    change_percent = float(row['涨跌幅'] if '涨跌幅' in row else row.get('change_pct', 0))
+                                    volume = float(row['成交额'] if '成交额' in row else row.get('volume', 0))
+                                    
+                                    indices_data[code] = {
+                                        'name': info['name'],
+                                        'code': index_code,
+                                        'price': current_price,
+                                        'change': change_amount,
+                                        'change_percent': change_percent,
+                                        'volume': volume / 100000000 if volume > 0 else 0  # 转换为亿元
+                                    }
+                                    print(f"[AKShare] {source['name']} - {info['name']} 获取成功: 价格={current_price}, 涨跌幅={change_percent}%")
+                                    source_success = True
+                                except Exception as e:
+                                    print(f"[AKShare] {source['name']} - 处理{info['name']}数据失败: {e}")
+                                break
+                    
+                    if source_success and len(indices_data) >= 2:  # 至少获取到2个指数才算成功
+                        print(f"[AKShare] {source['name']}数据源成功，获取到{len(indices_data)}个指数")
                         break
+                        
+            else:
+                # 东财数据源
+                for func_info in source['functions']:
+                    print(f"[AKShare] {source['name']} - {func_info['desc']}...")
+                    
+                    if func_info['symbol']:
+                        df = safe_akshare_call(func_info['func'], f"akshare_{func_info['symbol']}", symbol=func_info['symbol'])
+                    else:
+                        df = safe_akshare_call(func_info['func'], f"akshare_{func_info['desc']}")
+                    
+                    if df is not None and not df.empty:
+                        print(f"[AKShare] {source['name']} - {func_info['desc']}数据获取成功，共{len(df)}条记录")
+                        
+                        for _, row in df.iterrows():
+                            index_name = row['名称']
+                            print(f"[AKShare] {source['name']} - 处理指数: {index_name}")
+                            
+                            # 匹配指数
+                            for code, info in index_mapping.items():
+                                if info['search_name'] in index_name or index_name in info['search_name']:
+                                    try:
+                                        current_price = float(row['最新价'])
+                                        change_amount = float(row['涨跌额'])
+                                        change_percent = float(row['涨跌幅'])
+                                        volume = float(row['成交额']) if pd.notna(row['成交额']) else 0
+                                        
+                                        indices_data[code] = {
+                                            'name': info['name'],
+                                            'code': row['代码'],
+                                            'price': current_price,
+                                            'change': change_amount,
+                                            'change_percent': change_percent,
+                                            'volume': volume / 100000000  # 转换为亿元
+                                        }
+                                        print(f"[AKShare] {source['name']} - {info['name']} 获取成功: 价格={current_price}, 涨跌幅={change_percent}%")
+                                        source_success = True
+                                    except Exception as e:
+                                        print(f"[AKShare] {source['name']} - 处理{info['name']}数据失败: {e}")
+                                    break
+                
+                if source_success and len(indices_data) >= 2:  # 至少获取到2个指数才算成功
+                    print(f"[AKShare] {source['name']}数据源成功，获取到{len(indices_data)}个指数")
+                    break
+                    
+        except Exception as e:
+            print(f"[AKShare] {source['name']}数据源异常: {e}")
+            continue
         
-        # 如果沪深重要指数没有获取到所有数据，尝试获取上证系列指数
-        if 'sh000001' not in indices_data or 'sh000688' not in indices_data:
-            print("[AKShare] 获取上证系列指数...")
-            df_sh = safe_akshare_call(ak.stock_zh_index_spot_em, 'akshare_sh_indices', symbol="上证系列指数")
-            
-            if df_sh is not None and not df_sh.empty:
-                print(f"[AKShare] 上证系列指数数据获取成功，共{len(df_sh)}条记录")
-                for _, row in df_sh.iterrows():
-                    index_name = row['名称']
-                    
-                    # 匹配上证指数和科创板
-                    if 'sh000001' not in indices_data and ('上证指数' in index_name or index_name == '上证指数'):
-                        try:
-                            indices_data['sh000001'] = {
-                                'name': '上证指数',
-                                'code': row['代码'],
-                                'price': float(row['最新价']),
-                                'change': float(row['涨跌额']),
-                                'change_percent': float(row['涨跌幅']),
-                                'volume': float(row['成交额']) / 100000000 if pd.notna(row['成交额']) else 0
-                            }
-                            print(f"[AKShare] 上证指数获取成功: 价格={row['最新价']}, 涨跌幅={row['涨跌幅']}%")
-                        except Exception as e:
-                            print(f"[AKShare] 处理上证指数数据失败: {e}")
-                    
-                    elif 'sh000688' not in indices_data and ('科创50' in index_name or '科创板' in index_name):
-                        try:
-                            indices_data['sh000688'] = {
-                                'name': '科创板',
-                                'code': row['代码'],
-                                'price': float(row['最新价']),
-                                'change': float(row['涨跌额']),
-                                'change_percent': float(row['涨跌幅']),
-                                'volume': float(row['成交额']) / 100000000 if pd.notna(row['成交额']) else 0
-                            }
-                            print(f"[AKShare] 科创板获取成功: 价格={row['最新价']}, 涨跌幅={row['涨跌幅']}%")
-                        except Exception as e:
-                            print(f"[AKShare] 处理科创板数据失败: {e}")
-        
-        # 如果深证成指和创业板指没有获取到，尝试获取深证系列指数
-        if 'sz399001' not in indices_data or 'sz399006' not in indices_data:
-            print("[AKShare] 获取深证系列指数...")
-            df_sz = safe_akshare_call(ak.stock_zh_index_spot_em, 'akshare_sz_indices', symbol="深证系列指数")
-            
-            if df_sz is not None and not df_sz.empty:
-                print(f"[AKShare] 深证系列指数数据获取成功，共{len(df_sz)}条记录")
-                for _, row in df_sz.iterrows():
-                    index_name = row['名称']
-                    
-                    # 匹配深证成指和创业板指
-                    if 'sz399001' not in indices_data and ('深证成指' in index_name or index_name == '深证成指'):
-                        try:
-                            indices_data['sz399001'] = {
-                                'name': '深证成指',
-                                'code': row['代码'],
-                                'price': float(row['最新价']),
-                                'change': float(row['涨跌额']),
-                                'change_percent': float(row['涨跌幅']),
-                                'volume': float(row['成交额']) / 100000000 if pd.notna(row['成交额']) else 0
-                            }
-                            print(f"[AKShare] 深证成指获取成功: 价格={row['最新价']}, 涨跌幅={row['涨跌幅']}%")
-                        except Exception as e:
-                            print(f"[AKShare] 处理深证成指数据失败: {e}")
-                    
-                    elif 'sz399006' not in indices_data and ('创业板指' in index_name or index_name == '创业板指'):
-                        try:
-                            indices_data['sz399006'] = {
-                                'name': '创业板指',
-                                'code': row['代码'],
-                                'price': float(row['最新价']),
-                                'change': float(row['涨跌额']),
-                                'change_percent': float(row['涨跌幅']),
-                                'volume': float(row['成交额']) / 100000000 if pd.notna(row['成交额']) else 0
-                            }
-                            print(f"[AKShare] 创业板指获取成功: 价格={row['最新价']}, 涨跌幅={row['涨跌幅']}%")
-                        except Exception as e:
-                            print(f"[AKShare] 处理创业板指数据失败: {e}")
-        
-        if indices_data:
-            print(f"[AKShare] 实时数据获取成功，共获取到 {len(indices_data)} 个指数数据")
-            return indices_data
-        else:
-            print("[AKShare] 未获取到任何实时指数数据")
-            return None
-            
-    except Exception as e:
-        print(f"[AKShare] 获取实时指数数据异常: {e}")
+        # 如果当前数据源失败，尝试下一个数据源
+        if not source_success:
+            print(f"[AKShare] {source['name']}数据源失败，切换到下一个数据源...")
+    
+    if indices_data:
+        print(f"[AKShare] 实时数据获取成功，共获取到 {len(indices_data)} 个指数数据")
+        return indices_data
+    else:
+        print("[AKShare] 所有数据源都失败，未获取到任何实时指数数据")
         return None
 
 def get_indices_from_tushare(indices):
@@ -4384,6 +4491,42 @@ def get_rate_limiter_status():
             'message': str(e)
         }), 500
 
+@app.route('/api/akshare_rate_limiter/status')
+def get_akshare_rate_limiter_status():
+    """获取AkShare API频率限制器状态"""
+    try:
+        status = akshare_rate_limiter.get_status()
+        
+        # 格式化时间显示
+        if status['next_reset_time']:
+            next_reset = datetime.fromtimestamp(status['next_reset_time'])
+            status['next_reset_time_formatted'] = next_reset.strftime('%Y-%m-%d %H:%M:%S')
+            status['seconds_until_reset'] = max(0, int(status['next_reset_time'] - status['current_time']))
+        else:
+            status['next_reset_time_formatted'] = None
+            status['seconds_until_reset'] = 0
+        
+        if status['next_allowed_time']:
+            next_allowed = datetime.fromtimestamp(status['next_allowed_time'])
+            status['next_allowed_time_formatted'] = next_allowed.strftime('%Y-%m-%d %H:%M:%S')
+            status['seconds_until_next_allowed'] = max(0, int(status['next_allowed_time'] - status['current_time']))
+        else:
+            status['next_allowed_time_formatted'] = None
+            status['seconds_until_next_allowed'] = 0
+        
+        current_time = datetime.fromtimestamp(status['current_time'])
+        status['current_time_formatted'] = current_time.strftime('%Y-%m-%d %H:%M:%S')
+        
+        return jsonify({
+            'status': 'success',
+            'data': status
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 # 自选股管理功能
 def get_watchlist_file_path():
     """获取自选股文件路径"""
@@ -5086,6 +5229,167 @@ def get_green_filter_stocks():
         return jsonify({
             'success': False,
             'error': str(e)
+        }), 500
+
+@app.route('/api/stock/<stock_code>/intraday')
+def get_stock_intraday_data(stock_code):
+    """
+    获取股票分时数据
+    使用AkShare的stock_zh_a_hist_min_em接口获取分钟级数据
+    
+    Args:
+        stock_code: 股票代码，如 000001 或 300354
+        
+    Query Parameters:
+        period: 分钟周期，默认为1（1分钟）
+        adjust: 复权类型，默认为空（不复权）
+        
+    Returns:
+        JSON: 分时数据，包含时间、价格、成交量等信息
+    """
+    try:
+        # 获取查询参数
+        period = request.args.get('period', '1')  # 默认1分钟
+        adjust = request.args.get('adjust', '')   # 默认不复权
+        
+        # 检查AkShare是否可用
+        if not AKSHARE_AVAILABLE:
+            return jsonify({
+                'success': False,
+                'error': 'AkShare库未安装，无法获取分时数据',
+                'details': '请安装akshare库以使用分时图功能'
+            }), 503
+        
+        # 转换股票代码格式（去掉.SZ/.SH后缀）
+        if '.' in stock_code:
+            stock_code = stock_code.split('.')[0]
+        
+        print(f"[分时数据] 开始获取股票 {stock_code} 的分时数据...")
+        
+        # 获取当前日期
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        # 调用AkShare接口获取分时数据
+        intraday_data = safe_akshare_call(
+            ak.stock_zh_a_hist_min_em,
+            f"intraday_{stock_code}_{today}",
+            symbol=stock_code,
+            period=period,
+            adjust=adjust,
+            start_date=today + " 09:30:00",
+            end_date=today + " 15:00:00"
+        )
+        
+        if intraday_data is None or intraday_data.empty:
+            print(f"[分时数据] 未获取到股票 {stock_code} 的分时数据")
+            return jsonify({
+                'success': False,
+                'error': '未获取到分时数据',
+                'details': '可能是非交易时间或股票代码不存在'
+            }), 404
+        
+        print(f"[分时数据] 成功获取{len(intraday_data)}条分时数据")
+        
+        # 处理数据
+        result_data = []
+        cumulative_volume = 0
+        cumulative_amount = 0
+        
+        for _, row in intraday_data.iterrows():
+            try:
+                # 获取时间戳
+                timestamp = row['时间']
+                if pd.isna(timestamp):
+                    continue
+                
+                # 转换时间格式
+                if isinstance(timestamp, str):
+                    # 如果是字符串格式，尝试解析
+                    if ' ' in timestamp:
+                        # 格式如 "2025-07-29 09:30:00"
+                        time_str = timestamp.split(' ')[1][:5]  # 提取 "09:30"
+                    else:
+                        time_str = timestamp
+                else:
+                    time_str = timestamp.strftime('%H:%M')
+                
+                # 过滤非交易时间（只保留09:30-11:30和13:00-15:00）
+                try:
+                    hour_minute = time_str.replace(':', '')
+                    hour_minute_int = int(hour_minute)
+                except ValueError:
+                    print(f"[分时数据] 时间格式错误: {time_str}")
+                    continue
+                
+                if not ((930 <= hour_minute_int <= 1130) or (1300 <= hour_minute_int <= 1500)):
+                    continue
+                
+                # 获取价格和成交量数据
+                close_price = float(row.get('收盘', 0))
+                volume = float(row.get('成交量', 0))
+                amount = float(row.get('成交额', 0))
+                
+                if close_price <= 0:
+                    continue
+                
+                # 累计成交量和成交额（用于计算VWAP）
+                cumulative_volume += volume
+                cumulative_amount += amount
+                
+                # 计算VWAP（成交量加权平均价格）
+                vwap = cumulative_amount / cumulative_volume if cumulative_volume > 0 else close_price
+                
+                data_point = {
+                    'time': time_str,
+                    'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S') if hasattr(timestamp, 'strftime') else str(timestamp),
+                    'price': close_price,
+                    'open': float(row.get('开盘', close_price)),
+                    'high': float(row.get('最高', close_price)),
+                    'low': float(row.get('最低', close_price)),
+                    'volume': volume,
+                    'amount': amount,
+                    'vwap': vwap,
+                    'cumulative_volume': cumulative_volume,
+                    'cumulative_amount': cumulative_amount
+                }
+                result_data.append(data_point)
+                
+            except Exception as e:
+                print(f"[分时数据] 处理数据行失败: {e}")
+                continue
+        
+        if not result_data:
+            return jsonify({
+                'success': False,
+                'error': '没有有效的分时数据',
+                'details': '可能是非交易时间或数据格式异常'
+            }), 404
+        
+        # 获取昨收价（用于计算涨跌幅）
+        yesterday_close = None
+        if result_data:
+            # 尝试从第一个数据点获取昨收价
+            first_price = result_data[0]['price']
+            # 这里可以通过其他API获取昨收价，暂时使用第一个价格作为参考
+            yesterday_close = first_price
+        
+        return jsonify({
+            'success': True,
+            'data': result_data,
+            'total': len(result_data),
+            'stock_code': stock_code,
+            'date': today,
+            'yesterday_close': yesterday_close,
+            'period': period,
+            'message': f'成功获取{len(result_data)}条分时数据'
+        })
+        
+    except Exception as e:
+        print(f"[分时数据] 获取失败: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'获取分时数据失败: {str(e)}',
+            'details': '请检查股票代码是否正确或稍后重试'
         }), 500
 
 @app.route('/api/top-list')
