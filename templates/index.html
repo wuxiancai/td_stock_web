@@ -504,21 +504,38 @@
                 </div>
             </div>
             
+            <!-- 虚拟货币实时价格面板 -->
+            <div class="crypto-section" style="margin-top: 10px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="font-size: 14px; font-weight: bold; color: white;">虚拟货币</div>
+                </div>
+                <div id="cryptoContainer" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
+                    <!-- 虚拟货币数据将通过JavaScript动态填充 -->
+                </div>
+            </div>
+            
             <!-- 指数实时数据面板 -->
             <div class="indices-section" style="margin-top: 10px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <div style="font-size: 14px; font-weight: bold; color: white;">主要指数</div>
-                    <div id="indicesUpdateTime" style="font-size: 10px; color: #ccc;">加载中...</div>
+                    <div id="indicesUpdateTime" style="font-size: 10px; color: #ccc; display: none;">加载中...</div>
                 </div>
                 <div id="indicesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
                     <!-- 指数数据将通过JavaScript动态填充 -->
                 </div>
             </div>
             
-            <!-- 虚拟货币实时价格面板 -->
-            <div class="crypto-section" style="margin-top: 10px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
-                <div id="cryptoContainer" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
-                    <!-- 虚拟货币数据将通过JavaScript动态填充 -->
+            <!-- 所有指数实时数据面板 -->
+            <div class="all-indices-section" style="margin-top: 10px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="font-size: 14px; font-weight: bold; color: white;">全部指数</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button onclick="refreshAllIndicesData()" style="padding: 4px 8px; background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 4px; cursor: pointer; font-size: 10px; transition: background 0.3s;">刷新指数</button>
+                        <div id="allIndicesUpdateTime" style="font-size: 10px; color: #ccc; display: none;">加载中...</div>
+                    </div>
+                </div>
+                <div id="allIndicesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 2px;">
+                    <!-- 所有指数数据将通过JavaScript动态填充 -->
                 </div>
             </div>
         </div>
@@ -2004,6 +2021,112 @@
          });
      }
      
+     // ==================== 所有指数数据功能 ====================
+     
+     // 获取所有指数数据
+     function refreshAllIndicesData() {
+         console.log('开始获取所有指数数据...');
+         
+         fetch('/api/indices/all')
+             .then(response => response.json())
+             .then(data => {
+                 if (data.success) {
+                     displayAllIndicesData(data.data);
+                     console.log(`成功获取 ${data.count} 条指数数据`);
+                 } else {
+                     console.error('获取所有指数数据失败:', data.error);
+                     document.getElementById('allIndicesContainer').innerHTML = `
+                         <div style="text-align: center; color: #666; padding: 20px;">
+                             获取指数数据失败: ${data.error}
+                         </div>
+                     `;
+                 }
+             })
+             .catch(error => {
+                 console.error('获取所有指数数据异常:', error);
+                 document.getElementById('allIndicesContainer').innerHTML = `
+                     <div style="text-align: center; color: #666; padding: 20px;">
+                         网络连接失败，请稍后重试
+                     </div>
+                 `;
+             });
+     }
+     
+     // 显示所有指数数据
+     function displayAllIndicesData(allIndices) {
+         const container = document.getElementById('allIndicesContainer');
+         container.innerHTML = '';
+         
+         if (!allIndices || allIndices.length === 0) {
+             container.innerHTML = `
+                 <div style="text-align: center; color: #666; padding: 20px;">
+                     暂无指数数据
+                 </div>
+             `;
+             return;
+         }
+         
+         // 创建网格布局容器
+         const gridContainer = document.createElement('div');
+         gridContainer.style.cssText = `
+             display: grid;
+             grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+             gap: 2px;
+             padding: 5px;
+         `;
+         
+         allIndices.forEach(index => {
+             const changeClass = index.change_percent >= 0 ? 'price-positive' : 'price-negative';
+             const changeSymbol = index.change_percent >= 0 ? '+' : '';
+             
+             // 格式化成交额
+             let volumeText = '0';
+             if (index.volume > 0) {
+                 if (index.volume >= 1) {
+                     volumeText = index.volume.toFixed(2) + '亿';
+                 } else {
+                     volumeText = (index.volume * 10000).toFixed(0) + '万';
+                 }
+             }
+             
+             const indexCard = document.createElement('div');
+             indexCard.style.cssText = `
+                 background: rgba(255, 255, 255, 0.9);
+                 border-radius: 4px;
+                 padding: 4px;
+                 text-align: center;
+                 box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+                 border: 1px solid rgba(0,0,0,0.05);
+                 transition: transform 0.2s ease;
+                 cursor: pointer;
+             `;
+             
+             // 添加悬停效果
+             indexCard.addEventListener('mouseenter', function() {
+                 this.style.transform = 'translateY(-2px)';
+                 this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+             });
+             
+             indexCard.addEventListener('mouseleave', function() {
+                 this.style.transform = 'translateY(0)';
+                 this.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
+             });
+             
+             indexCard.innerHTML = `
+                 <div style="font-weight: bold; font-size: 9px; color: #333; margin-bottom: 2px; line-height: 1.1; height: 18px; overflow: hidden;">${index.name}</div>
+                 <div style="font-size: 12px; font-weight: bold; color: #333; margin-bottom: 1px;">${index.price.toFixed(2)}</div>
+                 <div class="${changeClass}" style="font-size: 8px; margin-bottom: 1px;">
+                     ${changeSymbol}${index.change.toFixed(2)} (${changeSymbol}${index.change_percent.toFixed(2)}%)
+                 </div>
+                 <div style="font-size: 7px; color: #666;">成交额: ${volumeText}</div>
+             `;
+             
+             gridContainer.appendChild(indexCard);
+         });
+         
+         container.appendChild(gridContainer);
+     }
+     
      // 页面加载完成后初始化
      document.addEventListener('DOMContentLoaded', function() {
          // 初始化时间显示
@@ -2021,6 +2144,11 @@
          
          // 初始化指数数据（会根据开盘状态自动设置刷新策略）
          refreshIndicesData();
+         
+         // 初始化所有指数数据
+         refreshAllIndicesData();
+         // 每5分钟刷新一次所有指数数据
+         setInterval(refreshAllIndicesData, 300000);
          
          // 每5分钟检查一次市场状态，以便在开盘时间开始时自动启动刷新
          setInterval(() => {
