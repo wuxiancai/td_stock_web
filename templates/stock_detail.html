@@ -1410,8 +1410,9 @@
             // 绘制成交额图
             Plotly.newPlot('volumeChart', [amountTrace], amountLayout, config);
             
-            // 添加图表同步机制
-            setupChartSync();
+            // 标记图表渲染完成
+            markChartRendered('candlestickChart');
+            markChartRendered('volumeChart');
         }
 
         // 设置显示范围
@@ -1672,8 +1673,10 @@
                 Plotly.Plots.resize('rsiChart');
                 console.log('技术指标图表强制重绘完成');
                 
-                // 添加图表同步机制
-                setupChartSync();
+                // 标记技术指标图表渲染完成
+                markChartRendered('macdChart');
+                markChartRendered('kdjChart');
+                markChartRendered('rsiChart');
             }, 100);
         }
 
@@ -2042,6 +2045,10 @@
             
             try {
                 await loadIntradayChart();
+                // 刷新完成后强制重新设置图表同步机制
+                setTimeout(() => {
+                    forceSetupChartSync();
+                }, 200);
             } finally {
                 refreshBtn.disabled = false;
                 refreshBtn.textContent = '刷新';
@@ -2058,22 +2065,97 @@
             console.log('分时图数据长度:', data.length);
             console.log('分时图数据样例:', data.slice(0, 3));
 
-            // 准备数据
-            const times = data.map(item => item.time);
-            const prices = data.map(item => item.price);
-            const volumes = data.map(item => item.volume);
-            const vwaps = data.map(item => item.vwap);
+            // 分离上午和下午的数据
+            const morningData = [];
+            const afternoonData = [];
+            
+            data.forEach(item => {
+                const timeStr = item.time;
+                const hourMinute = timeStr.replace(':', '');
+                const hourMinuteInt = parseInt(hourMinute);
+                
+                if (hourMinuteInt >= 930 && hourMinuteInt <= 1130) {
+                    morningData.push(item);
+                } else if (hourMinuteInt >= 1300 && hourMinuteInt <= 1500) {
+                    afternoonData.push(item);
+                }
+            });
+
+            console.log('上午数据长度:', morningData.length, '下午数据长度:', afternoonData.length);
+
+            // 定义完整的交易时间框架
+            const MORNING_MINUTES = 120; // 上午交易时间：09:30-11:30 (120分钟)
+            const AFTERNOON_MINUTES = 120; // 下午交易时间：13:00-15:00 (120分钟)
+            const TOTAL_MINUTES = MORNING_MINUTES + AFTERNOON_MINUTES;
+
+            // 创建完整的时间轴（始终包含上午和下午）
+            const allTimes = [];
+            const allPrices = [];
+            const allVolumes = [];
+            const allVwaps = [];
+            const timeLabels = [];
+            
+            // 生成完整的时间标签
+            const generateTimeLabels = () => {
+                const labels = [];
+                // 上午时间：09:30-11:30
+                for (let i = 0; i < MORNING_MINUTES; i++) {
+                    const totalMinutes = 9 * 60 + 30 + i; // 从09:30开始
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes % 60;
+                    labels.push(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
+                }
+                // 下午时间：13:00-15:00
+                for (let i = 0; i < AFTERNOON_MINUTES; i++) {
+                    const totalMinutes = 13 * 60 + i; // 从13:00开始
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes % 60;
+                    labels.push(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
+                }
+                return labels;
+            };
+
+            const fullTimeLabels = generateTimeLabels();
+
+            // 创建数据映射
+            const dataMap = new Map();
+            [...morningData, ...afternoonData].forEach(item => {
+                dataMap.set(item.time, item);
+            });
+
+            // 填充完整的时间轴数据
+            for (let i = 0; i < TOTAL_MINUTES; i++) {
+                allTimes.push(i);
+                const timeLabel = fullTimeLabels[i];
+                timeLabels.push(timeLabel);
+                
+                const dataItem = dataMap.get(timeLabel);
+                if (dataItem) {
+                    // 有实际数据
+                    allPrices.push(dataItem.price);
+                    // 计算成交额：成交量 * 价格 / 10000 (转换为万元)
+                    const turnover = (dataItem.volume * dataItem.price) / 10000;
+                    allVolumes.push(turnover);
+                    allVwaps.push(dataItem.vwap);
+                } else {
+                    // 没有数据的时间点（下午未开始交易）
+                    allPrices.push(null);
+                    allVolumes.push(0);
+                    allVwaps.push(null);
+                }
+            }
 
             // 计算价格范围（±5%）
-            const firstPrice = prices[0];
+            const validPrices = allPrices.filter(p => p !== null);
+            const firstPrice = validPrices[0];
             const priceRange = firstPrice * 0.05;
             const yMin = firstPrice - priceRange;
             const yMax = firstPrice + priceRange;
 
             // 创建分时图
             const priceTrace = {
-                x: times,
-                y: prices,
+                x: allTimes,
+                y: allPrices,
                 type: 'scatter',
                 mode: 'lines',
                 name: '分时价格',
@@ -2083,12 +2165,14 @@
                 },
                 fill: 'tonexty',
                 fillcolor: 'rgba(33, 150, 243, 0.1)',
-                hovertemplate: '<b>分时价格</b><br>时间: %{x}<br>价格: ¥%{y:.2f}<extra></extra>'
+                connectgaps: false, // 不连接null值，保持午休时段的断开
+                hovertemplate: '<b>分时价格</b><br>时间: %{text}<br>价格: ¥%{y:.2f}<extra></extra>',
+                text: timeLabels
             };
 
             const vwapTrace = {
-                x: times,
-                y: vwaps,
+                x: allTimes,
+                y: allVwaps,
                 type: 'scatter',
                 mode: 'lines',
                 name: 'VWAP均价',
@@ -2097,24 +2181,44 @@
                     width: 1,
                     dash: 'dash'
                 },
-                hovertemplate: '<b>VWAP均价</b><br>时间: %{x}<br>价格: ¥%{y:.2f}<extra></extra>'
+                connectgaps: false, // 不连接null值
+                hovertemplate: '<b>VWAP均价</b><br>时间: %{text}<br>价格: ¥%{y:.2f}<extra></extra>',
+                text: timeLabels
             };
 
+            // 创建时间轴刻度（始终显示完整的交易时间框架）
+            const tickvals = [];
+            const ticktext = [];
+            
+            // 上午时间点
+            tickvals.push(0); // 09:30 开盘
+            ticktext.push('09:30');
+            
+            tickvals.push(60); // 10:30 上午中点
+            ticktext.push('10:30');
+            
+            tickvals.push(MORNING_MINUTES - 1); // 11:30 上午收盘
+            ticktext.push('11:30');
+            
+            // 下午时间点
+            tickvals.push(MORNING_MINUTES); // 13:00 下午开盘
+            ticktext.push('13:00');
+            
+            tickvals.push(MORNING_MINUTES + 60); // 14:00 下午中点
+            ticktext.push('14:00');
+            
+            tickvals.push(TOTAL_MINUTES - 1); // 15:00 收盘
+            ticktext.push('15:00');
+
             const priceLayout = {
-                title: {
-                    text: '分时走势',
-                    font: { size: 16, family: 'Arial, sans-serif' }
-                },
                 xaxis: {
-                    type: 'category',
-                    title: '时间',
                     showgrid: true,
                     gridcolor: '#f0f0f0',
-                    tickangle: -45,
-                    categoryorder: 'array',
-                    categoryarray: times,
-                    range: [-0.5, times.length - 0.5],
-                    showticklabels: true
+                    tickvals: tickvals,
+                    ticktext: ticktext,
+                    range: [-0.5, TOTAL_MINUTES - 0.5], // 始终显示完整的交易时间框架
+                    showticklabels: false, // 隐藏时间标注
+                    zeroline: false
                 },
                 yaxis: {
                     title: '价格 (元)',
@@ -2145,54 +2249,58 @@
             // 绘制分时图
             Plotly.newPlot('intradayChart', [priceTrace, vwapTrace], priceLayout, config);
 
-            // 创建成交量图
+            // 计算成交额的显示范围
+            const validVolumes = allVolumes.filter(vol => vol > 0);
+            const maxVolume = validVolumes.length > 0 ? Math.max(...validVolumes) : 100;
+            const volumeYMax = maxVolume * 1.05; // 只增加5%的上边距，让柱状图占用更多空间
+
+            // 创建成交额图
             const volumeTrace = {
-                x: times,
-                y: volumes,
+                x: allTimes,
+                y: allVolumes,
                 type: 'bar',
-                name: '成交量',
+                name: '成交额',
                 marker: {
-                    color: volumes.map((vol, index) => {
+                    color: allVolumes.map((vol, index) => {
                         if (index === 0) return '#666';
-                        return prices[index] >= prices[index - 1] ? '#ff4444' : '#00aa00';
+                        const currentPrice = allPrices[index];
+                        const prevPrice = allPrices[index - 1];
+                        return currentPrice >= prevPrice ? '#ff4444' : '#00aa00';
                     })
                 },
-                hovertemplate: '<b>成交量</b><br>时间: %{x}<br>成交量: %{y}<extra></extra>'
+                hovertemplate: '<b>成交额</b><br>时间: %{text}<br>成交额: %{y:.2f}万元<extra></extra>',
+                text: timeLabels
             };
 
             const volumeLayout = {
-                title: {
-                    text: '成交量',
-                    font: { size: 14, family: 'Arial, sans-serif' }
-                },
                 xaxis: {
-                    type: 'category',
-                    title: '时间',
                     showgrid: true,
                     gridcolor: '#f0f0f0',
-                    tickangle: -45,
-                    categoryorder: 'array',
-                    categoryarray: times,
-                    range: [-0.5, times.length - 0.5],
-                    showticklabels: true
+                    tickvals: tickvals,
+                    ticktext: ticktext,
+                    range: [-0.5, TOTAL_MINUTES - 0.5], // 始终显示完整的交易时间框架
+                    showticklabels: false, // 隐藏时间标注
+                    zeroline: false
                 },
                 yaxis: {
-                    title: '成交量',
+                    title: '成交额 (万元)',
                     showgrid: true,
-                    gridcolor: '#f0f0f0'
+                    gridcolor: '#f0f0f0',
+                    range: [0, volumeYMax] // 设置Y轴范围，让柱状图显示得更高
                 },
                 plot_bgcolor: 'white',
                 paper_bgcolor: 'white',
                 font: { family: 'Arial, sans-serif', size: 12 },
-                margin: { l: 60, r: 20, t: 50, b: 80 },
+                margin: { l: 60, r: 20, t: 20, b: 40 }, // 减少上下边距，让柱状图占用更多空间
                 showlegend: false
             };
 
             // 绘制成交量图
             Plotly.newPlot('intradayVolumeChart', [volumeTrace], volumeLayout, config);
 
-            // 添加图表同步机制
-            setupChartSync();
+            // 标记图表渲染完成
+            markChartRendered('intradayChart');
+            markChartRendered('intradayVolumeChart');
 
             // 显示图表，隐藏错误信息
             document.getElementById('intradayChartContainer').style.display = 'block';
@@ -2228,9 +2336,115 @@
             document.getElementById('intradayTimestamp').textContent = `更新时间: ${timestamp}`;
         }
 
+        // 图表同步状态跟踪
+        let chartSyncSetup = false;
+        let chartRenderStatus = {
+            'candlestickChart': false,
+            'volumeChart': false,
+            'macdChart': false,
+            'kdjChart': false,
+            'rsiChart': false,
+            'intradayChart': false,
+            'intradayVolumeChart': false
+        };
+
+        // 标记图表渲染完成
+        function markChartRendered(chartId) {
+            chartRenderStatus[chartId] = true;
+            console.log(`图表 ${chartId} 渲染完成`);
+            
+            // 检查是否所有主要图表都已渲染完成
+            const mainCharts = ['candlestickChart', 'volumeChart', 'intradayChart', 'intradayVolumeChart'];
+            const mainChartsReady = mainCharts.every(id => chartRenderStatus[id]);
+            
+            if (mainChartsReady && !chartSyncSetup) {
+                console.log('主要图表都已渲染完成，开始容器尺寸检查和同步设置');
+                
+                // 延迟执行，确保DOM完全渲染
+                setTimeout(() => {
+                    // 检查并调整图表容器尺寸
+                    ensureChartContainerSizes();
+                    
+                    // 再次延迟设置同步机制，确保容器尺寸调整完成
+                    setTimeout(() => {
+                        setupChartSync();
+                        
+                        // 最后强制重新布局所有图表，确保对齐
+                        setTimeout(() => {
+                            forceResizeAllCharts();
+                        }, 200);
+                    }, 300);
+                }, 100);
+            }
+        }
+
+        // 确保图表容器尺寸正确
+        function ensureChartContainerSizes() {
+            console.log('检查图表容器尺寸');
+            
+            const chartIds = [
+                'candlestickChart', 'volumeChart', 
+                'macdChart', 'kdjChart', 'rsiChart',
+                'intradayChart', 'intradayVolumeChart'
+            ];
+            
+            chartIds.forEach(chartId => {
+                const chartElement = document.getElementById(chartId);
+                if (chartElement) {
+                    const container = chartElement.parentElement;
+                    const containerWidth = container.offsetWidth;
+                    const containerHeight = container.offsetHeight;
+                    
+                    console.log(`图表 ${chartId} 容器尺寸: ${containerWidth}x${containerHeight}`);
+                    
+                    // 如果容器尺寸为0或过小，强制设置最小尺寸
+                    if (containerWidth < 100) {
+                        container.style.width = '100%';
+                        console.log(`强制设置 ${chartId} 容器宽度为100%`);
+                    }
+                    
+                    if (containerHeight < 100) {
+                        container.style.height = '300px';
+                        console.log(`强制设置 ${chartId} 容器高度为300px`);
+                    }
+                }
+            });
+        }
+
+        // 强制重新布局所有图表
+        function forceResizeAllCharts() {
+            console.log('强制重新布局所有图表');
+            
+            const chartIds = [
+                'candlestickChart', 'volumeChart', 
+                'macdChart', 'kdjChart', 'rsiChart',
+                'intradayChart', 'intradayVolumeChart'
+            ];
+            
+            chartIds.forEach(chartId => {
+                const chartElement = document.getElementById(chartId);
+                if (chartElement && chartElement._fullLayout) {
+                    try {
+                        // 使用Plotly的resize方法强制重新计算布局
+                        Plotly.Plots.resize(chartElement);
+                        console.log(`图表 ${chartId} 重新布局完成`);
+                    } catch (error) {
+                        console.warn(`图表 ${chartId} 重新布局失败:`, error);
+                    }
+                }
+            });
+            
+            console.log('所有图表重新布局完成');
+        }
+
         // 设置图表同步机制
         function setupChartSync() {
-            console.log('设置图表同步机制');
+            if (chartSyncSetup) {
+                console.log('图表同步机制已设置，跳过重复设置');
+                return;
+            }
+            
+            console.log('开始设置图表同步机制');
             
             // 获取所有图表元素
             const chartIds = [
@@ -2239,55 +2453,88 @@
                 'intradayChart', 'intradayVolumeChart'
             ];
             
-            // 为每个图表添加缩放和平移事件监听器
+            // 检查图表是否准备就绪
+            const readyCharts = [];
             chartIds.forEach(chartId => {
                 const chartElement = document.getElementById(chartId);
                 if (chartElement && chartElement._fullLayout) {
-                    // 监听图表的缩放和平移事件
-                    chartElement.on('plotly_relayout', function(eventData) {
-                        console.log(`图表 ${chartId} 发生布局变化:`, eventData);
-                        
-                        // 检查是否是x轴范围变化
-                        if (eventData['xaxis.range[0]'] !== undefined && eventData['xaxis.range[1]'] !== undefined) {
-                            const newRange = [eventData['xaxis.range[0]'], eventData['xaxis.range[1]']];
-                            console.log(`同步x轴范围到其他图表:`, newRange);
-                            
-                            // 同步到其他图表
-                            chartIds.forEach(otherChartId => {
-                                if (otherChartId !== chartId) {
-                                    const otherChart = document.getElementById(otherChartId);
-                                    if (otherChart && otherChart._fullLayout) {
-                                        Plotly.relayout(otherChart, {
-                                            'xaxis.range': newRange
-                                        }).catch(err => {
-                                            console.warn(`同步图表 ${otherChartId} 失败:`, err);
-                                        });
-                                    }
-                                }
-                            });
-                        }
-                        
-                        // 处理自动缩放重置
-                        if (eventData['xaxis.autorange'] === true) {
-                            console.log('重置所有图表的x轴范围');
-                            chartIds.forEach(otherChartId => {
-                                if (otherChartId !== chartId) {
-                                    const otherChart = document.getElementById(otherChartId);
-                                    if (otherChart && otherChart._fullLayout) {
-                                        Plotly.relayout(otherChart, {
-                                            'xaxis.autorange': true
-                                        }).catch(err => {
-                                            console.warn(`重置图表 ${otherChartId} 失败:`, err);
-                                        });
-                                    }
-                                }
-                            });
-                        }
-                    });
+                    readyCharts.push(chartId);
+                } else {
+                    console.warn(`图表 ${chartId} 尚未准备就绪`);
                 }
             });
             
+            console.log(`准备就绪的图表: ${readyCharts.join(', ')}`);
+            
+            if (readyCharts.length < 2) {
+                console.log('准备就绪的图表数量不足，延迟重试');
+                setTimeout(() => {
+                    setupChartSync();
+                }, 1000);
+                return;
+            }
+            
+            // 为每个准备就绪的图表添加缩放和平移事件监听器
+            readyCharts.forEach(chartId => {
+                const chartElement = document.getElementById(chartId);
+                
+                // 移除之前的事件监听器（如果存在）
+                if (chartElement._plotlyListeners) {
+                    chartElement.removeAllListeners('plotly_relayout');
+                }
+                
+                // 监听图表的缩放和平移事件
+                chartElement.on('plotly_relayout', function(eventData) {
+                    console.log(`图表 ${chartId} 发生布局变化:`, eventData);
+                    
+                    // 检查是否是x轴范围变化
+                    if (eventData['xaxis.range[0]'] !== undefined && eventData['xaxis.range[1]'] !== undefined) {
+                        const newRange = [eventData['xaxis.range[0]'], eventData['xaxis.range[1]']];
+                        console.log(`同步x轴范围到其他图表:`, newRange);
+                        
+                        // 同步到其他图表
+                        readyCharts.forEach(otherChartId => {
+                            if (otherChartId !== chartId) {
+                                const otherChart = document.getElementById(otherChartId);
+                                if (otherChart && otherChart._fullLayout) {
+                                    Plotly.relayout(otherChart, {
+                                        'xaxis.range': newRange
+                                    }).catch(err => {
+                                        console.warn(`同步图表 ${otherChartId} 失败:`, err);
+                                    });
+                                }
+                            }
+                        });
+                    }
+                    
+                    // 处理自动缩放重置
+                    if (eventData['xaxis.autorange'] === true) {
+                        console.log('重置所有图表的x轴范围');
+                        readyCharts.forEach(otherChartId => {
+                            if (otherChartId !== chartId) {
+                                const otherChart = document.getElementById(otherChartId);
+                                if (otherChart && otherChart._fullLayout) {
+                                    Plotly.relayout(otherChart, {
+                                        'xaxis.autorange': true
+                                    }).catch(err => {
+                                        console.warn(`重置图表 ${otherChartId} 失败:`, err);
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+            
+            chartSyncSetup = true;
             console.log('图表同步机制设置完成');
+        }
+
+        // 强制重新设置图表同步（用于刷新按钮）
+        function forceSetupChartSync() {
+            console.log('强制重新设置图表同步机制');
+            chartSyncSetup = false;
+            setupChartSync();
         }
 
         // ==================== 分时图相关函数结束 ====================
@@ -2317,6 +2564,29 @@
                 loadIndicatorData();
             }, 1000);
         };
+
+        // 添加窗口resize事件监听器
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            // 防抖处理，避免频繁触发
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                console.log('窗口大小变化，重新布局图表');
+                
+                // 重新检查容器尺寸
+                ensureChartContainerSizes();
+                
+                // 延迟重新布局图表
+                setTimeout(() => {
+                    forceResizeAllCharts();
+                    
+                    // 重新设置图表同步机制
+                    setTimeout(() => {
+                        forceSetupChartSync();
+                    }, 200);
+                }, 100);
+            }, 300);
+        });
     </script>
 </body>
 </html>
