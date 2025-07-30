@@ -505,29 +505,29 @@
             </div>
             
             <!-- 虚拟货币实时价格面板 -->
-            <div class="crypto-section" style="margin-top: 10px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div class="crypto-section" style="margin-top: 8px; padding: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <div style="font-size: 14px; font-weight: bold; color: white;">虚拟货币</div>
                 </div>
-                <div id="cryptoContainer" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
+                <div id="cryptoContainer" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;">
                     <!-- 虚拟货币数据将通过JavaScript动态填充 -->
                 </div>
             </div>
             
             <!-- 指数实时数据面板 -->
-            <div class="indices-section" style="margin-top: 10px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div class="indices-section" style="margin-top: 8px; padding: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <div style="font-size: 14px; font-weight: bold; color: white;">主要指数</div>
                     <div id="indicesUpdateTime" style="font-size: 10px; color: #ccc; display: none;">加载中...</div>
                 </div>
-                <div id="indicesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                <div id="indicesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
                     <!-- 指数数据将通过JavaScript动态填充 -->
                 </div>
             </div>
             
             <!-- 所有指数实时数据面板 -->
-            <div class="all-indices-section" style="margin-top: 10px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div class="all-indices-section" style="margin-top: 8px; padding: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <div style="font-size: 14px; font-weight: bold; color: white;">全部指数</div>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <button onclick="refreshAllIndicesData()" style="padding: 4px 8px; background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 4px; cursor: pointer; font-size: 10px; transition: background 0.3s;">刷新指数</button>
@@ -2066,6 +2066,9 @@
              return;
          }
          
+         // 按涨幅从高到低排序
+         const sortedIndices = [...allIndices].sort((a, b) => b.change_percent - a.change_percent);
+         
          // 创建网格布局容器
          const gridContainer = document.createElement('div');
          gridContainer.style.cssText = `
@@ -2075,7 +2078,7 @@
              padding: 5px;
          `;
          
-         allIndices.forEach(index => {
+         sortedIndices.forEach(index => {
              const changeClass = index.change_percent >= 0 ? 'price-positive' : 'price-negative';
              const changeSymbol = index.change_percent >= 0 ? '+' : '';
              
@@ -2113,7 +2116,7 @@
              });
              
              indexCard.innerHTML = `
-                 <div style="font-weight: bold; font-size: 9px; color: #333; margin-bottom: 2px; line-height: 1.1; height: 18px; overflow: hidden;">${index.name}</div>
+                 <div style="font-weight: bold; font-size: 13px; color: #333; margin-bottom: 2px; line-height: 1.1; height: 18px; overflow: hidden; padding: 0 1px;">${index.name}</div>
                  <div style="font-size: 12px; font-weight: bold; color: #333; margin-bottom: 1px;">${index.price.toFixed(2)}</div>
                  <div class="${changeClass}" style="font-size: 8px; margin-bottom: 1px;">
                      ${changeSymbol}${index.change.toFixed(2)} (${changeSymbol}${index.change_percent.toFixed(2)}%)
@@ -2374,24 +2377,24 @@
                  cryptoCard.style.cssText = `
                      background: rgba(255, 255, 255, 0.9);
                      border-radius: 6px;
-                     padding: 8px 6px;
+                     padding: 6px 4px;
                      text-align: center;
                      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                      transition: transform 0.2s ease;
                  `;
                  
                  cryptoCard.innerHTML = `
-                     <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
+                     <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 3px;">
                          <span style="font-size: 14px; margin-right: 4px;">${cryptoConfig.icon}</span>
                          <span style="font-weight: bold; font-size: 13px; color: #333;">${cryptoConfig.name}</span>
                      </div>
-                     <div style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 3px;">
+                     <div style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 2px;">
                          $${data.price.toFixed(data.price >= 1 ? 2 : 6)}
                      </div>
-                     <div class="${changeClass}" style="font-size: 12px; margin-bottom: 3px;">
+                     <div class="${changeClass}" style="font-size: 11px; margin-bottom: 2px;">
                          ${changeSymbol}${dayChange.toFixed(data.price >= 1 ? 2 : 6)} (${changeSymbol}${dayChangePercent.toFixed(2)}%)
                      </div>
-                     <div style="font-size: 10px; color: #666; line-height: 1.1;">
+                     <div style="font-size: 9px; color: #666; line-height: 1.1;">
                          <div>24h: ${volumeText}</div>
                          <div>H: $${data.highPrice.toFixed(data.price >= 1 ? 2 : 6)} L: $${data.lowPrice.toFixed(data.price >= 1 ? 2 : 6)}</div>
                      </div>
