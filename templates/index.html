@@ -1988,13 +1988,13 @@
                  const changeClass = index.change_pct >= 0 ? 'price-positive' : 'price-negative';
                  const changeSymbol = index.change_pct >= 0 ? '+' : '';
                  
-                 // 格式化成交额（Tushare返回的单位是万元）
+                 // 格式化成交额（后端已统一转换为亿元）
                  let volumeText = '0';
                  if (index.volume > 0) {
-                     if (index.volume >= 10000) {
-                         volumeText = (index.volume / 10000).toFixed(2) + '亿';
+                     if (index.volume >= 1) {
+                         volumeText = index.volume.toFixed(2) + '亿';
                      } else {
-                         volumeText = index.volume.toFixed(2) + '万';
+                         volumeText = (index.volume * 10000).toFixed(0) + '万';
                      }
                  }
                  
@@ -2023,10 +2023,27 @@
      
      // ==================== 所有指数数据功能 ====================
      
-     // 获取所有指数数据
+     // 获取所有指数数据（带交易时间检查）
      function refreshAllIndicesData() {
-         console.log('开始获取所有指数数据...');
-         
+         // 先检查是否为交易时间
+         checkMarketStatus().then(isMarketOpen => {
+             if (isMarketOpen) {
+                 console.log('交易时间内，开始获取所有指数数据...');
+                 fetchAllIndicesData();
+             } else {
+                 console.log('非交易时间，跳过所有指数数据自动获取，显示最后缓存数据');
+                 // 非交易时间仍然尝试获取一次数据（后端会返回收盘数据）
+                 fetchAllIndicesData();
+             }
+         }).catch(error => {
+             console.error('检查市场状态失败:', error);
+             // 如果检查失败，仍然尝试获取数据
+             fetchAllIndicesData();
+         });
+     }
+     
+     // 实际获取所有指数数据的函数
+     function fetchAllIndicesData() {
          fetch('/api/indices/all')
              .then(response => response.json())
              .then(data => {
@@ -2150,8 +2167,8 @@
          
          // 初始化所有指数数据
          refreshAllIndicesData();
-         // 每5分钟刷新一次所有指数数据
-         setInterval(refreshAllIndicesData, 300000);
+         // 每2分钟刷新一次所有指数数据
+         setInterval(refreshAllIndicesData, 120000);
          
          // 每5分钟检查一次市场状态，以便在开盘时间开始时自动启动刷新
          setInterval(() => {

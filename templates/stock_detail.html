@@ -158,11 +158,6 @@
             color: #e74c3c;
         }
 
-        .trade-date {
-            color: #666;
-            font-size: 12px;
-        }
-
         .indicators-section {
             background: white;
             border-radius: 8px;
@@ -520,7 +515,6 @@
                     <div class="price-change">
                         <span id="changeAmount" class="change-amount">+52.00</span>
                         <span>(<span id="changePercent" class="change-percent">+33.30</span>)</span>
-                        <span id="tradeDate" class="trade-date">2025年7月25日</span>
                     </div>
                 </div>
                 
@@ -1605,7 +1599,6 @@
             // 更新股票基本信息
             document.getElementById('stockName').textContent = stock_info.name || '股票名称';
             document.getElementById('stockCode').textContent = stock_info.ts_code || '';
-            document.getElementById('tradeDate').textContent = formatDate(stock_info.trade_date);
             
             // 更新页面标题
             const stockName = stock_info.name || '股票名称';
@@ -2746,9 +2739,28 @@
         // 自动刷新相关变量
         let autoRefreshInterval = null;
         let autoRefreshEnabled = true;
+        let marketCheckInterval = null;
         const AUTO_REFRESH_INTERVAL = 10000; // 10秒
+        const MARKET_CHECK_INTERVAL = 300000; // 5分钟检查一次市场状态
 
-        // 启动自动刷新
+        // 检查市场状态
+        function checkMarketStatus() {
+            return fetch('/api/market/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('市场状态检查:', data.is_market_open ? '开盘' : '收盘', '时间:', data.current_time);
+                        return data.is_market_open;
+                    }
+                    return false;
+                })
+                .catch(error => {
+                    console.error('检查市场状态失败:', error);
+                    return false;
+                });
+        }
+
+        // 启动自动刷新（带交易时间检查）
         function startAutoRefresh() {
             if (autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);
@@ -2759,32 +2771,96 @@
                 return;
             }
             
-            console.log('启动自动刷新，间隔:', AUTO_REFRESH_INTERVAL / 1000, '秒');
+            // 先检查市场状态
+            checkMarketStatus().then(isMarketOpen => {
+                if (isMarketOpen) {
+                    console.log('交易时间内，启动自动刷新，间隔:', AUTO_REFRESH_INTERVAL / 1000, '秒');
+                    
+                    autoRefreshInterval = setInterval(async () => {
+                        if (!autoRefreshEnabled) {
+                            console.log('自动刷新已禁用，停止刷新');
+                            clearInterval(autoRefreshInterval);
+                            return;
+                        }
+                        
+                        // 每次刷新前检查市场状态
+                        const stillOpen = await checkMarketStatus();
+                        if (!stillOpen) {
+                            console.log('市场已收盘，停止自动刷新');
+                            clearInterval(autoRefreshInterval);
+                            autoRefreshInterval = null;
+                            updateAutoRefreshButtonState(false);
+                            return;
+                        }
+                        
+                        try {
+                            console.log('自动刷新: 开始更新实时数据和分时图');
+                            
+                            // 并行刷新实时交易数据和分时图
+                            // 自动刷新时不显示加载状态，避免数据消失
+                            await Promise.all([
+                                loadRealtimeData(false),
+                                loadIntradayChart(false)
+                            ]);
+                            
+                            console.log('自动刷新: 数据更新完成');
+                            updateLastRefreshTime();
+                            
+                        } catch (error) {
+                            console.error('自动刷新失败:', error);
+                        }
+                    }, AUTO_REFRESH_INTERVAL);
+                    
+                    updateAutoRefreshButtonState(true);
+                } else {
+                    console.log('非交易时间，不启动自动刷新');
+                    updateAutoRefreshButtonState(false);
+                }
+            });
+        }
+
+        // 启动市场状态监控
+        function startMarketStatusMonitor() {
+            if (marketCheckInterval) {
+                clearInterval(marketCheckInterval);
+            }
             
-            autoRefreshInterval = setInterval(async () => {
-                if (!autoRefreshEnabled) {
-                    console.log('自动刷新已禁用，停止刷新');
-                    clearInterval(autoRefreshInterval);
-                    return;
+            marketCheckInterval = setInterval(() => {
+                if (!autoRefreshInterval && autoRefreshEnabled) {
+                    checkMarketStatus().then(isMarketOpen => {
+                        if (isMarketOpen) {
+                            console.log('检测到市场开盘，启动自动刷新');
+                            startAutoRefresh();
+                        }
+                    });
                 }
-                
-                try {
-                    console.log('自动刷新: 开始更新实时数据和分时图');
-                    
-                    // 并行刷新实时交易数据和分时图
-                    // 自动刷新时不显示加载状态，避免数据消失
-                    await Promise.all([
-                        loadRealtimeData(false),
-                        loadIntradayChart(false)
-                    ]);
-                    
-                    console.log('自动刷新: 数据更新完成');
-                    updateLastRefreshTime();
-                    
-                } catch (error) {
-                    console.error('自动刷新失败:', error);
+            }, MARKET_CHECK_INTERVAL);
+        }
+
+        // 更新自动刷新按钮状态
+        function updateAutoRefreshButtonState(isActive) {
+            const toggleBtn = document.getElementById('autoRefreshToggle');
+            const chartToggleBtn = document.getElementById('chartAutoRefreshToggle');
+            
+            if (isActive) {
+                if (toggleBtn) {
+                    toggleBtn.textContent = '停止自动刷新';
+                    toggleBtn.style.backgroundColor = '#dc3545';
                 }
-            }, AUTO_REFRESH_INTERVAL);
+                if (chartToggleBtn) {
+                    chartToggleBtn.textContent = '停止自动刷新';
+                    chartToggleBtn.style.backgroundColor = '#dc3545';
+                }
+            } else {
+                if (toggleBtn) {
+                    toggleBtn.textContent = '启动自动刷新';
+                    toggleBtn.style.backgroundColor = '#28a745';
+                }
+                if (chartToggleBtn) {
+                    chartToggleBtn.textContent = '启动自动刷新';
+                    chartToggleBtn.style.backgroundColor = '#28a745';
+                }
+            }
         }
 
         // 停止自动刷新
@@ -2799,34 +2875,13 @@
         // 切换自动刷新状态
         function toggleAutoRefresh() {
             autoRefreshEnabled = !autoRefreshEnabled;
-            const toggleBtn = document.getElementById('autoRefreshToggle');
-            const chartToggleBtn = document.getElementById('chartAutoRefreshToggle');
             
             if (autoRefreshEnabled) {
                 startAutoRefresh();
-                // 更新实时交易数据的按钮
-                if (toggleBtn) {
-                    toggleBtn.textContent = '停止自动刷新';
-                    toggleBtn.style.backgroundColor = '#dc3545';
-                }
-                // 更新分时图的按钮
-                if (chartToggleBtn) {
-                    chartToggleBtn.textContent = '停止自动刷新';
-                    chartToggleBtn.style.backgroundColor = '#dc3545';
-                }
                 console.log('自动刷新已启用');
             } else {
                 stopAutoRefresh();
-                // 更新实时交易数据的按钮
-                if (toggleBtn) {
-                    toggleBtn.textContent = '启动自动刷新';
-                    toggleBtn.style.backgroundColor = '#28a745';
-                }
-                // 更新分时图的按钮
-                if (chartToggleBtn) {
-                    chartToggleBtn.textContent = '启动自动刷新';
-                    chartToggleBtn.style.backgroundColor = '#28a745';
-                }
+                updateAutoRefreshButtonState(false);
                 console.log('自动刷新已禁用');
             }
         }
@@ -2861,27 +2916,138 @@
             const stockCode = getStockCodeFromUrl();
             if (!stockCode) return;
             
-            // 从localStorage获取自选股票列表
-            const watchlist = JSON.parse(localStorage.getItem('stockWatchlist') || '[]');
-            const isInWatchlist = watchlist.includes(stockCode);
+            // 构造ts_code（6位股票代码 + 交易所后缀）
+            const tsCode = stockCode.startsWith('6') ? `${stockCode}.SH` : `${stockCode}.SZ`;
             
-            const addBtn = document.getElementById('addToWatchlistBtn');
-            const removeBtn = document.getElementById('removeFromWatchlistBtn');
-            
-            // 所有按钮都显示
-            addBtn.style.display = 'flex';
-            removeBtn.style.display = 'flex';
-            
-            // 根据是否在自选列表中更新按钮文本和样式
-            if (isInWatchlist) {
-                addBtn.innerHTML = '<span>✓</span><span>已加入自选（重点关注）</span>';
-                addBtn.className = 'action-btn btn-added';
-            } else {
-                addBtn.innerHTML = '<span>+</span><span>加入自选</span>';
-                addBtn.className = 'action-btn btn-add';
-            }
+            // 从后端API检查自选股状态
+            fetch('/api/watchlist/check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ts_code: tsCode
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const addBtn = document.getElementById('addToWatchlistBtn');
+                const removeBtn = document.getElementById('removeFromWatchlistBtn');
+                
+                // 所有按钮都显示
+                if (addBtn) addBtn.style.display = 'flex';
+                if (removeBtn) removeBtn.style.display = 'flex';
+                
+                // 根据是否在自选列表中更新按钮文本和样式
+                if (data.in_watchlist) {
+                    if (addBtn) {
+                        addBtn.innerHTML = '<span>✓</span><span>已加入自选（重点关注）</span>';
+                        addBtn.className = 'action-btn btn-added';
+                    }
+                } else {
+                    if (addBtn) {
+                        addBtn.innerHTML = '<span>+</span><span>加入自选</span>';
+                        addBtn.className = 'action-btn btn-add';
+                    }
+                }
+                
+                // 同时更新localStorage以保持兼容性
+                let watchlist = JSON.parse(localStorage.getItem('stockWatchlist') || '[]');
+                const index = watchlist.indexOf(stockCode);
+                
+                if (data.in_watchlist && index === -1) {
+                    // 后端有但localStorage没有，添加到localStorage
+                    watchlist.push(stockCode);
+                    localStorage.setItem('stockWatchlist', JSON.stringify(watchlist));
+                } else if (!data.in_watchlist && index > -1) {
+                    // 后端没有但localStorage有，从localStorage删除
+                    watchlist.splice(index, 1);
+                    localStorage.setItem('stockWatchlist', JSON.stringify(watchlist));
+                }
+            })
+            .catch(error => {
+                console.error('检查自选股状态失败:', error);
+                // 如果API调用失败，回退到localStorage检查
+                const watchlist = JSON.parse(localStorage.getItem('stockWatchlist') || '[]');
+                const isInWatchlist = watchlist.includes(stockCode);
+                
+                const addBtn = document.getElementById('addToWatchlistBtn');
+                const removeBtn = document.getElementById('removeFromWatchlistBtn');
+                
+                // 所有按钮都显示
+                if (addBtn) addBtn.style.display = 'flex';
+                if (removeBtn) removeBtn.style.display = 'flex';
+                
+                // 根据是否在自选列表中更新按钮文本和样式
+                if (isInWatchlist) {
+                    if (addBtn) {
+                        addBtn.innerHTML = '<span>✓</span><span>已加入自选（重点关注）</span>';
+                        addBtn.className = 'action-btn btn-added';
+                    }
+                } else {
+                    if (addBtn) {
+                        addBtn.innerHTML = '<span>+</span><span>加入自选</span>';
+                        addBtn.className = 'action-btn btn-add';
+                    }
+                }
+            });
         }
         
+        // 获取当前股票信息
+        function getCurrentStockInfo() {
+            // 从页面元素中获取股票信息
+            const stockInfo = {
+                name: '',
+                latest_price: 0,
+                pct_chg: 0,
+                industry: '-',
+                volume_ratio: 0,
+                pe: 0,
+                amount: 0,
+                total_mv: 0,
+                nine_turn_up: 0,
+                nine_turn_down: 0
+            };
+            
+            try {
+                // 从页面标题获取股票名称
+                const titleElement = document.querySelector('.stock-title h1');
+                if (titleElement) {
+                    const titleText = titleElement.textContent;
+                    const match = titleText.match(/^(.+?)\s*\(/);
+                    if (match) {
+                        stockInfo.name = match[1].trim();
+                    }
+                }
+                
+                // 从实时数据获取价格信息
+                if (window.realtimeData) {
+                    stockInfo.latest_price = parseFloat(window.realtimeData.current_price) || 0;
+                    stockInfo.pct_chg = parseFloat(window.realtimeData.change_percent) || 0;
+                    stockInfo.volume_ratio = parseFloat(window.realtimeData.volume_ratio) || 0;
+                    stockInfo.amount = parseFloat(window.realtimeData.amount) || 0;
+                }
+                
+                // 从基本信息获取其他数据
+                if (window.stockData) {
+                    stockInfo.industry = window.stockData.industry || '-';
+                    stockInfo.pe = parseFloat(window.stockData.pe_ttm) || 0;
+                    stockInfo.total_mv = parseFloat(window.stockData.total_mv) || 0;
+                }
+                
+                // 从技术指标获取九转序列数据
+                if (window.indicatorData) {
+                    stockInfo.nine_turn_up = parseInt(window.indicatorData.nine_turn_up) || 0;
+                    stockInfo.nine_turn_down = parseInt(window.indicatorData.nine_turn_down) || 0;
+                }
+                
+            } catch (error) {
+                console.error('获取股票信息失败:', error);
+            }
+            
+            return stockInfo;
+        }
+
         // 添加到自选
         function addToWatchlist() {
             const stockCode = getStockCodeFromUrl();
@@ -2890,22 +3056,59 @@
                 return;
             }
             
-            // 从localStorage获取自选股票列表
-            let watchlist = JSON.parse(localStorage.getItem('stockWatchlist') || '[]');
+            // 获取当前股票信息
+            const stockInfo = getCurrentStockInfo();
             
-            if (!watchlist.includes(stockCode)) {
-                watchlist.push(stockCode);
-                localStorage.setItem('stockWatchlist', JSON.stringify(watchlist));
-                
-                // 更新按钮显示状态
-                checkWatchlistStatus();
-                
-                // 显示成功提示
-                showNotification('已添加到自选股票', 'success');
-                console.log('股票已添加到自选:', stockCode);
-            } else {
-                showNotification('该股票已在自选列表中', 'info');
-            }
+            // 构造ts_code（6位股票代码 + 交易所后缀）
+            const tsCode = stockCode.startsWith('6') ? `${stockCode}.SH` : `${stockCode}.SZ`;
+            
+            // 调用后端API添加到自选股
+            fetch('/api/watchlist/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ts_code: tsCode,
+                    name: stockInfo.name || '',
+                    latest_price: stockInfo.latest_price || 0,
+                    pct_chg: stockInfo.pct_chg || 0,
+                    industry: stockInfo.industry || '-',
+                    volume_ratio: stockInfo.volume_ratio || 0,
+                    pe: stockInfo.pe || 0,
+                    amount: stockInfo.amount || 0,
+                    total_mv: stockInfo.total_mv || 0,
+                    nine_turn_up: stockInfo.nine_turn_up || 0,
+                    nine_turn_down: stockInfo.nine_turn_down || 0,
+                    priority: 'green',  // 默认绿色优先级
+                    note: '',  // 默认备注为空
+                    add_time: new Date().toISOString()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 同时更新localStorage以保持兼容性
+                    let watchlist = JSON.parse(localStorage.getItem('stockWatchlist') || '[]');
+                    if (!watchlist.includes(stockCode)) {
+                        watchlist.push(stockCode);
+                        localStorage.setItem('stockWatchlist', JSON.stringify(watchlist));
+                    }
+                    
+                    // 更新按钮显示状态
+                    checkWatchlistStatus();
+                    
+                    // 显示成功提示
+                    showNotification('已添加到自选股票', 'success');
+                    console.log('股票已添加到自选:', stockCode);
+                } else {
+                    showNotification(data.message || '添加失败', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('添加自选股失败:', error);
+                showNotification('添加失败，请稍后重试', 'error');
+            });
         }
         
         // 从自选中删除
@@ -2921,23 +3124,44 @@
                 return;
             }
             
-            // 从localStorage获取自选股票列表
-            let watchlist = JSON.parse(localStorage.getItem('stockWatchlist') || '[]');
+            // 构造ts_code（6位股票代码 + 交易所后缀）
+            const tsCode = stockCode.startsWith('6') ? `${stockCode}.SH` : `${stockCode}.SZ`;
             
-            const index = watchlist.indexOf(stockCode);
-            if (index > -1) {
-                watchlist.splice(index, 1);
-                localStorage.setItem('stockWatchlist', JSON.stringify(watchlist));
-                
-                // 更新按钮显示状态
-                checkWatchlistStatus();
-                
-                // 显示成功提示
-                showNotification('已从自选股票中删除', 'success');
-                console.log('股票已从自选中删除:', stockCode);
-            } else {
-                showNotification('该股票不在自选列表中', 'info');
-            }
+            // 调用后端API从自选股中删除
+            fetch('/api/watchlist/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ts_code: tsCode
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 同时更新localStorage以保持兼容性
+                    let watchlist = JSON.parse(localStorage.getItem('stockWatchlist') || '[]');
+                    const index = watchlist.indexOf(stockCode);
+                    if (index > -1) {
+                        watchlist.splice(index, 1);
+                        localStorage.setItem('stockWatchlist', JSON.stringify(watchlist));
+                    }
+                    
+                    // 更新按钮显示状态
+                    checkWatchlistStatus();
+                    
+                    // 显示成功提示
+                    showNotification('已从自选股票中删除', 'success');
+                    console.log('股票已从自选中删除:', stockCode);
+                } else {
+                    showNotification(data.message || '删除失败', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('删除自选股失败:', error);
+                showNotification('删除失败，请稍后重试', 'error');
+            });
         }
         
         // 刷新所有数据
@@ -3050,11 +3274,16 @@
                 loadIndicatorData();
             }, 1000);
             
-            // 启动自动刷新
+            // 启动自动刷新（会检查交易时间）
             setTimeout(() => {
                 startAutoRefresh();
                 updateLastRefreshTime();
             }, 2000);
+            
+            // 启动市场状态监控
+            setTimeout(() => {
+                startMarketStatusMonitor();
+            }, 3000);
         };
 
         // 页面隐藏时停止自动刷新，页面显示时重新启动

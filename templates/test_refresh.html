@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动刷新测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .log { background-color: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; border-radius: 5px; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>自动刷新测试页面</h1>
+    
+    <div id="marketStatus" class="status info">检查市场状态中...</div>
+    <div id="refreshStatus" class="status info">自动刷新状态: 未启动</div>
+    <div id="lastUpdate" class="status info">最后更新时间: 未更新</div>
+    
+    <h3>实时数据</h3>
+    <div id="realtimeData" class="log">加载中...</div>
+    
+    <h3>日志</h3>
+    <div id="logContainer" class="log"></div>
+    
+    <script>
+        let refreshTimer = null;
+        let logContainer = document.getElementById('logContainer');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContainer.innerHTML += `[${timestamp}] ${message}<br>`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        async function checkMarketStatus() {
+            try {
+                const response = await fetch('/api/market/status');
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('marketStatus');
+                if (data.success) {
+                    statusDiv.className = data.is_market_open ? 'status success' : 'status error';
+                    statusDiv.textContent = `市场状态: ${data.is_market_open ? '开放' : '关闭'} (${data.current_time})`;
+                    log(`市场状态检查: ${data.is_market_open ? '开放' : '关闭'} - ${data.current_time}`);
+                    return data.is_market_open;
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = '市场状态检查失败';
+                    log('市场状态检查失败');
+                    return false;
+                }
+            } catch (error) {
+                log(`市场状态检查错误: ${error.message}`);
+                return false;
+            }
+        }
+        
+        async function loadRealtimeData() {
+            try {
+                const response = await fetch('/api/stock/300354/realtime');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const realtimeDiv = document.getElementById('realtimeData');
+                    realtimeDiv.innerHTML = `
+                        <strong>${data.spot.name}</strong><br>
+                        最新价: ${data.spot.latest_price}<br>
+                        涨跌: ${data.spot.change_amount} (${data.spot.change_percent.toFixed(2)}%)<br>
+                        更新时间: ${data.spot.update_time}<br>
+                        数据来源: ${data.spot.data_source}
+                    `;
+                    
+                    const lastUpdateDiv = document.getElementById('lastUpdate');
+                    lastUpdateDiv.textContent = `最后更新时间: ${new Date().toLocaleTimeString()}`;
+                    
+                    log(`实时数据更新成功: ${data.spot.name} - ${data.spot.latest_price}`);
+                } else {
+                    log('实时数据加载失败');
+                }
+            } catch (error) {
+                log(`实时数据加载错误: ${error.message}`);
+            }
+        }
+        
+        function startAutoRefresh() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+            }
+            
+            refreshTimer = setInterval(async () => {
+                const isMarketOpen = await checkMarketStatus();
+                if (isMarketOpen) {
+                    await loadRealtimeData();
+                } else {
+                    stopAutoRefresh();
+                    log('市场关闭，停止自动刷新');
+                }
+            }, 10000); // 10秒间隔
+            
+            const refreshStatusDiv = document.getElementById('refreshStatus');
+            refreshStatusDiv.className = 'status success';
+            refreshStatusDiv.textContent = '自动刷新状态: 已启动 (每10秒)';
+            log('自动刷新已启动，间隔10秒');
+        }
+        
+        function stopAutoRefresh() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+            
+            const refreshStatusDiv = document.getElementById('refreshStatus');
+            refreshStatusDiv.className = 'status error';
+            refreshStatusDiv.textContent = '自动刷新状态: 已停止';
+            log('自动刷新已停止');
+        }
+        
+        // 页面加载时初始化
+        window.onload = async function() {
+            log('页面加载完成，开始初始化');
+            
+            // 检查市场状态
+            const isMarketOpen = await checkMarketStatus();
+            
+            // 加载初始数据
+            await loadRealtimeData();
+            
+            // 如果市场开放，启动自动刷新
+            if (isMarketOpen) {
+                setTimeout(() => {
+                    startAutoRefresh();
+                }, 2000);
+            } else {
+                log('市场关闭，不启动自动刷新');
+            }
+        };
+    </script>
+</body>
+</html>

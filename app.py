@@ -1172,6 +1172,11 @@ def boll_test():
     """BOLL指标测试验证页面"""
     return render_template('boll_test.html')
 
+@app.route('/test/refresh')
+def test_refresh():
+    """自动刷新功能测试页面"""
+    return render_template('test_refresh.html')
+
 def get_stock_from_cache(ts_code):
     """从缓存中查找股票数据"""
     # 确定股票所属市场
@@ -1519,6 +1524,77 @@ def save_indices_cache(data, fetch_time):
     except Exception as e:
         print(f"保存指数缓存失败: {e}")
         return False
+
+def load_all_indices_cache():
+    """加载所有指数数据缓存"""
+    try:
+        cache_file = os.path.join('cache', 'all_indices_cache.json')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                cached_data = json.load(f)
+                
+                # 检查缓存是否是当天的数据
+                cache_date = cached_data.get('cache_date', '')
+                current_date = datetime.now().strftime('%Y-%m-%d')
+                
+                # 如果是周末，不使用当天的缓存，需要重新获取最新交易日数据
+                now = datetime.now()
+                if now.weekday() >= 5:  # 周六或周日
+                    print(f"当前是周末，不使用所有指数缓存数据，需要重新获取最新交易日数据")
+                    return None
+                
+                # 工作日时检查缓存日期
+                if cache_date == current_date:
+                    return cached_data
+                else:
+                    print(f"所有指数缓存数据过期: 缓存日期={cache_date}, 当前日期={current_date}")
+        return None
+    except Exception as e:
+        print(f"加载所有指数缓存失败: {e}")
+        return None
+
+def save_all_indices_cache(data):
+    """保存所有指数数据到缓存"""
+    try:
+        cache_dir = 'cache'
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+        
+        cache_file = os.path.join(cache_dir, 'all_indices_cache.json')
+        cache_data = {
+            'data': data,
+            'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'cache_date': datetime.now().strftime('%Y-%m-%d'),
+            'cache_time': datetime.now().strftime('%H:%M:%S'),
+            'count': len(data)
+        }
+        
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(cache_data, f, ensure_ascii=False, indent=2)
+        
+        print(f"所有指数数据已保存到缓存: {cache_file}, 共{len(data)}条")
+        return True
+    except Exception as e:
+        print(f"保存所有指数缓存失败: {e}")
+        return False
+
+def get_cached_all_indices_data():
+    """获取缓存的所有指数数据，如果没有缓存则返回示例数据"""
+    cached_data = load_all_indices_cache()
+    
+    if cached_data:
+        print(f"从缓存获取所有指数数据，共{cached_data.get('count', 0)}条")
+        return jsonify({
+            'success': True,
+            'data': cached_data['data'],
+            'fetch_time': cached_data.get('fetch_time', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+            'count': cached_data.get('count', len(cached_data['data'])),
+            'is_trading_time': False,
+            'source': 'cache'
+        })
+    else:
+        print("没有可用的所有指数缓存数据，返回示例数据")
+        return get_sample_indices_data()
 
 def get_indices_from_akshare_realtime(indices):
     """使用AKShare获取实时指数数据 - 双数据源策略（新浪财经和东财）"""
@@ -1905,7 +1981,7 @@ def get_today_close_data(indices):
 
 @app.route('/api/indices/all')
 def get_all_indices():
-    """获取所有指数数据 - 使用AKShare新浪财经数据源，失败时返回示例数据"""
+    """获取所有指数数据 - 根据交易时间采用不同策略"""
     try:
         if not AKSHARE_AVAILABLE:
             return get_sample_indices_data()
@@ -1914,54 +1990,65 @@ def get_all_indices():
             return get_sample_indices_data()
         
         current_time = datetime.now().strftime('%H:%M:%S')
-        print(f"[所有指数] 开始获取所有指数数据 {current_time}")
+        is_trading_time = is_market_open()
         
-        # 使用新浪财经数据源获取所有指数
-        df = safe_akshare_call(ak.stock_zh_index_spot_sina, 'akshare_all_indices')
-        
-        if df is None or df.empty:
-            print("[所有指数] AkShare数据获取失败，返回示例数据")
-            return get_sample_indices_data()
-        
-        print(f"[所有指数] 获取到 {len(df)} 条指数数据")
-        
-        # 转换数据格式
-        all_indices = []
-        for _, row in df.iterrows():
-            try:
-                index_data = {
-                    'name': row['名称'] if '名称' in row else row.get('name', ''),
-                    'code': row['代码'] if '代码' in row else row.get('code', ''),
-                    'price': float(row['最新价'] if '最新价' in row else row.get('price', 0)),
-                    'change': float(row['涨跌额'] if '涨跌额' in row else row.get('change', 0)),
-                    'change_percent': float(row['涨跌幅'] if '涨跌幅' in row else row.get('change_pct', 0)),
-                    'volume': float(row['成交额'] if '成交额' in row else row.get('volume', 0)) / 100000000 if '成交额' in row or 'volume' in row else 0  # 转换为亿元
-                }
-                
-                # 只添加有效的指数数据
-                if index_data['name'] and index_data['price'] > 0:
-                    all_indices.append(index_data)
+        if is_trading_time:
+            print(f"[所有指数] 交易时间 {current_time}，开始获取所有指数数据")
+            
+            # 使用新浪财经数据源获取所有指数
+            df = safe_akshare_call(ak.stock_zh_index_spot_sina, 'akshare_all_indices')
+            
+            if df is None or df.empty:
+                print("[所有指数] AkShare数据获取失败，尝试返回缓存数据")
+                return get_cached_all_indices_data()
+            
+            print(f"[所有指数] 获取到 {len(df)} 条指数数据")
+            
+            # 转换数据格式
+            all_indices = []
+            for _, row in df.iterrows():
+                try:
+                    index_data = {
+                        'name': row['名称'] if '名称' in row else row.get('name', ''),
+                        'code': row['代码'] if '代码' in row else row.get('code', ''),
+                        'price': float(row['最新价'] if '最新价' in row else row.get('price', 0)),
+                        'change': float(row['涨跌额'] if '涨跌额' in row else row.get('change', 0)),
+                        'change_percent': float(row['涨跌幅'] if '涨跌幅' in row else row.get('change_pct', 0)),
+                        'volume': float(row['成交额'] if '成交额' in row else row.get('volume', 0)) / 100000000 if '成交额' in row or 'volume' in row else 0  # 转换为亿元
+                    }
                     
-            except Exception as e:
-                print(f"[所有指数] 处理指数数据失败: {e}")
-                continue
-        
-        if len(all_indices) == 0:
-            print("[所有指数] 没有有效的指数数据，返回示例数据")
-            return get_sample_indices_data()
-        
-        print(f"[所有指数] 成功处理 {len(all_indices)} 条有效指数数据")
-        
-        return jsonify({
-            'success': True,
-            'data': all_indices,
-            'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'count': len(all_indices)
-        })
+                    # 只添加有效的指数数据
+                    if index_data['name'] and index_data['price'] > 0:
+                        all_indices.append(index_data)
+                        
+                except Exception as e:
+                    print(f"[所有指数] 处理指数数据失败: {e}")
+                    continue
+            
+            if len(all_indices) == 0:
+                print("[所有指数] 没有有效的指数数据，尝试返回缓存数据")
+                return get_cached_all_indices_data()
+            
+            print(f"[所有指数] 成功处理 {len(all_indices)} 条有效指数数据")
+            
+            # 保存到缓存
+            save_all_indices_cache(all_indices)
+            
+            return jsonify({
+                'success': True,
+                'data': all_indices,
+                'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'count': len(all_indices),
+                'is_trading_time': True,
+                'source': 'realtime'
+            })
+        else:
+            print(f"[所有指数] 非交易时间 {current_time}，返回最后缓存的指数数据")
+            return get_cached_all_indices_data()
         
     except Exception as e:
         print(f"[所有指数] 获取所有指数数据异常: {e}")
-        return get_sample_indices_data()
+        return get_cached_all_indices_data()
 
 def get_sample_indices_data():
     """返回示例指数数据用于演示"""
@@ -2428,7 +2515,64 @@ def get_live_realtime_data(ts_code, stock_code):
     try:
         print(f"[实时数据] 获取{ts_code}的真实实时数据...")
         
-        # 获取股票基础数据
+        # 首先尝试从AkShare获取最新的实时数据
+        akshare_realtime_data = None
+        if AKSHARE_AVAILABLE:
+            try:
+                print(f"[实时数据] 尝试从AkShare获取{stock_code}的最新实时数据...")
+                # 调用AkShare接口获取实时数据，设置较短的超时时间
+                realtime_df = safe_akshare_call(
+                    ak.stock_zh_a_spot_em, 
+                    'live_realtime_data',
+                    max_retries=1,  # 减少重试次数
+                    retry_delay=0.2  # 减少重试延迟
+                )
+                
+                if realtime_df is not None and not realtime_df.empty:
+                    # 查找指定股票的数据
+                    stock_data_row = realtime_df[realtime_df['代码'] == stock_code]
+                    if not stock_data_row.empty:
+                        row = stock_data_row.iloc[0]
+                        akshare_realtime_data = {
+                            'name': str(row.get('名称', '')),
+                            'latest_price': float(row.get('最新价', 0)) if pd.notna(row.get('最新价')) else 0.0,
+                            'open': float(row.get('今开', 0)) if pd.notna(row.get('今开')) else 0.0,
+                            'high': float(row.get('最高', 0)) if pd.notna(row.get('最高')) else 0.0,
+                            'low': float(row.get('最低', 0)) if pd.notna(row.get('最低')) else 0.0,
+                            'pre_close': float(row.get('昨收', 0)) if pd.notna(row.get('昨收')) else 0.0,
+                            'volume': float(row.get('成交量', 0)) if pd.notna(row.get('成交量')) else 0.0,
+                            'amount': float(row.get('成交额', 0)) if pd.notna(row.get('成交额')) else 0.0,
+                            'turnover_rate': float(row.get('换手率', 0)) if pd.notna(row.get('换手率')) else 0.0,
+                            'volume_ratio': float(row.get('量比', 0)) if pd.notna(row.get('量比')) else 0.0,
+                            'pe_ratio': float(row.get('市盈率-动态', 0)) if pd.notna(row.get('市盈率-动态')) else 0.0,
+                            'market_cap': float(row.get('总市值', 0)) if pd.notna(row.get('总市值')) else 0.0,
+                            'data_source': 'akshare_live'
+                        }
+                        
+                        # 重新计算涨跌幅和涨跌额（基于昨收价格）
+                        latest_price = akshare_realtime_data['latest_price']
+                        pre_close = akshare_realtime_data['pre_close']
+                        
+                        if pre_close > 0:
+                            change_amount = latest_price - pre_close
+                            change_percent = (change_amount / pre_close) * 100
+                        else:
+                            change_amount = 0
+                            change_percent = 0
+                        
+                        akshare_realtime_data['change_amount'] = change_amount
+                        akshare_realtime_data['change_percent'] = change_percent
+                        
+                        print(f"[实时数据] 成功从AkShare获取{stock_code}实时数据: 最新价={latest_price}, 涨跌幅={change_percent:.2f}%")
+                    else:
+                        print(f"[实时数据] AkShare数据中未找到股票{stock_code}")
+                else:
+                    print(f"[实时数据] AkShare返回空数据")
+            except Exception as e:
+                print(f"[实时数据] AkShare获取失败，将使用Tushare数据: {e}")
+                akshare_realtime_data = None
+        
+        # 获取股票基础数据（用于K线、资金流向等）
         stock_detail_response = get_stock_data(ts_code)
         if hasattr(stock_detail_response, 'get_json'):
             stock_data = stock_detail_response.get_json()
@@ -2443,8 +2587,28 @@ def get_live_realtime_data(ts_code, stock_code):
         # 构造实时数据
         realtime_data = {}
         
-        if stock_data:
-            # 使用股票数据中的实时信息，应用精度清理
+        if akshare_realtime_data:
+            # 优先使用AkShare的实时数据
+            realtime_data['spot'] = {
+                'name': akshare_realtime_data['name'],
+                'latest_price': clean_float_precision(akshare_realtime_data['latest_price']),
+                'change_percent': clean_float_precision(akshare_realtime_data['change_percent']),
+                'change_amount': clean_float_precision(akshare_realtime_data['change_amount']),
+                'volume': clean_float_precision(akshare_realtime_data['volume']),
+                'amount': clean_float_precision(akshare_realtime_data['amount']),
+                'turnover_rate': clean_float_precision(akshare_realtime_data['turnover_rate']),
+                'volume_ratio': clean_float_precision(akshare_realtime_data['volume_ratio']),
+                'pe_ratio': akshare_realtime_data['pe_ratio'],
+                'market_cap': clean_float_precision(akshare_realtime_data['market_cap']),
+                'open': clean_float_precision(akshare_realtime_data['open']),
+                'high': clean_float_precision(akshare_realtime_data['high']),
+                'low': clean_float_precision(akshare_realtime_data['low']),
+                'pre_close': clean_float_precision(akshare_realtime_data['pre_close']),
+                'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'data_source': 'akshare_live_realtime'  # 标记数据来源
+            }
+        elif stock_data:
+            # 备用：使用股票数据中的信息
             realtime_data['spot'] = {
                 'name': stock_data.get('name', ''),
                 'latest_price': clean_float_precision(stock_data.get('latest_price', 0)),
@@ -2461,7 +2625,7 @@ def get_live_realtime_data(ts_code, stock_code):
                 'low': clean_float_precision(stock_data.get('low', 0)),
                 'pre_close': clean_float_precision(stock_data.get('pre_close', 0)),
                 'update_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'data_source': 'live_realtime'  # 标记数据来源
+                'data_source': 'tushare_fallback'  # 标记数据来源
             }
         
         # 添加K线数据
@@ -2479,8 +2643,8 @@ def get_live_realtime_data(ts_code, stock_code):
             realtime_data['money_flow'] = stock_data['moneyflow']
         elif stock_data.get('net_mf_amount') is not None:
             realtime_data['money_flow'] = {
-                'close_price': stock_data.get('latest_price', 0),
-                'change_percent': stock_data.get('pct_chg', 0),
+                'close_price': realtime_data['spot']['latest_price'],
+                'change_percent': realtime_data['spot']['change_percent'],
                 'main_net_inflow': stock_data.get('net_mf_amount', 0) * 10000
             }
         
@@ -2488,7 +2652,7 @@ def get_live_realtime_data(ts_code, stock_code):
         if stock_data.get('net_mf_amount') is not None:
             realtime_data['net_mf_amount'] = stock_data.get('net_mf_amount', 0)
         
-        print(f"[实时数据] 成功获取{ts_code}的实时数据")
+        print(f"[实时数据] 成功获取{ts_code}的实时数据，数据源: {realtime_data['spot']['data_source']}")
         return jsonify(realtime_data)
         
     except Exception as e:
