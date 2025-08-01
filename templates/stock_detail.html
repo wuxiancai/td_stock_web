@@ -315,6 +315,157 @@
             font-size: 14px;
         }
 
+        /* 资金流向数据样式 - 优化紧凑版 */
+        .moneyflow-section {
+            background: white;
+            border-radius: 6px;
+            padding: 0;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .moneyflow-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .moneyflow-refresh-btn {
+            padding: 4px 8px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s ease;
+        }
+
+        .moneyflow-refresh-btn:hover {
+            background: #218838;
+        }
+
+        .moneyflow-refresh-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .moneyflow-loading {
+            text-align: center;
+            padding: 15px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .moneyflow-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px 15px;
+            border: 1px solid #f5c6cb;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .moneyflow-grid {
+            padding: 12px;
+        }
+
+        .moneyflow-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+
+        .moneyflow-summary-item {
+            text-align: center;
+        }
+
+        .moneyflow-summary-label {
+            font-size: 11px;
+            color: #6c757d;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .moneyflow-summary-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .moneyflow-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .moneyflow-category {
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .moneyflow-category-title {
+            background: #f8f9fa;
+            padding: 8px 10px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .moneyflow-category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0;
+        }
+
+        .moneyflow-item {
+            padding: 8px 6px;
+            text-align: center;
+            border-right: 1px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef;
+            transition: background-color 0.2s ease;
+        }
+
+        .moneyflow-item:nth-child(2n) {
+            border-right: none;
+        }
+
+        .moneyflow-item:nth-last-child(-n+2) {
+            border-bottom: none;
+        }
+
+        .moneyflow-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .moneyflow-label {
+            font-size: 10px;
+            color: #6c757d;
+            margin-bottom: 3px;
+            line-height: 1.1;
+        }
+
+        .moneyflow-value {
+            font-size: 11px;
+            font-weight: 600;
+            color: #212529;
+            line-height: 1.1;
+        }
+
         /* 技术指标图表样式 */
         .indicators-charts-section {
             background: white;
@@ -582,6 +733,131 @@
                     <div class="indicator-item">
                         <div class="indicator-label">所属行业</div>
                         <div id="industry" class="indicator-value">电器仪表</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 资金流向数据部分 -->
+            <div class="moneyflow-section">
+                <div class="moneyflow-header">
+                    <span>资金流向</span>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span id="moneyflowTimestamp" style="font-size: 12px; color: #6c757d;">--</span>
+                        <button id="moneyflowRefreshBtn" class="moneyflow-refresh-btn" onclick="refreshMoneyflowData()">刷新</button>
+                    </div>
+                </div>
+                <div id="moneyflowContent">
+                    <div id="moneyflowLoading" class="moneyflow-loading" style="display: block;">
+                        正在加载资金流向数据...
+                    </div>
+                    <div id="moneyflowError" class="moneyflow-error" style="display: none;"></div>
+                    <div id="moneyflowGrid" class="moneyflow-grid" style="display: none;">
+                        <!-- 净流入汇总 -->
+                        <div class="moneyflow-summary">
+                            <div class="moneyflow-summary-item">
+                                <div class="moneyflow-summary-label">净流入量</div>
+                                <div id="mf_net_vol" class="moneyflow-summary-value">--</div>
+                            </div>
+                            <div class="moneyflow-summary-item">
+                                <div class="moneyflow-summary-label">净流入额</div>
+                                <div id="mf_net_amount" class="moneyflow-summary-value">--</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 详细资金流向 -->
+                        <div class="moneyflow-details">
+                            <!-- 小单 -->
+                            <div class="moneyflow-category">
+                                <div class="moneyflow-category-title">小单（<5万）</div>
+                                <div class="moneyflow-category-grid">
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">买入量</div>
+                                        <div id="mf_buy_sm_vol" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">买入额</div>
+                                        <div id="mf_buy_sm_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">卖出量</div>
+                                        <div id="mf_sell_sm_vol" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">卖出额</div>
+                                        <div id="mf_sell_sm_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 中单 -->
+                            <div class="moneyflow-category">
+                                <div class="moneyflow-category-title">中单（5-20万）</div>
+                                <div class="moneyflow-category-grid">
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">买入量</div>
+                                        <div id="mf_buy_md_vol" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">买入额</div>
+                                        <div id="mf_buy_md_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">卖出量</div>
+                                        <div id="mf_sell_md_vol" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">卖出额</div>
+                                        <div id="mf_sell_md_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 大单 -->
+                            <div class="moneyflow-category">
+                                <div class="moneyflow-category-title">大单（20-100万）</div>
+                                <div class="moneyflow-category-grid">
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">买入量</div>
+                                        <div id="mf_buy_lg_vol" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">买入额</div>
+                                        <div id="mf_buy_lg_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">卖出量</div>
+                                        <div id="mf_sell_lg_vol" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">卖出额</div>
+                                        <div id="mf_sell_lg_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 特大单 -->
+                            <div class="moneyflow-category">
+                                <div class="moneyflow-category-title">特大单（>100万）</div>
+                                <div class="moneyflow-category-grid">
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">买入量</div>
+                                        <div id="mf_buy_elg_vol" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">买入额</div>
+                                        <div id="mf_buy_elg_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">卖出量</div>
+                                        <div id="mf_sell_elg_vol" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">卖出额</div>
+                                        <div id="mf_sell_elg_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -882,6 +1158,9 @@
                 
                 displayStockData(dailyBasicResult, realtimeResult);
                 
+                // 加载资金流向数据
+                await loadMoneyflowData();
+                
                 // 加载实时交易数据
                 await loadRealtimeData();
                 
@@ -919,10 +1198,31 @@
                     throw new Error(errorMsg + detailMsg);
                 }
                 
+                // 检查是否是缓存数据，如果是缓存数据，尝试使用个股实时数据API作为备用
+                if (result.is_cached_data) {
+                    console.log('检测到缓存数据，尝试使用个股实时数据API获取最新数据...');
+                    try {
+                        await loadFallbackRealtimeData(result);
+                        return;
+                    } catch (fallbackError) {
+                        console.warn('个股实时数据API也失败，使用缓存数据:', fallbackError);
+                        // 继续使用缓存数据
+                    }
+                }
+                
                 displayRealtimeData(result.data, result);
                 
             } catch (error) {
                 console.error('实时交易数据加载失败:', error);
+                
+                // 尝试使用个股实时数据API作为备用
+                try {
+                    console.log('尝试使用个股实时数据API作为备用...');
+                    await loadFallbackRealtimeData();
+                    return;
+                } catch (fallbackError) {
+                    console.error('个股实时数据API也失败:', fallbackError);
+                }
                 
                 // 根据错误类型显示不同的错误信息
                 let errorMessage = '实时交易数据加载失败';
@@ -950,6 +1250,68 @@
                     showRealtimeLoading(false);
                 }
             }
+        }
+
+        // 使用个股实时数据API作为备用数据源
+        async function loadFallbackRealtimeData(originalResult = null) {
+            const realtimeResponse = await fetch(`/api/stock/${currentStockCode}/realtime`);
+            
+            if (!realtimeResponse.ok) {
+                throw new Error(`个股实时数据API HTTP ${realtimeResponse.status}: ${realtimeResponse.statusText}`);
+            }
+            
+            const realtimeResult = await realtimeResponse.json();
+            
+            if (!realtimeResult.success) {
+                throw new Error(realtimeResult.error || '获取个股实时数据失败');
+            }
+            
+            // 将个股实时数据转换为实时交易数据格式
+            const spotData = realtimeResult.spot;
+            if (!spotData) {
+                throw new Error('个股实时数据中缺少spot数据');
+            }
+            
+            const convertedData = [{
+                '序号': 1,
+                '代码': currentStockCode,
+                '名称': spotData.name || '',
+                '最新价': spotData.latest_price || 0,
+                '涨跌幅': spotData.change_percent || 0,
+                '涨跌额': spotData.change_amount || 0,
+                '成交量': spotData.volume || 0,
+                '成交额': spotData.amount || 0,
+                '振幅': 0, // 个股API中没有这个字段
+                '最高': spotData.high || 0,
+                '最低': spotData.low || 0,
+                '今开': spotData.open || 0,
+                '昨收': spotData.pre_close || 0,
+                '量比': spotData.volume_ratio || 0,
+                '换手率': spotData.turnover_rate || 0,
+                '市盈率-动态': spotData.pe_ratio || 0,
+                '市净率': 0, // 个股API中没有这个字段
+                '总市值': spotData.market_cap || 0,
+                '流通市值': 0, // 个股API中没有这个字段
+                '涨速': 0, // 个股API中没有这个字段
+                '5分钟涨跌': 0, // 个股API中没有这个字段
+                '60日涨跌幅': 0, // 个股API中没有这个字段
+                '年初至今涨跌幅': 0, // 个股API中没有这个字段
+                '连涨天数': 0, // 个股API中没有这个字段
+                '量价齐升天数': 0 // 个股API中没有这个字段
+            }];
+            
+            const fallbackResult = {
+                success: true,
+                data: convertedData,
+                total_records: 1,
+                fetch_time: new Date().toLocaleString('zh-CN'),
+                data_source: '个股实时数据API (备用)',
+                message: originalResult ? '全市场数据使用缓存，个股数据已更新' : '使用个股实时数据API',
+                is_cached_data: false
+            };
+            
+            console.log('成功使用个股实时数据API获取最新数据');
+            displayRealtimeData(fallbackResult.data, fallbackResult);
         }
 
         // 刷新实时交易数据
@@ -1056,6 +1418,54 @@
             
             // 使用实时交易数据更新每日指标
             updateDailyIndicatorsFromRealtimeData(data);
+            
+            // 更新红框中的股票价格（使用最新价）
+            updateStockPriceDisplay(stockData);
+        }
+
+        // 更新红框中的股票价格显示
+        function updateStockPriceDisplay(stockData) {
+            if (!stockData) return;
+            
+            // 更新最新价格
+            const stockPriceElement = document.getElementById('stockPrice');
+            if (stockData['最新价'] && stockPriceElement) {
+                const latestPrice = stockData['最新价'];
+                stockPriceElement.textContent = formatValue(latestPrice, 'currency');
+                console.log(`[红框价格] 更新最新价格: ${latestPrice}`);
+            }
+            
+            // 更新涨跌额和涨跌幅
+            const changeAmountElement = document.getElementById('changeAmount');
+            const changePctElement = document.getElementById('changePercent');
+            
+            if (stockData['涨跌额'] && changeAmountElement) {
+                const changeAmount = stockData['涨跌额'];
+                changeAmountElement.textContent = (changeAmount >= 0 ? '+' : '') + formatValue(changeAmount);
+                setValueColor(changeAmountElement, changeAmount);
+                console.log(`[红框价格] 更新涨跌额: ${changeAmount}`);
+            }
+            
+            if (stockData['涨跌幅'] && changePctElement) {
+                const changePct = stockData['涨跌幅'];
+                changePctElement.textContent = (changePct >= 0 ? '+' : '') + formatValue(changePct, 'percentage');
+                setValueColor(changePctElement, changePct);
+                console.log(`[红框价格] 更新涨跌幅: ${changePct}%`);
+            }
+            
+            // 更新今开价格
+            const openElement = document.getElementById('open');
+            if (stockData['今开'] && openElement) {
+                openElement.textContent = formatValue(stockData['今开'], 'currency');
+            }
+            
+            // 更新涨跌幅显示（页面右侧的涨跌幅）
+            const pctChgElement = document.getElementById('pctChg');
+            if (stockData['涨跌幅'] && pctChgElement) {
+                const changePct = stockData['涨跌幅'];
+                pctChgElement.textContent = formatValue(changePct, 'percentage');
+                setValueColor(pctChgElement, changePct);
+            }
         }
 
         // 格式化实时数据值
@@ -1170,6 +1580,203 @@
             } else {
                 document.getElementById('realtimeTimestamp').textContent = `更新时间: ${timestamp}`;
             }
+        }
+
+        // 加载资金流向数据
+        async function loadMoneyflowData(showLoading = true) {
+            try {
+                if (showLoading) {
+                    showMoneyflowLoading(true);
+                }
+                
+                const response = await fetch(`/api/stock/${currentStockCode}/moneyflow`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || '获取资金流向数据失败');
+                }
+                
+                displayMoneyflowData(result.data, result);
+                
+            } catch (error) {
+                console.error('资金流向数据加载失败:', error);
+                
+                let errorMessage = '资金流向数据加载失败';
+                if (error.message.includes('HTTP')) {
+                    errorMessage = `服务器错误: ${error.message}`;
+                } else {
+                    errorMessage = error.message || '未知错误，请稍后重试';
+                }
+                
+                if (showLoading) {
+                    showMoneyflowError(errorMessage);
+                }
+            } finally {
+                if (showLoading) {
+                    showMoneyflowLoading(false);
+                }
+            }
+        }
+
+        // 刷新资金流向数据
+        async function refreshMoneyflowData() {
+            const refreshBtn = document.getElementById('moneyflowRefreshBtn');
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = '刷新中...';
+            
+            try {
+                await loadMoneyflowData();
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '刷新';
+            }
+        }
+
+        // 显示资金流向数据
+        function displayMoneyflowData(data, result = null) {
+            if (!data || data.length === 0) {
+                showMoneyflowError('暂无资金流向数据');
+                return;
+            }
+
+            // 获取最新的资金流向数据（通常是第一条）
+            const moneyflowData = data[0];
+
+            // 显示净流入汇总
+            document.getElementById('mf_net_vol').textContent = formatMoneyflowValue(moneyflowData.net_mf_vol, 'volume');
+            document.getElementById('mf_net_amount').textContent = formatMoneyflowValue(moneyflowData.net_mf_amount, 'amount');
+            
+            // 设置净流入额的颜色
+            const netAmountElement = document.getElementById('mf_net_amount');
+            setMoneyflowValueColor(netAmountElement, moneyflowData.net_mf_amount);
+
+            // 显示详细资金流向数据
+            const fields = [
+                // 小单
+                { id: 'mf_buy_sm_vol', value: moneyflowData.buy_sm_vol, type: 'volume' },
+                { id: 'mf_buy_sm_amount', value: moneyflowData.buy_sm_amount, type: 'amount' },
+                { id: 'mf_sell_sm_vol', value: moneyflowData.sell_sm_vol, type: 'volume' },
+                { id: 'mf_sell_sm_amount', value: moneyflowData.sell_sm_amount, type: 'amount' },
+                // 中单
+                { id: 'mf_buy_md_vol', value: moneyflowData.buy_md_vol, type: 'volume' },
+                { id: 'mf_buy_md_amount', value: moneyflowData.buy_md_amount, type: 'amount' },
+                { id: 'mf_sell_md_vol', value: moneyflowData.sell_md_vol, type: 'volume' },
+                { id: 'mf_sell_md_amount', value: moneyflowData.sell_md_amount, type: 'amount' },
+                // 大单
+                { id: 'mf_buy_lg_vol', value: moneyflowData.buy_lg_vol, type: 'volume' },
+                { id: 'mf_buy_lg_amount', value: moneyflowData.buy_lg_amount, type: 'amount' },
+                { id: 'mf_sell_lg_vol', value: moneyflowData.sell_lg_vol, type: 'volume' },
+                { id: 'mf_sell_lg_amount', value: moneyflowData.sell_lg_amount, type: 'amount' },
+                // 特大单
+                { id: 'mf_buy_elg_vol', value: moneyflowData.buy_elg_vol, type: 'volume' },
+                { id: 'mf_buy_elg_amount', value: moneyflowData.buy_elg_amount, type: 'amount' },
+                { id: 'mf_sell_elg_vol', value: moneyflowData.sell_elg_vol, type: 'volume' },
+                { id: 'mf_sell_elg_amount', value: moneyflowData.sell_elg_amount, type: 'amount' }
+            ];
+
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                if (element) {
+                    element.textContent = formatMoneyflowValue(field.value, field.type);
+                }
+            });
+
+            // 显示数据网格
+            document.getElementById('moneyflowGrid').style.display = 'block';
+            document.getElementById('moneyflowError').style.display = 'none';
+            
+            // 更新时间戳
+            updateMoneyflowTimestamp(result);
+        }
+
+        // 格式化资金流向数值
+        function formatMoneyflowValue(value, type = 'number') {
+            if (value === null || value === undefined || value === '' || value === 0) {
+                return '--';
+            }
+            
+            const num = parseFloat(value);
+            if (isNaN(num)) return value;
+            
+            switch (type) {
+                case 'volume':
+                    if (Math.abs(num) >= 100000000) {
+                        return `${(num / 100000000).toFixed(2)}亿手`;
+                    } else if (Math.abs(num) >= 10000) {
+                        return `${(num / 10000).toFixed(2)}万手`;
+                    }
+                    return `${num.toFixed(0)}手`;
+                case 'amount':
+                    if (Math.abs(num) >= 100000000) {
+                        return `${(num / 100000000).toFixed(2)}亿元`;
+                    } else if (Math.abs(num) >= 10000) {
+                        return `${(num / 10000).toFixed(2)}万元`;
+                    }
+                    return `${num.toFixed(2)}元`;
+                case 'number':
+                default:
+                    return num.toFixed(2);
+            }
+        }
+
+        // 设置资金流向数值颜色
+        function setMoneyflowValueColor(element, value) {
+            const numValue = parseFloat(value);
+            if (!isNaN(numValue)) {
+                element.classList.remove('positive', 'negative', 'neutral');
+                if (numValue > 0) {
+                    element.classList.add('positive');
+                    element.style.color = '#ff4444'; // 红色，表示净流入
+                } else if (numValue < 0) {
+                    element.classList.add('negative');
+                    element.style.color = '#00aa00'; // 绿色，表示净流出
+                } else {
+                    element.classList.add('neutral');
+                    element.style.color = '#666'; // 灰色，表示平衡
+                }
+            } else {
+                element.style.color = '#333'; // 默认颜色
+            }
+        }
+
+        // 显示资金流向加载状态
+        function showMoneyflowLoading(show) {
+            document.getElementById('moneyflowLoading').style.display = show ? 'block' : 'none';
+            document.getElementById('moneyflowGrid').style.display = show ? 'none' : 'block';
+            document.getElementById('moneyflowError').style.display = 'none';
+        }
+
+        // 显示资金流向错误
+        function showMoneyflowError(message) {
+            document.getElementById('moneyflowError').textContent = message;
+            document.getElementById('moneyflowError').style.display = 'block';
+            document.getElementById('moneyflowLoading').style.display = 'none';
+            document.getElementById('moneyflowGrid').style.display = 'none';
+        }
+
+        // 更新资金流向时间戳
+        function updateMoneyflowTimestamp(result = null) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            const timestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            
+            let displayText = `更新时间: ${timestamp}`;
+            if (result && result.stock_info && result.stock_info.trade_date) {
+                displayText = `交易日期: ${result.stock_info.trade_date} | ${displayText}`;
+            }
+            
+            document.getElementById('moneyflowTimestamp').textContent = displayText;
         }
 
         // 加载K线数据
@@ -2261,6 +2868,7 @@
             const allPrices = [];
             const allVolumes = [];
             const allVwaps = [];
+            const allAvgPrices = [];  // 新增：均价线数据
             const timeLabels = [];
             
             // 生成完整的时间标签
@@ -2305,11 +2913,13 @@
                     const turnover = (dataItem.volume * dataItem.price) / 10000;
                     allVolumes.push(turnover);
                     allVwaps.push(dataItem.vwap);
+                    allAvgPrices.push(dataItem.avg_price || dataItem.price);  // 新增：均价线数据
                 } else {
                     // 没有数据的时间点（下午未开始交易）
                     allPrices.push(null);
                     allVolumes.push(0);
                     allVwaps.push(null);
+                    allAvgPrices.push(null);  // 新增：均价线数据
                 }
             }
 
@@ -2365,6 +2975,22 @@
                 },
                 connectgaps: false, // 不连接null值
                 hovertemplate: '<b>VWAP均价</b><br>时间: %{text}<br>价格: ¥%{y:.2f}<extra></extra>',
+                text: timeLabels
+            };
+
+            // 新增：黄色均价线
+            const avgPriceTrace = {
+                x: allTimes,
+                y: allAvgPrices,
+                type: 'scatter',
+                mode: 'lines',
+                name: '均价线',
+                line: {
+                    color: '#FFD700',  // 黄色
+                    width: 2
+                },
+                connectgaps: false, // 不连接null值
+                hovertemplate: '<b>均价线</b><br>时间: %{text}<br>价格: ¥%{y:.2f}<extra></extra>',
                 text: timeLabels
             };
 
@@ -2430,7 +3056,7 @@
             };
 
             // 绘制分时图
-            Plotly.newPlot('intradayChart', [priceTrace, vwapTrace], priceLayout, config);
+            Plotly.newPlot('intradayChart', [priceTrace, vwapTrace, avgPriceTrace], priceLayout, config);
 
             // 计算成交额的显示范围
             const validVolumes = allVolumes.filter(vol => vol > 0);

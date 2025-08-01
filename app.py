@@ -3089,19 +3089,15 @@ def get_realtime_trading_data():
                 open_price = float(row.get('今开', 0)) if pd.notna(row.get('今开')) else 0.0
                 yesterday_close = float(row.get('昨收', 0)) if pd.notna(row.get('昨收')) else 0.0
                 
-                # 重新计算涨跌幅和涨跌额（基于今开价格，而不是昨收价格）
-                if open_price > 0:
-                    # 正确的涨跌幅：(当前价格 - 今开价格) / 今开价格 * 100
-                    corrected_change_percent = ((latest_price - open_price) / open_price) * 100
-                    corrected_change_amount = latest_price - open_price
+                # 重新计算涨跌幅和涨跌额（基于昨收价格，这是标准的计算方式）
+                if yesterday_close > 0:
+                    # 正确的涨跌幅：(当前价格 - 昨收价格) / 昨收价格 * 100
+                    corrected_change_percent = ((latest_price - yesterday_close) / yesterday_close) * 100
+                    corrected_change_amount = latest_price - yesterday_close
                 else:
-                    # 如果今开价格为0，则使用昨收价格作为备选
-                    if yesterday_close > 0:
-                        corrected_change_percent = ((latest_price - yesterday_close) / yesterday_close) * 100
-                        corrected_change_amount = latest_price - yesterday_close
-                    else:
-                        corrected_change_percent = 0.0
-                        corrected_change_amount = 0.0
+                    # 如果昨收价格为0，则涨跌幅为0
+                    corrected_change_percent = 0.0
+                    corrected_change_amount = 0.0
                 
                 data_item = {
                     '序号': int(row.get('序号', 0)) if pd.notna(row.get('序号')) else 0,
@@ -3291,6 +3287,188 @@ def get_stock_daily_basic(stock_code):
     except Exception as e:
         print(f"[每日指标] 获取失败: {e}")
         return jsonify({'error': f'获取每日指标数据失败: {str(e)}'}), 500
+
+
+@app.route('/api/stock/<stock_code>/moneyflow')
+def get_stock_moneyflow(stock_code):
+    """
+    获取股票资金流向数据
+    严格按照Tushare官方文档 moneyflow 接口的输出参数
+    
+    Args:
+        stock_code: 股票代码，如 000001 或 000001.SZ
+        
+    Query Parameters:
+        trade_date: 交易日期 YYYYMMDD，默认为最近交易日
+        days: 获取天数，默认1天
+        
+    Returns:
+        JSON: 资金流向数据，包含Tushare官方文档中的所有输出参数
+    """
+    try:
+        # 确保股票代码格式正确
+        if len(stock_code) == 6:
+            if stock_code.startswith(('60', '68')):
+                ts_code = f"{stock_code}.SH"
+            elif stock_code.startswith(('43', '83', '87')):
+                ts_code = f"{stock_code}.BJ"
+            else:
+                ts_code = f"{stock_code}.SZ"
+        else:
+            ts_code = stock_code
+        
+        # 获取参数
+        trade_date = request.args.get('trade_date')
+        days = request.args.get('days', 1, type=int)
+        
+        print(f"[资金流向] 获取{ts_code}的资金流向数据，交易日期: {trade_date}, 天数: {days}")
+        
+        # 验证股票代码是否存在
+        basic_info = safe_tushare_call(pro.stock_basic, ts_code=ts_code)
+        if basic_info.empty:
+            return jsonify({'error': '股票代码不存在'}), 404
+        
+        stock_name = basic_info.iloc[0]['name']
+        
+        # 如果没有指定交易日期，使用最近的交易日
+        if not trade_date:
+            trade_date = get_latest_trading_day()
+        
+        # 首先尝试从缓存获取数据
+        cached_stock = get_stock_from_cache(ts_code)
+        cached_moneyflow = None
+        
+        if cached_stock:
+            # 检查是否有完整的资金流向数据字段
+            required_fields = ['buy_sm_amount', 'sell_sm_amount', 'buy_md_amount', 'sell_md_amount', 
+                             'buy_lg_amount', 'sell_lg_amount', 'buy_elg_amount', 'sell_elg_amount', 'net_mf_amount']
+            if all(field in cached_stock for field in required_fields):
+                cached_moneyflow = {
+                    'ts_code': ts_code,
+                    'trade_date': trade_date,
+                    'buy_sm_vol': cached_stock.get('buy_sm_vol', 0),
+                    'buy_sm_amount': cached_stock.get('buy_sm_amount', 0),
+                    'sell_sm_vol': cached_stock.get('sell_sm_vol', 0),
+                    'sell_sm_amount': cached_stock.get('sell_sm_amount', 0),
+                    'buy_md_vol': cached_stock.get('buy_md_vol', 0),
+                    'buy_md_amount': cached_stock.get('buy_md_amount', 0),
+                    'sell_md_vol': cached_stock.get('sell_md_vol', 0),
+                    'sell_md_amount': cached_stock.get('sell_md_amount', 0),
+                    'buy_lg_vol': cached_stock.get('buy_lg_vol', 0),
+                    'buy_lg_amount': cached_stock.get('buy_lg_amount', 0),
+                    'sell_lg_vol': cached_stock.get('sell_lg_vol', 0),
+                    'sell_lg_amount': cached_stock.get('sell_lg_amount', 0),
+                    'buy_elg_vol': cached_stock.get('buy_elg_vol', 0),
+                    'buy_elg_amount': cached_stock.get('buy_elg_amount', 0),
+                    'sell_elg_vol': cached_stock.get('sell_elg_vol', 0),
+                    'sell_elg_amount': cached_stock.get('sell_elg_amount', 0),
+                    'net_mf_vol': cached_stock.get('net_mf_vol', 0),
+                    'net_mf_amount': cached_stock.get('net_mf_amount', 0),
+                    'data_source': 'cache'
+                }
+                print(f"从缓存获取完整资金流向数据: 净流入{cached_moneyflow['net_mf_amount']}万元")
+        
+        # 如果缓存中没有完整的资金流向数据，则通过API获取
+        moneyflow_data = None
+        if cached_moneyflow is None:
+            try:
+                print(f"缓存中无完整资金流向数据，正在通过API获取{ts_code}的资金流向数据...")
+                
+                # 优先尝试moneyflow接口（需要2000积分）
+                if days == 1:
+                    moneyflow_data = safe_tushare_call(pro.moneyflow, ts_code=ts_code, trade_date=trade_date)
+                else:
+                    # 获取多天数据
+                    end_date = datetime.strptime(trade_date, '%Y%m%d')
+                    start_date = end_date - timedelta(days=days-1)
+                    moneyflow_data = safe_tushare_call(pro.moneyflow, 
+                                                     ts_code=ts_code, 
+                                                     start_date=start_date.strftime('%Y%m%d'),
+                                                     end_date=trade_date)
+                
+                if moneyflow_data is None or moneyflow_data.empty:
+                    print(f"moneyflow接口无{ts_code}数据")
+                    moneyflow_data = None
+                else:
+                    print(f"成功从moneyflow获取{ts_code}的资金流向数据")
+                    
+            except Exception as e:
+                print(f"获取{ts_code}资金流向数据失败: {e}")
+                moneyflow_data = None
+        
+        # 构造返回数据
+        if cached_moneyflow is not None:
+            # 使用缓存中的完整资金流向数据
+            data_list = [cached_moneyflow]
+        elif moneyflow_data is not None and not moneyflow_data.empty:
+            # 使用API获取的数据
+            data_list = []
+            for _, row in moneyflow_data.iterrows():
+                data_list.append({
+                    'ts_code': row['ts_code'],
+                    'trade_date': row['trade_date'],
+                    'buy_sm_vol': int(row['buy_sm_vol']) if pd.notna(row['buy_sm_vol']) else 0,
+                    'buy_sm_amount': float(row['buy_sm_amount']) if pd.notna(row['buy_sm_amount']) else 0.0,
+                    'sell_sm_vol': int(row['sell_sm_vol']) if pd.notna(row['sell_sm_vol']) else 0,
+                    'sell_sm_amount': float(row['sell_sm_amount']) if pd.notna(row['sell_sm_amount']) else 0.0,
+                    'buy_md_vol': int(row['buy_md_vol']) if pd.notna(row['buy_md_vol']) else 0,
+                    'buy_md_amount': float(row['buy_md_amount']) if pd.notna(row['buy_md_amount']) else 0.0,
+                    'sell_md_vol': int(row['sell_md_vol']) if pd.notna(row['sell_md_vol']) else 0,
+                    'sell_md_amount': float(row['sell_md_amount']) if pd.notna(row['sell_md_amount']) else 0.0,
+                    'buy_lg_vol': int(row['buy_lg_vol']) if pd.notna(row['buy_lg_vol']) else 0,
+                    'buy_lg_amount': float(row['buy_lg_amount']) if pd.notna(row['buy_lg_amount']) else 0.0,
+                    'sell_lg_vol': int(row['sell_lg_vol']) if pd.notna(row['sell_lg_vol']) else 0,
+                    'sell_lg_amount': float(row['sell_lg_amount']) if pd.notna(row['sell_lg_amount']) else 0.0,
+                    'buy_elg_vol': int(row['buy_elg_vol']) if pd.notna(row['buy_elg_vol']) else 0,
+                    'buy_elg_amount': float(row['buy_elg_amount']) if pd.notna(row['buy_elg_amount']) else 0.0,
+                    'sell_elg_vol': int(row['sell_elg_vol']) if pd.notna(row['sell_elg_vol']) else 0,
+                    'sell_elg_amount': float(row['sell_elg_amount']) if pd.notna(row['sell_elg_amount']) else 0.0,
+                    'net_mf_vol': int(row['net_mf_vol']) if pd.notna(row['net_mf_vol']) else 0,
+                    'net_mf_amount': float(row['net_mf_amount']) if pd.notna(row['net_mf_amount']) else 0.0,
+                    'data_source': 'api'
+                })
+        else:
+            # 没有数据，返回空数据结构
+            data_list = [{
+                'ts_code': ts_code,
+                'trade_date': trade_date,
+                'buy_sm_vol': 0,
+                'buy_sm_amount': 0.0,
+                'sell_sm_vol': 0,
+                'sell_sm_amount': 0.0,
+                'buy_md_vol': 0,
+                'buy_md_amount': 0.0,
+                'sell_md_vol': 0,
+                'sell_md_amount': 0.0,
+                'buy_lg_vol': 0,
+                'buy_lg_amount': 0.0,
+                'sell_lg_vol': 0,
+                'sell_lg_amount': 0.0,
+                'buy_elg_vol': 0,
+                'buy_elg_amount': 0.0,
+                'sell_elg_vol': 0,
+                'sell_elg_amount': 0.0,
+                'net_mf_vol': 0,
+                'net_mf_amount': 0.0,
+                'data_source': 'empty'
+            }]
+        
+        print(f"[资金流向] 成功获取{ts_code}({stock_name})在{trade_date}的资金流向数据")
+        
+        return jsonify({
+            'success': True,
+            'data': data_list,
+            'stock_info': {
+                'ts_code': ts_code,
+                'name': stock_name,
+                'trade_date': trade_date
+            },
+            'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        print(f"[资金流向] 获取失败: {e}")
+        return jsonify({'error': f'获取资金流向数据失败: {str(e)}'}), 500
 
 
 @app.route('/api/stock/<stock_code>/daily_history')
@@ -4159,6 +4337,7 @@ def auto_filter_stocks():
             return
         
         # 筛选红 3-6 股票
+        # 注意：由于量比数据可能不准确或为0，调整筛选条件
         red_filtered_stocks = []
         for stock in all_stocks:
             try:
@@ -4166,8 +4345,14 @@ def auto_filter_stocks():
                 volume_ratio = float(stock.get('volume_ratio', 0))
                 nine_turn_up = int(stock.get('nine_turn_up', 0))
                 
-                if (turnover_rate > 2 and 
-                    volume_ratio > 1 and 
+                # 筛选条件：换手率>1，九转买入红色3-6
+                # 如果量比数据可用且>0，则加入量比条件
+                volume_condition = True
+                if volume_ratio > 0:
+                    volume_condition = volume_ratio > 0.8  # 降低量比要求
+                
+                if (turnover_rate > 1 and  # 降低换手率要求
+                    volume_condition and 
                     3 <= nine_turn_up <= 6):
                     
                     stock_copy = stock.copy()
@@ -5443,7 +5628,8 @@ def get_red_filter_stocks():
                 print(f"获取市场 {market} 数据失败: {e}")
                 continue
         
-        # 筛选符合条件的股票：换手率>2，量比>1，九转买入红色3-6
+        # 筛选符合条件的股票：换手率>1，九转买入红色3-6
+        # 注意：由于量比数据可能不准确或为0，暂时移除量比条件
         filtered_stocks = []
         for stock in all_stocks:
             try:
@@ -5451,9 +5637,14 @@ def get_red_filter_stocks():
                 volume_ratio = float(stock.get('volume_ratio', 0))
                 nine_turn_up = int(stock.get('nine_turn_up', 0))
                 
-                # 筛选条件：换手率>2，量比>1，九转买入红色3-6
-                if (turnover_rate > 2 and 
-                    volume_ratio > 1 and 
+                # 筛选条件：换手率>1，九转买入红色3-6
+                # 如果量比数据可用且>0，则加入量比条件
+                volume_condition = True
+                if volume_ratio > 0:
+                    volume_condition = volume_ratio > 0.8  # 降低量比要求
+                
+                if (turnover_rate > 1 and  # 降低换手率要求
+                    volume_condition and 
                     3 <= nine_turn_up <= 6):
                     
                     # 添加筛选日期
@@ -5618,6 +5809,8 @@ def get_stock_intraday_data(stock_code):
         result_data = []
         cumulative_volume = 0
         cumulative_amount = 0
+        total_turnover = 0  # 总成交金额（用于均价线计算）
+        total_shares = 0    # 总成交股数（用于均价线计算）
         
         for _, row in intraday_data.iterrows():
             try:
@@ -5650,8 +5843,8 @@ def get_stock_intraday_data(stock_code):
                 
                 # 获取价格和成交量数据
                 close_price = float(row.get('收盘', 0))
-                volume = float(row.get('成交量', 0))
-                amount = float(row.get('成交额', 0))
+                volume = float(row.get('成交量', 0))  # 成交量（手）
+                amount = float(row.get('成交额', 0))  # 成交额（元）
                 
                 if close_price <= 0:
                     continue
@@ -5663,6 +5856,18 @@ def get_stock_intraday_data(stock_code):
                 # 计算VWAP（成交量加权平均价格）
                 vwap = cumulative_amount / cumulative_volume if cumulative_volume > 0 else close_price
                 
+                # 计算均价线数据
+                # 成交股数 = 成交量（手） × 100（每手100股）
+                shares_traded = volume * 100
+                turnover_amount = amount  # 成交金额
+                
+                # 累计数据用于均价线计算
+                total_shares += shares_traded
+                total_turnover += turnover_amount
+                
+                # 均价线 = 总成交金额 ÷ 总成交股数
+                avg_price = total_turnover / total_shares if total_shares > 0 else close_price
+                
                 data_point = {
                     'time': time_str,
                     'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S') if hasattr(timestamp, 'strftime') else str(timestamp),
@@ -5673,8 +5878,11 @@ def get_stock_intraday_data(stock_code):
                     'volume': volume,
                     'amount': amount,
                     'vwap': vwap,
+                    'avg_price': avg_price,  # 新增：均价线数据
                     'cumulative_volume': cumulative_volume,
-                    'cumulative_amount': cumulative_amount
+                    'cumulative_amount': cumulative_amount,
+                    'total_shares': total_shares,
+                    'total_turnover': total_turnover
                 }
                 result_data.append(data_point)
                 
