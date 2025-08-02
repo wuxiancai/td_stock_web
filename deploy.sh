@@ -31,7 +31,7 @@ log_error() {
 
 # 默认配置
 ENVIRONMENT="development"
-PROJECT_DIR="/opt/td_stock_web"
+PROJECT_DIR="$HOME/td_stock_web"
 SERVICE_NAME="td-stock"
 PYTHON_VERSION="3.9"
 BACKUP_DIR="/var/backups/td_stock"
