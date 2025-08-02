@@ -162,7 +162,7 @@
             background: white;
             border-radius: 8px;
             padding: 0;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
@@ -182,7 +182,7 @@
         }
 
         .indicator-item {
-            padding: 15px 10px;
+            padding: 8px 10px;
             text-align: center;
             border-right: 1px solid #e9ecef;
             transition: background-color 0.2s ease;
@@ -675,10 +675,29 @@
                         <!-- 左侧留空 -->
                     </div>
                     <div class="stock-actions-right">
-                        <button id="addToWatchlistBtn" class="action-btn btn-add" onclick="addToWatchlist()">
-                            <span>+</span>
-                            <span>加入自选</span>
-                        </button>
+                        <select id="watchlistSelect" onchange="addToWatchlistWithPriority(this.value)" style="
+                            background: linear-gradient(45deg, #ffc107, #fd7e14);
+                            color: #333;
+                            border: none;
+                            padding: 8px 15px;
+                            border-radius: 20px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            font-weight: bold;
+                            transition: all 0.3s ease;
+                            appearance: none;
+                            -webkit-appearance: none;
+                            -moz-appearance: none;
+                            min-width: 120px;
+                            margin-right: 10px;
+                        ">
+                            <option value="" disabled selected>⭐ 加入自选</option>
+                            <option value="purple">🟣 立即买入</option>
+                            <option value="red">🔴 重点关注</option>
+                            <option value="green">🟢 观察中</option>
+                            <option value="holding">🟠 持仓中</option>
+                            <option value="sold">⚫ 已卖出</option>
+                        </select>
                         <button id="refreshDataBtn" class="action-btn btn-refresh" onclick="refreshAllData()">
                             <span>🔄</span>
                             <span>刷新数据</span>
@@ -692,7 +711,6 @@
             </div>
 
             <div class="indicators-section">
-                <div class="indicators-header">每日指标</div>
                 <div class="indicators-grid">
                     <!-- 基础价格指标 -->
                     <div class="indicator-item">
@@ -2047,6 +2065,26 @@
                 }
             }
 
+            // 添加EMA15均线
+            const ema15Data = displayData.map(item => item.ema15);
+            const hasValidEma15Data = ema15Data.some(val => val !== null && val !== undefined);
+            
+            if (hasValidEma15Data) {
+                traces.push({
+                    x: dates,
+                    y: ema15Data,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'EMA15',
+                    line: {
+                        color: '#000000',
+                        width: 2
+                    },
+                    hovertemplate: '<b>📊 EMA15</b><br>📅 日期: %{x}<br>💰 价格: %{y:.2f}元<extra></extra>',
+                    showlegend: false
+                });
+            }
+
             // 添加BOLL指标
             const showBOLLElement = document.getElementById('showBOLL');
             const showBOLL = showBOLLElement ? showBOLLElement.checked : false;
@@ -2447,7 +2485,7 @@
         }
 
         // 技术指标相关函数
-        let indicatorData = null;
+        window.indicatorData = null;
 
         // 测试加载技术指标数据（调试用）
         function testLoadIndicators() {
@@ -2474,8 +2512,8 @@
                     throw new Error(result.message || result.error || '获取技术指标数据失败');
                 }
                 
-                indicatorData = result.data;
-                console.log('技术指标数据:', indicatorData);
+                window.indicatorData = result.data;
+                console.log('技术指标数据:', window.indicatorData);
                 
                 // 绘制所有技术指标
                 drawAllIndicatorCharts();
@@ -2492,15 +2530,15 @@
         // 绘制所有技术指标图表
         function drawAllIndicatorCharts() {
             console.log('开始绘制技术指标图表');
-            console.log('indicatorData:', indicatorData);
+            console.log('indicatorData:', window.indicatorData);
             
-            if (!indicatorData || !indicatorData.kline_data) {
+            if (!window.indicatorData || !window.indicatorData.kline_data) {
                 console.error('技术指标数据为空或缺少kline_data');
                 showIndicatorError('技术指标数据为空');
                 return;
             }
             
-            let klineData = indicatorData.kline_data;
+            let klineData = window.indicatorData.kline_data;
             console.log('原始K线数据长度:', klineData.length);
             
             // 应用与K线图相同的显示范围过滤
@@ -2907,7 +2945,14 @@
                     throw new Error(result.error || '获取分时图数据失败');
                 }
                 
-                displayIntradayChart(result.data);
+                // 检查是否为模拟数据
+                if (result.is_simulated) {
+                    console.log('显示模拟分时数据:', result.message);
+                    // 显示模拟数据提示
+                    showIntradaySimulatedNotice(result.message);
+                }
+                
+                displayIntradayChart(result.data, result.is_simulated);
                 
             } catch (error) {
                 console.error('分时图数据加载失败:', error);
@@ -2941,10 +2986,15 @@
         }
 
         // 显示分时图
-        function displayIntradayChart(data) {
+        function displayIntradayChart(data, isSimulated = false) {
             if (!data || data.length === 0) {
                 showIntradayError('暂无分时图数据');
                 return;
+            }
+
+            // 如果不是模拟数据，隐藏模拟数据提示
+            if (!isSimulated) {
+                hideIntradaySimulatedNotice();
             }
 
             console.log('分时图数据长度:', data.length);
@@ -3239,6 +3289,47 @@
             document.getElementById('intradayError').textContent = message;
             document.getElementById('intradayError').style.display = 'block';
             document.getElementById('intradayChartContainer').style.display = 'none';
+        }
+
+        // 显示分时图模拟数据提示
+        function showIntradaySimulatedNotice(message) {
+            // 创建或更新模拟数据提示元素
+            let noticeElement = document.getElementById('intradaySimulatedNotice');
+            if (!noticeElement) {
+                noticeElement = document.createElement('div');
+                noticeElement.id = 'intradaySimulatedNotice';
+                noticeElement.style.cssText = `
+                    background-color: #fff3cd;
+                    border: 1px solid #ffeaa7;
+                    color: #856404;
+                    padding: 8px 12px;
+                    margin-bottom: 10px;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    display: flex;
+                    align-items: center;
+                `;
+                noticeElement.innerHTML = `
+                    <i class="fas fa-info-circle" style="margin-right: 8px; color: #f39c12;"></i>
+                    <span id="intradaySimulatedNoticeText"></span>
+                `;
+                
+                // 插入到分时图容器前面
+                const intradaySection = document.querySelector('.chart-section h3').parentNode;
+                const chartContainer = document.getElementById('intradayChartContainer');
+                intradaySection.insertBefore(noticeElement, chartContainer);
+            }
+            
+            document.getElementById('intradaySimulatedNoticeText').textContent = message;
+            noticeElement.style.display = 'flex';
+        }
+
+        // 隐藏分时图模拟数据提示
+        function hideIntradaySimulatedNotice() {
+            const noticeElement = document.getElementById('intradaySimulatedNotice');
+            if (noticeElement) {
+                noticeElement.style.display = 'none';
+            }
         }
 
         // 更新分时图时间戳
@@ -3649,41 +3740,92 @@
         
         // 检查股票是否在自选列表中
         function checkWatchlistStatus() {
+            updateWatchlistSelectStatus();
+        }
+        
+        // 更新自选股下拉菜单状态
+        function updateWatchlistSelectStatus() {
             const stockCode = getStockCodeFromUrl();
-            if (!stockCode) return;
+            if (!stockCode) {
+                console.log('无法获取股票代码');
+                return;
+            }
             
             // 构造ts_code（6位股票代码 + 交易所后缀）
             const tsCode = stockCode.startsWith('6') ? `${stockCode}.SH` : `${stockCode}.SZ`;
+            console.log('检查自选股状态，股票代码:', stockCode, 'ts_code:', tsCode);
             
             // 从后端API检查自选股状态
-            fetch('/api/watchlist/check', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    ts_code: tsCode
-                })
+            const apiUrl = `/api/watchlist/check?ts_code=${encodeURIComponent(tsCode)}`;
+            console.log('请求API URL:', apiUrl);
+            
+            fetch(apiUrl, {
+                method: 'GET'
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('API响应状态:', response.status, response.statusText);
+                console.log('响应头:', response.headers);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text().then(text => {
+                    console.log('API响应原始文本:', text);
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.error('JSON解析失败:', e);
+                        console.error('响应文本:', text);
+                        throw new Error('响应不是有效的JSON格式');
+                    }
+                });
+            })
             .then(data => {
-                const addBtn = document.getElementById('addToWatchlistBtn');
+                console.log('API响应数据:', data);
+                const selectElement = document.getElementById('watchlistSelect');
                 const removeBtn = document.getElementById('removeFromWatchlistBtn');
                 
-                // 所有按钮都显示
-                if (addBtn) addBtn.style.display = 'flex';
-                if (removeBtn) removeBtn.style.display = 'flex';
-                
-                // 根据是否在自选列表中更新按钮文本和样式
-                if (data.in_watchlist) {
-                    if (addBtn) {
-                        addBtn.innerHTML = '<span>✓</span><span>已加入自选（重点关注）</span>';
-                        addBtn.className = 'action-btn btn-added';
-                    }
-                } else {
-                    if (addBtn) {
-                        addBtn.innerHTML = '<span>+</span><span>加入自选</span>';
-                        addBtn.className = 'action-btn btn-add';
+                if (selectElement && removeBtn) {
+                    if (data.in_watchlist && data.priority) {
+                        // 已在自选股中，设置下拉菜单的选中值和样式
+                        selectElement.value = data.priority;
+                        
+                        // 根据优先级设置背景色
+                        switch (data.priority) {
+                            case 'purple':
+                                selectElement.style.background = 'linear-gradient(45deg, #8e44ad, #9b59b6)';
+                                selectElement.style.color = 'white';
+                                break;
+                            case 'red':
+                                selectElement.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+                                selectElement.style.color = 'white';
+                                break;
+                            case 'green':
+                                selectElement.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+                                selectElement.style.color = 'white';
+                                break;
+                            case 'holding':
+                                selectElement.style.background = 'linear-gradient(45deg, #f39c12, #e67e22)';
+                                selectElement.style.color = 'white';
+                                break;
+                            case 'sold':
+                                selectElement.style.background = 'linear-gradient(45deg, #34495e, #2c3e50)';
+                                selectElement.style.color = 'white';
+                                break;
+                            default:
+                                selectElement.style.background = 'linear-gradient(45deg, #3498db, #2980b9)';
+                                selectElement.style.color = 'white';
+                        }
+                        
+                        // 显示删除按钮
+                        removeBtn.style.display = 'flex';
+                    } else {
+                        // 未在自选股中，恢复默认样式
+                        selectElement.value = '';
+                        selectElement.style.background = 'linear-gradient(45deg, #ffc107, #fd7e14)';
+                        selectElement.style.color = '#333';
+                        
+                        // 隐藏删除按钮
+                        removeBtn.style.display = 'none';
                     }
                 }
                 
@@ -3707,23 +3849,22 @@
                 const watchlist = JSON.parse(localStorage.getItem('stockWatchlist') || '[]');
                 const isInWatchlist = watchlist.includes(stockCode);
                 
-                const addBtn = document.getElementById('addToWatchlistBtn');
+                const selectElement = document.getElementById('watchlistSelect');
                 const removeBtn = document.getElementById('removeFromWatchlistBtn');
                 
-                // 所有按钮都显示
-                if (addBtn) addBtn.style.display = 'flex';
-                if (removeBtn) removeBtn.style.display = 'flex';
-                
-                // 根据是否在自选列表中更新按钮文本和样式
-                if (isInWatchlist) {
-                    if (addBtn) {
-                        addBtn.innerHTML = '<span>✓</span><span>已加入自选（重点关注）</span>';
-                        addBtn.className = 'action-btn btn-added';
-                    }
-                } else {
-                    if (addBtn) {
-                        addBtn.innerHTML = '<span>+</span><span>加入自选</span>';
-                        addBtn.className = 'action-btn btn-add';
+                if (selectElement && removeBtn) {
+                    if (isInWatchlist) {
+                        // 已在自选股中，设置为默认绿色
+                        selectElement.value = 'green';
+                        selectElement.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+                        selectElement.style.color = 'white';
+                        removeBtn.style.display = 'flex';
+                    } else {
+                        // 未在自选股中，恢复默认样式
+                        selectElement.value = '';
+                        selectElement.style.background = 'linear-gradient(45deg, #ffc107, #fd7e14)';
+                        selectElement.style.color = '#333';
+                        removeBtn.style.display = 'none';
                     }
                 }
             });
@@ -3771,10 +3912,11 @@
                     stockInfo.total_mv = parseFloat(window.stockData.total_mv) || 0;
                 }
                 
-                // 从技术指标获取九转序列数据
-                if (window.indicatorData) {
-                    stockInfo.nine_turn_up = parseInt(window.indicatorData.nine_turn_up) || 0;
-                    stockInfo.nine_turn_down = parseInt(window.indicatorData.nine_turn_down) || 0;
+                // 从九转数据获取最新的九转序列数据
+                if (nineTurnData && nineTurnData.length > 0) {
+                    const latestNineTurn = nineTurnData[nineTurnData.length - 1];
+                    stockInfo.nine_turn_up = parseInt(latestNineTurn.sell_signal) || 0;    // 红色：卖出信号
+                    stockInfo.nine_turn_down = parseInt(latestNineTurn.buy_signal) || 0;   // 绿色：买入信号
                 }
                 
             } catch (error) {
@@ -3785,11 +3927,40 @@
         }
 
         // 添加到自选
-        function addToWatchlist() {
+        // 加载九转数据
+        async function loadNineTurnData() {
+            try {
+                const response = await fetch(`/api/stock/${currentStockCode}/nine_turn?days=200&freq=daily`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    nineTurnData = result.data;
+                    console.log(`[九转数据] 成功获取${nineTurnData.length}条数据`);
+                } else {
+                    nineTurnData = [];
+                    console.log('[九转数据] 暂无数据或获取失败');
+                }
+            } catch (error) {
+                console.error('加载九转数据失败:', error);
+                nineTurnData = [];
+            }
+        }
+
+        async function addToWatchlist() {
             const stockCode = getStockCodeFromUrl();
             if (!stockCode) {
                 alert('无法获取股票代码');
                 return;
+            }
+            
+            // 确保九转数据已加载
+            if (!nineTurnData || nineTurnData.length === 0) {
+                console.log('九转数据未加载，先加载九转数据');
+                try {
+                    await loadNineTurnData();
+                } catch (error) {
+                    console.error('加载九转数据失败:', error);
+                }
             }
             
             // 获取当前股票信息
@@ -3797,6 +3968,21 @@
             
             // 构造ts_code（6位股票代码 + 交易所后缀）
             const tsCode = stockCode.startsWith('6') ? `${stockCode}.SH` : `${stockCode}.SZ`;
+            
+            // 生成自动备注：加入日期 + 九转数字
+            const now = new Date();
+            const day = now.getDate();
+            const nineUp = stockInfo.nine_turn_up || 0;
+            const nineDown = stockInfo.nine_turn_down || 0;
+            let autoNote = `${day}日`;
+            if (nineUp > 0) {
+                autoNote += ` 红${nineUp}`;
+            }
+            if (nineDown > 0) {
+                autoNote += ` 绿${nineDown}`;
+            }
+            
+            console.log('生成的自动备注:', autoNote, '九转数据:', {nineUp, nineDown});
             
             // 调用后端API添加到自选股
             fetch('/api/watchlist/add', {
@@ -3817,7 +4003,7 @@
                     nine_turn_up: stockInfo.nine_turn_up || 0,
                     nine_turn_down: stockInfo.nine_turn_down || 0,
                     priority: 'green',  // 默认绿色优先级
-                    note: '',  // 默认备注为空
+                    note: autoNote,  // 自动生成的备注
                     add_time: new Date().toISOString()
                 })
             })
@@ -3831,8 +4017,8 @@
                         localStorage.setItem('stockWatchlist', JSON.stringify(watchlist));
                     }
                     
-                    // 更新按钮显示状态
-                    checkWatchlistStatus();
+                    // 更新下拉菜单显示状态
+                    updateWatchlistSelectStatus();
                     
                     // 显示成功提示
                     showNotification('已添加到自选股票', 'success');
@@ -3844,6 +4030,113 @@
             .catch(error => {
                 console.error('添加自选股失败:', error);
                 showNotification('添加失败，请稍后重试', 'error');
+            });
+        }
+        
+        // 添加到自选股（带优先级）
+        async function addToWatchlistWithPriority(priority) {
+            if (!priority) return;
+            
+            const stockCode = getStockCodeFromUrl();
+            if (!stockCode) {
+                alert('无法获取股票代码');
+                return;
+            }
+            
+            // 确保九转数据已加载
+            if (!nineTurnData || nineTurnData.length === 0) {
+                console.log('九转数据未加载，先加载九转数据');
+                try {
+                    await loadNineTurnData();
+                } catch (error) {
+                    console.error('加载九转数据失败:', error);
+                }
+            }
+            
+            // 获取当前股票信息
+            const stockInfo = getCurrentStockInfo();
+            
+            // 构造ts_code（6位股票代码 + 交易所后缀）
+            const tsCode = stockCode.startsWith('6') ? `${stockCode}.SH` : `${stockCode}.SZ`;
+            
+            // 生成自动备注：加入日期 + 九转数字
+            const now = new Date();
+            const day = now.getDate();
+            const nineUp = stockInfo.nine_turn_up || 0;
+            const nineDown = stockInfo.nine_turn_down || 0;
+            let autoNote = `${day}日`;
+            if (nineUp > 0) {
+                autoNote += ` 红${nineUp}`;
+            }
+            if (nineDown > 0) {
+                autoNote += ` 绿${nineDown}`;
+            }
+            
+            console.log('生成的自动备注:', autoNote, '九转数据:', {nineUp, nineDown});
+            
+            // 调用后端API添加到自选股
+            fetch('/api/watchlist/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ts_code: tsCode,
+                    name: stockInfo.name || '',
+                    latest_price: stockInfo.latest_price || 0,
+                    pct_chg: stockInfo.pct_chg || 0,
+                    industry: stockInfo.industry || '-',
+                    volume_ratio: stockInfo.volume_ratio || 0,
+                    pe: stockInfo.pe || 0,
+                    amount: stockInfo.amount || 0,
+                    total_mv: stockInfo.total_mv || 0,
+                    nine_turn_up: stockInfo.nine_turn_up || 0,
+                    nine_turn_down: stockInfo.nine_turn_down || 0,
+                    priority: priority,
+                    note: autoNote,  // 自动生成的备注
+                    add_time: new Date().toISOString()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 同时更新localStorage以保持兼容性
+                    let watchlist = JSON.parse(localStorage.getItem('stockWatchlist') || '[]');
+                    if (!watchlist.includes(stockCode)) {
+                        watchlist.push(stockCode);
+                        localStorage.setItem('stockWatchlist', JSON.stringify(watchlist));
+                    }
+                    
+                    // 更新下拉菜单显示状态
+                    updateWatchlistSelectStatus();
+                    
+                    // 显示成功提示
+                    const priorityNames = {
+                        'purple': '立即买入',
+                        'red': '重点关注',
+                        'green': '观察中',
+                        'holding': '持仓中',
+                        'sold': '已卖出'
+                    };
+                    showNotification(`已添加到自选股票（${priorityNames[priority]}）`, 'success');
+                    console.log('股票已添加到自选:', stockCode, '优先级:', priority);
+                } else {
+                    showNotification(data.message || '添加失败', 'error');
+                    // 重置下拉菜单选择
+                    const selectElement = document.getElementById('watchlistSelect');
+                    if (selectElement) {
+                        selectElement.value = '';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('添加自选股失败:', error);
+                showNotification('添加失败，请稍后重试', 'error');
+                // 重置下拉菜单选择
+                const selectElement = document.getElementById('watchlistSelect');
+                if (selectElement) {
+                    selectElement.value = '';
+                }
             });
         }
         

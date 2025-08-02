@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日指标修改预览</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .indicators-section {
+            background: white;
+            border-radius: 8px;
+            padding: 0;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .indicator-item {
+            padding: 8px 10px;
+            text-align: center;
+            border-right: 1px solid #e9ecef;
+            transition: background-color 0.2s ease;
+        }
+
+        .indicator-item:last-child {
+            border-right: none;
+        }
+
+        .indicator-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .indicator-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .indicator-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212529;
+            line-height: 1.2;
+        }
+
+        .positive {
+            color: #28a745;
+        }
+
+        .negative {
+            color: #dc3545;
+        }
+
+        .neutral {
+            color: #6c757d;
+        }
+
+        .comparison {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .comparison-item {
+            flex: 1;
+        }
+
+        .comparison-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>每日指标修改对比</h1>
+        
+        <div class="comparison">
+            <div class="comparison-item">
+                <div class="comparison-title">修改前（有标题，间距大）</div>
+                <div style="background: white; border-radius: 8px; padding: 0; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                    <div style="background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #e9ecef; font-weight: 600; color: #495057;">每日指标</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); border-bottom: 1px solid #e9ecef;">
+                        <div style="padding: 15px 10px; text-align: center; border-right: 1px solid #e9ecef;">
+                            <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">当日收盘价</div>
+                            <div style="font-size: 14px; font-weight: 600; color: #212529;">¥42.05</div>
+                        </div>
+                        <div style="padding: 15px 10px; text-align: center; border-right: 1px solid #e9ecef;">
+                            <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">当天开盘</div>
+                            <div style="font-size: 14px; font-weight: 600; color: #212529;">¥41.86</div>
+                        </div>
+                        <div style="padding: 15px 10px; text-align: center; border-right: 1px solid #e9ecef;">
+                            <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">当天涨幅</div>
+                            <div style="font-size: 14px; font-weight: 600; color: #28a745;">+0.50%</div>
+                        </div>
+                        <div style="padding: 15px 10px; text-align: center;">
+                            <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">成交额</div>
+                            <div style="font-size: 14px; font-weight: 600; color: #212529;">4.60亿</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comparison-item">
+                <div class="comparison-title">修改后（无标题，间距小）</div>
+                <div class="indicators-section">
+                    <div class="indicators-grid">
+                        <div class="indicator-item">
+                            <div class="indicator-label">当日收盘价</div>
+                            <div class="indicator-value">¥42.05</div>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="indicator-label">当天开盘</div>
+                            <div class="indicator-value">¥41.86</div>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="indicator-label">当天涨幅</div>
+                            <div class="indicator-value positive">+0.50%</div>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="indicator-label">成交额</div>
+                            <div class="indicator-value">4.60亿</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+            <h3>修改说明：</h3>
+            <ul>
+                <li>✅ 删除了"每日指标"标题文字</li>
+                <li>✅ 将 margin-bottom 从 20px 减少到 10px</li>
+                <li>✅ 将 indicator-item 的 padding 从 15px 10px 减少到 8px 10px</li>
+                <li>✅ 整体高度明显缩小，界面更加紧凑</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

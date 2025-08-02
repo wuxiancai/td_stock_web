@@ -662,6 +662,26 @@
         function addToWatchlistWithPriority(tsCode, priority) {
             if (!priority) return;
             
+            // 查找当前股票的数据
+            const stockData = filterData.find(stock => stock.ts_code === tsCode);
+            if (!stockData) {
+                alert('无法找到股票数据');
+                return;
+            }
+            
+            // 生成自动备注：加入日期 + 九转数字
+            const now = new Date();
+            const day = now.getDate();
+            const nineUp = stockData.nine_turn_up || 0;
+            const nineDown = stockData.nine_turn_down || 0;
+            let autoNote = `${day}日`;
+            if (nineUp > 0) {
+                autoNote += ` 红${nineUp}`;
+            }
+            if (nineDown > 0) {
+                autoNote += ` 绿${nineDown}`;
+            }
+            
             fetch('/api/watchlist/add', {
                 method: 'POST',
                 headers: {
@@ -669,7 +689,19 @@
                 },
                 body: JSON.stringify({
                     ts_code: tsCode,
-                    priority: priority
+                    name: stockData.name || '',
+                    latest_price: stockData.latest_price || 0,
+                    pct_chg: stockData.pct_chg || 0,
+                    industry: stockData.industry || '-',
+                    volume_ratio: stockData.volume_ratio || 0,
+                    pe: stockData.pe_ttm || 0,
+                    amount: stockData.amount || 0,
+                    total_mv: stockData.market_cap || 0,
+                    nine_turn_up: stockData.nine_turn_up || 0,
+                    nine_turn_down: stockData.nine_turn_down || 0,
+                    priority: priority,
+                    note: autoNote,
+                    add_time: new Date().toISOString()
                 })
             })
             .then(response => response.json())

@@ -79,19 +79,75 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         
+        .table-container {
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
         .stock-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            table-layout: fixed;
+            min-width: 1050px;
         }
         
         .stock-table th,
         .stock-table td {
-            padding: 12px;
+            padding: 4px 2px;
             text-align: left;
             border-bottom: 1px solid #eee;
-            font-size: 12px;
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
+        
+        /* 设置各列的固定宽度 */
+        .stock-table th:nth-child(1),
+        .stock-table td:nth-child(1) { width: 70px; } /* 股票代码 */
+        
+        .stock-table th:nth-child(2),
+        .stock-table td:nth-child(2) { width: 65px; } /* 股票名称 */
+        
+        .stock-table th:nth-child(3),
+        .stock-table td:nth-child(3) { width: 55px; } /* 所属行业 */
+        
+        .stock-table th:nth-child(4),
+        .stock-table td:nth-child(4) { width: 55px; } /* 当天涨幅 */
+        
+        .stock-table th:nth-child(5),
+        .stock-table td:nth-child(5) { width: 55px; } /* 最新价格 */
+        
+        .stock-table th:nth-child(6),
+        .stock-table td:nth-child(6) { width: 45px; } /* 换手率 */
+        
+        .stock-table th:nth-child(7),
+        .stock-table td:nth-child(7) { width: 35px; } /* 量比 */
+        
+        .stock-table th:nth-child(8),
+        .stock-table td:nth-child(8) { width: 55px; } /* 市盈率 */
+        
+        .stock-table th:nth-child(9),
+        .stock-table td:nth-child(9) { width: 65px; } /* 成交额 */
+        
+        .stock-table th:nth-child(10),
+        .stock-table td:nth-child(10) { width: 55px; } /* 市值 */
+        
+        .stock-table th:nth-child(11),
+        .stock-table td:nth-child(11) { width: 75px; } /* 净流入额 */
+        
+        .stock-table th:nth-child(12),
+        .stock-table td:nth-child(12) { width: 30px; } /* 九转 */
+        
+        .stock-table th:nth-child(13),
+        .stock-table td:nth-child(13) { width: 85px; } /* 优先级 */
+        
+        .stock-table th:nth-child(14),
+        .stock-table td:nth-child(14) { width: 90px; } /* 备注 */
+        
+        .stock-table th:nth-child(15),
+        .stock-table td:nth-child(15) { width: 45px; } /* 操作 */
         
         .stock-table th {
             background: #f8f9fa;
@@ -333,10 +389,13 @@
                 groupTitle.textContent = `${dateKey} 添加了 ${stocks.length} 只股票`;
                 contentDiv.appendChild(groupTitle);
                 
+                // 创建表格容器
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'table-container';
+                
                 // 创建该分组的表格
                 const table = document.createElement('table');
                 table.className = 'stock-table';
-                table.style.marginBottom = '30px';
                 
                 // 表头
                 table.innerHTML = `
@@ -465,7 +524,8 @@
                     tbody.appendChild(row);
                 });
                 
-                contentDiv.appendChild(table);
+                tableContainer.appendChild(table);
+                contentDiv.appendChild(tableContainer);
                 
                 // 更新该表格的排序指示器
                 updateTableSortIndicators(table, dateKey);

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>九转数据添加调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .debug-output { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; }
+        input { padding: 5px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>九转数据添加调试页面</h1>
+    
+    <div class="debug-section">
+        <h3>1. 输入股票代码</h3>
+        <input type="text" id="stockCode" placeholder="输入股票代码，如300609" value="300609">
+        <button onclick="loadIndicatorData()">加载技术指标数据</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>2. 技术指标数据状态</h3>
+        <div id="indicatorStatus" class="debug-output">未加载</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>3. 九转数据</h3>
+        <div id="nineTransData" class="debug-output">无数据</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>4. 生成的备注</h3>
+        <div id="generatedNote" class="debug-output">无备注</div>
+        <button onclick="generateNote()">生成备注</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>5. 添加到自选股</h3>
+        <select id="priority">
+            <option value="">选择优先级</option>
+            <option value="purple">立即买入</option>
+            <option value="red">重点关注</option>
+            <option value="green">观察中</option>
+            <option value="holding">持仓中</option>
+            <option value="sold">已卖出</option>
+        </select>
+        <button onclick="addToWatchlist()">添加到自选股</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>6. 调试日志</h3>
+        <div id="debugLog" class="debug-output"></div>
+        <button onclick="clearLog()">清空日志</button>
+    </div>
+
+    <script>
+        let currentStockCode = '';
+        
+        function log(message) {
+            const logDiv = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+        }
+        
+        async function loadIndicatorData() {
+            const stockCode = document.getElementById('stockCode').value.trim();
+            if (!stockCode) {
+                alert('请输入股票代码');
+                return;
+            }
+            
+            currentStockCode = stockCode;
+            log(`开始加载股票 ${stockCode} 的技术指标数据`);
+            
+            try {
+                document.getElementById('indicatorStatus').textContent = '加载中...';
+                
+                const response = await fetch(`/api/kline/indicators/${stockCode}?indicators=macd,kdj,rsi&limit=200`);
+                log(`API响应状态: ${response.status}`);
+                
+                const result = await response.json();
+                log(`API响应数据: ${JSON.stringify(result, null, 2)}`);
+                
+                if (!result.success) {
+                    throw new Error(result.message || result.error || '获取技术指标数据失败');
+                }
+                
+                window.indicatorData = result.data;
+                document.getElementById('indicatorStatus').textContent = '已加载';
+                
+                // 显示九转数据
+                if (window.indicatorData) {
+                    const nineUp = window.indicatorData.nine_turn_up || 0;
+                    const nineDown = window.indicatorData.nine_turn_down || 0;
+                    document.getElementById('nineTransData').innerHTML = 
+                        `九转向上: ${nineUp}<br>九转向下: ${nineDown}`;
+                    log(`九转数据: 向上=${nineUp}, 向下=${nineDown}`);
+                } else {
+                    document.getElementById('nineTransData').textContent = '无九转数据';
+                    log('警告: window.indicatorData 为空');
+                }
+                
+            } catch (error) {
+                log(`加载技术指标数据失败: ${error.message}`);
+                document.getElementById('indicatorStatus').textContent = '加载失败: ' + error.message;
+            }
+        }
+        
+        function generateNote() {
+            if (!window.indicatorData) {
+                log('错误: 技术指标数据未加载');
+                return;
+            }
+            
+            const now = new Date();
+            const day = now.getDate();
+            const nineUp = window.indicatorData.nine_turn_up || 0;
+            const nineDown = window.indicatorData.nine_turn_down || 0;
+            
+            let autoNote = `${day}日`;
+            if (nineUp > 0) {
+                autoNote += ` 红${nineUp}`;
+            }
+            if (nineDown > 0) {
+                autoNote += ` 绿${nineDown}`;
+            }
+            
+            document.getElementById('generatedNote').textContent = autoNote;
+            log(`生成的备注: ${autoNote} (九转向上=${nineUp}, 九转向下=${nineDown})`);
+        }
+        
+        async function addToWatchlist() {
+            const priority = document.getElementById('priority').value;
+            if (!priority) {
+                alert('请选择优先级');
+                return;
+            }
+            
+            if (!currentStockCode) {
+                alert('请先加载股票数据');
+                return;
+            }
+            
+            if (!window.indicatorData) {
+                log('警告: 技术指标数据未加载，先加载数据');
+                await loadIndicatorData();
+            }
+            
+            // 构造ts_code
+            const tsCode = currentStockCode.startsWith('6') ? `${currentStockCode}.SH` : `${currentStockCode}.SZ`;
+            
+            // 生成备注
+            const now = new Date();
+            const day = now.getDate();
+            const nineUp = window.indicatorData ? (window.indicatorData.nine_turn_up || 0) : 0;
+            const nineDown = window.indicatorData ? (window.indicatorData.nine_turn_down || 0) : 0;
+            
+            let autoNote = `${day}日`;
+            if (nineUp > 0) {
+                autoNote += ` 红${nineUp}`;
+            }
+            if (nineDown > 0) {
+                autoNote += ` 绿${nineDown}`;
+            }
+            
+            log(`准备添加股票: ${tsCode}, 备注: ${autoNote}, 九转数据: 向上=${nineUp}, 向下=${nineDown}`);
+            
+            try {
+                const response = await fetch('/api/watchlist/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ts_code: tsCode,
+                        name: `测试股票${currentStockCode}`,
+                        latest_price: 0,
+                        pct_chg: 0,
+                        industry: '测试行业',
+                        volume_ratio: 0,
+                        pe: 0,
+                        amount: 0,
+                        total_mv: 0,
+                        nine_turn_up: nineUp,
+                        nine_turn_down: nineDown,
+                        priority: priority,
+                        note: autoNote,
+                        add_time: new Date().toISOString()
+                    })
+                });
+                
+                const result = await response.json();
+                log(`添加结果: ${JSON.stringify(result)}`);
+                
+                if (result.success) {
+                    alert('添加成功！');
+                } else {
+                    alert('添加失败: ' + result.message);
+                }
+                
+            } catch (error) {
+                log(`添加失败: ${error.message}`);
+                alert('添加失败: ' + error.message);
+            }
+        }
+        
+        // 页面加载完成后的初始化
+        window.onload = function() {
+            log('调试页面加载完成');
+        };
+    </script>
+</body>
+</html>

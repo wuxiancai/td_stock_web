@@ -1078,11 +1078,42 @@ def calculate_ema15(df, period=15):
     """
     df = df.copy()
     
-    # 计算EMA15
-    df['ema15'] = df['close'].ewm(span=period, min_periods=1).mean()
-    
-    # 应用精度修复，避免显示包含"999"的浮点数
-    df['ema15'] = df['ema15'].apply(lambda x: clean_float_precision(x, 4))
+    try:
+        # 检查数据完整性
+        if 'close' not in df.columns:
+            print("[EMA15] 错误：数据中没有close列")
+            df['ema15'] = None
+            return df
+        
+        # 检查close列是否有有效数据
+        valid_close_count = df['close'].notna().sum()
+        print(f"[EMA15] 有效收盘价数据数量: {valid_close_count}/{len(df)}")
+        
+        if valid_close_count == 0:
+            print("[EMA15] 错误：没有有效的收盘价数据")
+            df['ema15'] = None
+            return df
+        
+        # 计算EMA15
+        df['ema15'] = df['close'].ewm(span=period, min_periods=1).mean()
+        
+        # 检查计算结果
+        valid_ema15_count = df['ema15'].notna().sum()
+        print(f"[EMA15] 计算完成，有效EMA15数据数量: {valid_ema15_count}/{len(df)}")
+        
+        # 应用精度修复，避免显示包含"999"的浮点数
+        df['ema15'] = df['ema15'].apply(lambda x: clean_float_precision(x, 4))
+        
+        # 再次检查精度修复后的结果
+        final_valid_count = df['ema15'].notna().sum()
+        print(f"[EMA15] 精度修复后，有效EMA15数据数量: {final_valid_count}/{len(df)}")
+        
+        if final_valid_count > 0:
+            print(f"[EMA15] EMA15值范围: {df['ema15'].min():.4f} - {df['ema15'].max():.4f}")
+        
+    except Exception as e:
+        print(f"[EMA15] 计算失败: {e}")
+        df['ema15'] = None
     
     return df
 
@@ -1193,6 +1224,16 @@ def boll_test():
 def test_refresh():
     """自动刷新功能测试页面"""
     return render_template('test_refresh.html')
+
+@app.route('/test/ema15')
+def test_ema15():
+    """EMA15数据测试页面"""
+    return render_template('test_ema15_frontend.html')
+
+@app.route('/debug_nine_turn_add')
+def debug_nine_turn_add():
+    """九转数据添加调试页面"""
+    return render_template('debug_nine_turn_add.html')
 
 def get_stock_from_cache(ts_code):
     """从缓存中查找股票数据"""
@@ -2264,6 +2305,9 @@ def get_stock_data(stock_code):
         
         # 计算BOLL指标
         daily_data = calculate_boll(daily_data)
+        
+        # 计算EMA15指标
+        daily_data = calculate_ema15(daily_data)
         
         # 计算MACD指标
         daily_data = calculate_macd(daily_data)
@@ -3547,7 +3591,10 @@ def get_stock_daily_history(stock_code):
         # 计算BOLL指标
         daily_data = calculate_boll(daily_data)
         
-        # 转换为JSON格式，保持Tushare官方文档的字段格式，并添加BOLL指标
+        # 计算EMA15指标
+        daily_data = calculate_ema15(daily_data)
+        
+        # 转换为JSON格式，保持Tushare官方文档的字段格式，并添加BOLL和EMA15指标
         data_list = []
         for _, row in daily_data.iterrows():
             data_list.append({
@@ -3565,7 +3612,9 @@ def get_stock_daily_history(stock_code):
                 # 添加BOLL指标数据
                 'boll_upper': float(row['boll_upper']) if pd.notna(row['boll_upper']) else None,
                 'boll_mid': float(row['boll_mid']) if pd.notna(row['boll_mid']) else None,
-                'boll_lower': float(row['boll_lower']) if pd.notna(row['boll_lower']) else None
+                'boll_lower': float(row['boll_lower']) if pd.notna(row['boll_lower']) else None,
+                # 添加EMA15指标数据
+                'ema15': float(row['ema15']) if pd.notna(row['ema15']) else None
             })
         
         # 获取股票基本信息
@@ -4333,6 +4382,191 @@ def auto_update_moneyflow_data():
         import traceback
         traceback.print_exc()
 
+def auto_cache_intraday_data():
+    """自动缓存分时图数据 - 工作日下午3:05执行"""
+    try:
+        now = datetime.now()
+        print(f"开始自动缓存分时图数据 - {now.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # 检查是否为工作日
+        if now.weekday() >= 5:  # 周六(5)和周日(6)不执行
+            print(f"今天是{['周一', '周二', '周三', '周四', '周五', '周六', '周日'][now.weekday()]}，跳过分时图缓存")
+            return
+        
+        # 检查AkShare是否可用
+        if not AKSHARE_AVAILABLE:
+            print("AkShare库未安装，无法缓存分时图数据")
+            return
+        
+        # 获取所有市场的股票数据
+        all_stocks = []
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        market_names = {
+            'cyb': '创业板',
+            'hu': '沪A股',
+            'zxb': '深A',
+            'kcb': '科创板',
+            'bj': '北交所'
+        }
+        
+        for market in markets:
+            try:
+                market_data = cache_manager.load_cache_data(market)
+                if market_data and 'stocks' in market_data:
+                    market_stocks = [(stock['ts_code'].split('.')[0], stock['name']) for stock in market_data['stocks']]
+                    all_stocks.extend(market_stocks)
+                    print(f"从{market_names[market]}获取到 {len(market_stocks)} 只股票")
+            except Exception as e:
+                print(f"获取市场 {market} 数据失败: {e}")
+                continue
+        
+        if not all_stocks:
+            print("没有找到股票数据，跳过分时图缓存")
+            return
+        
+        print(f"找到 {len(all_stocks)} 只股票，开始缓存分时图数据")
+        
+        # 获取当前日期
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        # 分批处理股票，避免API频率限制
+        batch_size = 5  # 每批处理5只股票
+        total_batches = (len(all_stocks) + batch_size - 1) // batch_size
+        
+        cached_count = 0
+        failed_count = 0
+        
+        for batch_idx in range(total_batches):
+            start_idx = batch_idx * batch_size
+            end_idx = min(start_idx + batch_size, len(all_stocks))
+            batch_stocks = all_stocks[start_idx:end_idx]
+            
+            print(f"处理第 {batch_idx + 1}/{total_batches} 批，股票 {start_idx + 1}-{end_idx}")
+            
+            # 处理当前批次的股票
+            for stock_code, stock_name in batch_stocks:
+                try:
+                    print(f"缓存 {stock_code}({stock_name}) 的分时图数据")
+                    
+                    # 调用AkShare接口获取分时数据
+                    intraday_data = safe_akshare_call(
+                        ak.stock_zh_a_hist_min_em,
+                        f"intraday_cache_{stock_code}_{today}",
+                        symbol=stock_code,
+                        period='1',
+                        adjust='',
+                        start_date=today + " 09:30:00",
+                        end_date=today + " 15:00:00"
+                    )
+                    
+                    if intraday_data is None or intraday_data.empty:
+                        print(f"未获取到 {stock_code} 的分时数据")
+                        failed_count += 1
+                        continue
+                    
+                    # 处理分时数据
+                    result_data = []
+                    cumulative_volume = 0
+                    cumulative_amount = 0
+                    total_shares = 0
+                    total_turnover = 0
+                    
+                    for _, row in intraday_data.iterrows():
+                        try:
+                            # 解析时间
+                            timestamp = row['时间']
+                            if isinstance(timestamp, str):
+                                timestamp = pd.to_datetime(timestamp)
+                            
+                            time_str = timestamp.strftime('%H:%M')
+                            
+                            # 过滤非交易时间
+                            hour = timestamp.hour
+                            minute = timestamp.minute
+                            if not ((9 <= hour <= 11) or (hour == 11 and minute <= 30) or (13 <= hour <= 15)):
+                                continue
+                            
+                            # 获取价格和成交量数据
+                            close_price = float(row.get('收盘', 0))
+                            volume = float(row.get('成交量', 0))
+                            amount = float(row.get('成交额', 0))
+                            
+                            # 累计成交量和成交额
+                            cumulative_volume += volume
+                            cumulative_amount += amount
+                            
+                            # 计算VWAP
+                            vwap = cumulative_amount / cumulative_volume if cumulative_volume > 0 else close_price
+                            
+                            # 计算均价线数据
+                            shares_traded = volume * 100
+                            turnover_amount = amount
+                            
+                            total_shares += shares_traded
+                            total_turnover += turnover_amount
+                            
+                            avg_price = total_turnover / total_shares if total_shares > 0 else close_price
+                            
+                            data_point = {
+                                'time': time_str,
+                                'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                                'price': close_price,
+                                'open': float(row.get('开盘', close_price)),
+                                'high': float(row.get('最高', close_price)),
+                                'low': float(row.get('最低', close_price)),
+                                'volume': volume,
+                                'amount': amount,
+                                'vwap': vwap,
+                                'avg_price': avg_price,
+                                'cumulative_volume': cumulative_volume,
+                                'cumulative_amount': cumulative_amount,
+                                'total_shares': total_shares,
+                                'total_turnover': total_turnover
+                            }
+                            result_data.append(data_point)
+                            
+                        except Exception as e:
+                            print(f"处理 {stock_code} 数据行失败: {e}")
+                            continue
+                    
+                    # 保存到缓存
+                    if result_data:
+                        cache_saved = cache_manager.save_intraday_data(stock_code, result_data)
+                        if cache_saved:
+                            cached_count += 1
+                            print(f"成功缓存 {stock_code} 的 {len(result_data)} 条分时数据")
+                        else:
+                            failed_count += 1
+                            print(f"保存 {stock_code} 缓存失败")
+                    else:
+                        failed_count += 1
+                        print(f"{stock_code} 没有有效的分时数据")
+                        
+                except Exception as e:
+                    failed_count += 1
+                    print(f"缓存 {stock_code} 分时数据失败: {e}")
+                    continue
+            
+            # 批次处理完成后，等待一段时间避免API限制
+            if batch_idx < total_batches - 1:
+                wait_time = 12  # 等待12秒
+                print(f"批次 {batch_idx + 1} 完成，等待 {wait_time} 秒后处理下一批...")
+                time.sleep(wait_time)
+        
+        print(f"分时图数据缓存完成！成功: {cached_count}, 失败: {failed_count}")
+        
+        # 清理过期的分时图缓存
+        try:
+            cache_manager.cleanup_old_intraday_cache()
+            print("已清理过期的分时图缓存文件")
+        except Exception as e:
+            print(f"清理过期缓存失败: {e}")
+        
+    except Exception as e:
+        print(f"自动缓存分时图数据失败: {e}")
+        import traceback
+        traceback.print_exc()
+
 def auto_filter_stocks():
     """自动筛选符合条件的股票并保存结果"""
     try:
@@ -4775,12 +5009,20 @@ def start_scheduler():
     # 设置定时任务：每天晚上6点执行股票筛选
     schedule.every().day.at("18:00").do(auto_filter_stocks)
     
+    # 设置定时任务：工作日下午3:05执行分时图数据缓存
+    schedule.every().monday.at("15:05").do(auto_cache_intraday_data)
+    schedule.every().tuesday.at("15:05").do(auto_cache_intraday_data)
+    schedule.every().wednesday.at("15:05").do(auto_cache_intraday_data)
+    schedule.every().thursday.at("15:05").do(auto_cache_intraday_data)
+    schedule.every().friday.at("15:05").do(auto_cache_intraday_data)
+    
     # AkShare清理任务已删除，不再使用AkShare
     
     print("定时任务已设置：工作日下午5点自动同步所有A股数据")
     print("定时任务已设置：工作日下午5:30自动更新九转序列数据")
     print("定时任务已设置：工作日晚上7点自动更新资金流向数据")
     print("定时任务已设置：每天晚上6点自动筛选符合条件的股票")
+    print("定时任务已设置：工作日下午3:05自动缓存分时图数据")
     
     # 在后台线程中运行调度器
     def run_scheduler():
@@ -4880,6 +5122,24 @@ def trigger_nine_turn_update():
         return jsonify({
             'status': 'success',
             'message': '九转序列更新任务已启动'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/scheduler/trigger_intraday_cache', methods=['POST'])
+def trigger_intraday_cache():
+    """手动触发分时图缓存任务"""
+    try:
+        # 在后台线程中执行分时图缓存任务
+        cache_thread = threading.Thread(target=auto_cache_intraday_data, daemon=True)
+        cache_thread.start()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '分时图缓存任务已启动'
         })
     except Exception as e:
         return jsonify({
@@ -5090,6 +5350,165 @@ def get_watchlist():
     """获取自选股列表"""
     try:
         watchlist_data = load_watchlist()
+        
+        # 为每只股票补充基本信息
+        for stock in watchlist_data:
+            ts_code = stock['ts_code']
+            
+            # 如果股票名称为空，尝试获取基本信息
+            if not stock.get('name') or stock.get('name') == '':
+                try:
+                    # 获取股票基本信息
+                    stock_basic = safe_tushare_call(pro.stock_basic, ts_code=ts_code)
+                    if not stock_basic.empty:
+                        stock['name'] = stock_basic.iloc[0]['name']
+                        stock['industry'] = stock_basic.iloc[0].get('industry', '-')
+                        print(f"补充股票基本信息: {ts_code} - {stock['name']}")
+                except Exception as e:
+                    print(f"获取股票 {ts_code} 基本信息失败: {e}")
+                    # 如果获取失败，设置默认值
+                    if not stock.get('name'):
+                        stock['name'] = ts_code[:6]  # 使用股票代码作为名称
+                    if not stock.get('industry'):
+                        stock['industry'] = '-'
+            
+            # 获取或更新股票的完整数据
+            need_update = (
+                stock.get('latest_price', 0) == 0 or 
+                stock.get('turnover_rate', 0) == 0 or 
+                stock.get('volume_ratio', 0) == 0 or 
+                stock.get('pe', 0) == 0
+            )
+            
+            if need_update:
+                try:
+                    # 获取最新交易数据
+                    latest_data = safe_tushare_call(pro.daily, ts_code=ts_code, limit=1)
+                    if not latest_data.empty:
+                        stock['latest_price'] = float(latest_data.iloc[0]['close'])
+                        stock['pct_chg'] = float(latest_data.iloc[0].get('pct_chg', 0))
+                        stock['amount'] = float(latest_data.iloc[0].get('amount', 0))
+                        
+                        # 获取量比数据（如果available）
+                        if 'vol_ratio' in latest_data.columns:
+                            stock['volume_ratio'] = float(latest_data.iloc[0].get('vol_ratio', 0))
+                        
+                        print(f"补充股票价格信息: {ts_code} - ¥{stock['latest_price']}")
+                    
+                    # 获取基本面数据（换手率、市盈率等）
+                    daily_basic = safe_tushare_call(pro.daily_basic, ts_code=ts_code, limit=1)
+                    if not daily_basic.empty:
+                        # 更新换手率
+                        if 'turnover_rate' in daily_basic.columns:
+                            turnover_rate = daily_basic.iloc[0]['turnover_rate']
+                            if turnover_rate is not None and not pd.isna(turnover_rate):
+                                stock['turnover_rate'] = float(turnover_rate)
+                        
+                        # 更新市盈率
+                        if 'pe_ttm' in daily_basic.columns:
+                            pe = daily_basic.iloc[0]['pe_ttm']
+                            if pe is not None and not pd.isna(pe):
+                                stock['pe'] = float(pe)
+                        
+                        # 更新市值
+                        if 'total_mv' in daily_basic.columns:
+                            total_mv = daily_basic.iloc[0]['total_mv']
+                            if total_mv is not None and not pd.isna(total_mv):
+                                stock['total_mv'] = float(total_mv)
+                        
+                        print(f"补充股票技术指标: {ts_code} - 换手率:{stock.get('turnover_rate', 0):.2f}%, PE:{stock.get('pe', 0):.2f}")
+                    
+                    # 如果量比还是0，尝试从实时数据获取
+                    if stock.get('volume_ratio', 0) == 0:
+                        try:
+                            # 尝试获取实时数据中的量比
+                            cached_stock = get_stock_from_cache(ts_code)
+                            if cached_stock and cached_stock.get('volume_ratio', 0) > 0:
+                                stock['volume_ratio'] = float(cached_stock['volume_ratio'])
+                                print(f"从缓存获取量比: {ts_code} - {stock['volume_ratio']:.2f}")
+                        except Exception as e:
+                            print(f"从缓存获取量比失败: {e}")
+                    
+                    # 获取净流入额数据
+                    if stock.get('net_mf_amount', 0) == 0:
+                        try:
+                            # 首先尝试从缓存获取
+                            cached_stock = get_stock_from_cache(ts_code)
+                            latest_trade_date = get_latest_trading_day()
+                            cache_date = cached_stock.get('cache_date') if cached_stock else None
+                            
+                            if (cache_date == latest_trade_date and 
+                                cached_stock and 
+                                cached_stock.get('net_mf_amount') is not None):
+                                stock['net_mf_amount'] = float(cached_stock.get('net_mf_amount', 0))
+                                print(f"从缓存获取净流入额: {ts_code} - {stock['net_mf_amount']:.2f}千万元")
+                            else:
+                                # 从API获取净流入额数据
+                                print(f"获取净流入额数据: {ts_code} - 交易日期: {latest_trade_date}")
+                                moneyflow_data = safe_tushare_call(pro.moneyflow, ts_code=ts_code, trade_date=latest_trade_date)
+                                
+                                if moneyflow_data is None or moneyflow_data.empty:
+                                    # 如果moneyflow没有数据，尝试moneyflow_dc接口
+                                    moneyflow_data = safe_tushare_call(pro.moneyflow_dc, ts_code=ts_code, trade_date=latest_trade_date)
+                                
+                                if moneyflow_data is not None and not moneyflow_data.empty:
+                                    # 检查是否是moneyflow_dc接口的数据（包含net_amount字段）
+                                    if 'net_amount' in moneyflow_data.columns:
+                                        try:
+                                            net_amount_wan = float(moneyflow_data.iloc[0]['net_amount']) if pd.notna(moneyflow_data.iloc[0]['net_amount']) else 0  # 万元
+                                            stock['net_mf_amount'] = round(net_amount_wan / 1000, 2)  # 转换为千万元
+                                        except (ValueError, TypeError):
+                                            stock['net_mf_amount'] = 0
+                                    # 检查是否是moneyflow接口的数据（包含net_mf_amount字段）
+                                    elif 'net_mf_amount' in moneyflow_data.columns:
+                                        try:
+                                            net_mf_amount_wan = float(moneyflow_data.iloc[0]['net_mf_amount']) if pd.notna(moneyflow_data.iloc[0]['net_mf_amount']) else 0  # 万元
+                                            stock['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)  # 转换为千万元
+                                        except (ValueError, TypeError):
+                                            stock['net_mf_amount'] = 0
+                                    
+                                    print(f"API获取净流入额: {ts_code} - {stock['net_mf_amount']:.2f}千万元")
+                                else:
+                                    stock['net_mf_amount'] = 0
+                        except Exception as e:
+                            print(f"获取净流入额失败: {e}")
+                            stock['net_mf_amount'] = 0
+                    
+                    # 获取九转数据
+                    if (stock.get('nine_turn_up', 0) == 0 and stock.get('nine_turn_down', 0) == 0):
+                        try:
+                            # 首先尝试从缓存获取
+                            cached_stock = get_stock_from_cache(ts_code)
+                            if (cached_stock and 
+                                (cached_stock.get('nine_turn_up', 0) > 0 or cached_stock.get('nine_turn_down', 0) > 0)):
+                                stock['nine_turn_up'] = int(cached_stock.get('nine_turn_up', 0))
+                                stock['nine_turn_down'] = int(cached_stock.get('nine_turn_down', 0))
+                                print(f"从缓存获取九转数据: {ts_code} - 上涨:{stock['nine_turn_up']}, 下跌:{stock['nine_turn_down']}")
+                            else:
+                                # 从API计算九转数据
+                                kline_data = safe_tushare_call(pro.daily, ts_code=ts_code, limit=30)  # 获取30天数据用于计算九转
+                                if kline_data is not None and not kline_data.empty:
+                                    # 计算九转序列
+                                    kline_with_nine_turn = calculate_nine_turn(kline_data)
+                                    if not kline_with_nine_turn.empty:
+                                        latest_nine_turn = kline_with_nine_turn.iloc[-1]
+                                        stock['nine_turn_up'] = int(latest_nine_turn['nine_turn_up']) if latest_nine_turn['nine_turn_up'] > 0 else 0
+                                        stock['nine_turn_down'] = int(latest_nine_turn['nine_turn_down']) if latest_nine_turn['nine_turn_down'] > 0 else 0
+                                        print(f"计算九转数据: {ts_code} - 上涨:{stock['nine_turn_up']}, 下跌:{stock['nine_turn_down']}")
+                                else:
+                                    stock['nine_turn_up'] = 0
+                                    stock['nine_turn_down'] = 0
+                        except Exception as e:
+                            print(f"获取九转数据失败: {e}")
+                            stock['nine_turn_up'] = 0
+                            stock['nine_turn_down'] = 0
+                    
+                except Exception as e:
+                    print(f"获取股票 {ts_code} 完整数据失败: {e}")
+        
+        # 保存更新后的数据
+        save_watchlist(watchlist_data)
+        
         return jsonify({
             'success': True,
             'data': watchlist_data
@@ -5521,6 +5940,23 @@ def refresh_watchlist():
                 stock['nine_turn_up'] = nine_turn_up
                 stock['nine_turn_down'] = nine_turn_down
                 
+                # 如果备注包含日期信息，且九转数据有值，则更新备注
+                current_note = stock.get('note', '')
+                if current_note:
+                    # 提取日期部分（如"2日"）
+                    import re
+                    date_match = re.match(r'(\d+日)', current_note)
+                    if date_match and (nine_turn_up > 0 or nine_turn_down > 0):
+                        date_part = date_match.group(1)
+                        # 重新生成备注
+                        new_note = date_part
+                        if nine_turn_up > 0:
+                            new_note += f' 红{nine_turn_up}'
+                        if nine_turn_down > 0:
+                            new_note += f' 绿{nine_turn_down}'
+                        stock['note'] = new_note
+                        print(f"更新股票 {ts_code} 备注: {current_note} -> {new_note}")
+                
                 # 更新时间戳
                 stock['last_refresh'] = datetime.now().isoformat()
                 updated_count += 1
@@ -5769,8 +6205,8 @@ def get_green_filter_stocks():
 @app.route('/api/stock/<stock_code>/intraday')
 def get_stock_intraday_data(stock_code):
     """
-    获取股票分时数据
-    使用AkShare的stock_zh_a_hist_min_em接口获取分钟级数据
+    获取股票分时数据（支持缓存）
+    交易时间获取实时数据并保存到缓存，非交易时间从缓存读取
     
     Args:
         stock_code: 股票代码，如 000001 或 300354
@@ -5787,6 +6223,42 @@ def get_stock_intraday_data(stock_code):
         period = request.args.get('period', '1')  # 默认1分钟
         adjust = request.args.get('adjust', '')   # 默认不复权
         
+        # 转换股票代码格式（去掉.SZ/.SH后缀）
+        if '.' in stock_code:
+            stock_code = stock_code.split('.')[0]
+        
+        print(f"[分时数据] 开始获取股票 {stock_code} 的分时数据...")
+        
+        # 判断是否为交易时间
+        now = datetime.now()
+        current_time = now.time()
+        is_trading_day = now.weekday() < 5  # 周一到周五
+        is_trading_hours = (
+            (current_time >= datetime.strptime('09:30', '%H:%M').time() and 
+             current_time <= datetime.strptime('11:30', '%H:%M').time()) or
+            (current_time >= datetime.strptime('13:00', '%H:%M').time() and 
+             current_time <= datetime.strptime('15:00', '%H:%M').time())
+        )
+        
+        # 非交易时间，优先从缓存读取
+        if not (is_trading_day and is_trading_hours):
+            print(f"[分时数据] 非交易时间，尝试从缓存读取数据...")
+            cached_data = cache_manager.load_intraday_data(stock_code)
+            
+            if cached_data:
+                print(f"[分时数据] 成功从缓存加载 {len(cached_data)} 条分时数据")
+                return jsonify({
+                    'success': True,
+                    'data': cached_data,
+                    'total': len(cached_data),
+                    'stock_code': stock_code,
+                    'date': now.strftime('%Y-%m-%d'),
+                    'period': period,
+                    'message': f'从缓存加载{len(cached_data)}条分时数据',
+                    'is_cached': True
+                })
+        
+        # 交易时间或缓存无数据，尝试获取实时数据
         # 检查AkShare是否可用
         if not AKSHARE_AVAILABLE:
             return jsonify({
@@ -5794,12 +6266,6 @@ def get_stock_intraday_data(stock_code):
                 'error': 'AkShare库未安装，无法获取分时数据',
                 'details': '请安装akshare库以使用分时图功能'
             }), 503
-        
-        # 转换股票代码格式（去掉.SZ/.SH后缀）
-        if '.' in stock_code:
-            stock_code = stock_code.split('.')[0]
-        
-        print(f"[分时数据] 开始获取股票 {stock_code} 的分时数据...")
         
         # 获取当前日期
         today = datetime.now().strftime('%Y-%m-%d')
@@ -5816,12 +6282,135 @@ def get_stock_intraday_data(stock_code):
         )
         
         if intraday_data is None or intraday_data.empty:
-            print(f"[分时数据] 未获取到股票 {stock_code} 的分时数据")
-            return jsonify({
-                'success': False,
-                'error': '未获取到分时数据',
-                'details': '可能是非交易时间或股票代码不存在'
-            }), 404
+            print(f"[分时数据] 未获取到股票 {stock_code} 的当日分时数据，尝试获取最新收盘价...")
+            
+            # 非交易时间，获取最新的收盘价来生成模拟分时数据
+            try:
+                # 获取最近的日线数据
+                recent_data = safe_tushare_call(pro.daily, ts_code=stock_code, limit=1)
+                if recent_data is None or recent_data.empty:
+                    # 如果Tushare也没有数据，尝试使用AkShare获取历史数据
+                    yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+                    recent_data = safe_akshare_call(
+                        ak.stock_zh_a_hist,
+                        f"recent_{stock_code}",
+                        symbol=stock_code,
+                        period='daily',
+                        start_date=yesterday,
+                        end_date=yesterday,
+                        adjust=''
+                    )
+                
+                if recent_data is None or recent_data.empty:
+                    return jsonify({
+                        'success': False,
+                        'error': '未获取到分时数据',
+                        'details': '非交易时间且无法获取最新收盘价'
+                    }), 404
+                
+                # 获取最新收盘价
+                if 'close' in recent_data.columns:
+                    latest_close = float(recent_data.iloc[0]['close'])
+                elif '收盘' in recent_data.columns:
+                    latest_close = float(recent_data.iloc[0]['收盘'])
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': '未获取到分时数据',
+                        'details': '无法解析收盘价数据'
+                    }), 404
+                
+                print(f"[分时数据] 非交易时间，使用最新收盘价 {latest_close} 生成模拟分时数据")
+                
+                # 生成基于收盘价的模拟分时数据
+                result_data = []
+                
+                # 生成上午时间段 (09:30-11:30)
+                for i in range(120):  # 120分钟
+                    minutes_from_start = i
+                    hour = 9 + (30 + minutes_from_start) // 60
+                    minute = (30 + minutes_from_start) % 60
+                    if hour > 11 or (hour == 11 and minute > 30):
+                        break
+                    
+                    time_str = f"{hour:02d}:{minute:02d}"
+                    timestamp_str = f"{today} {time_str}:00"
+                    
+                    # 在收盘价基础上添加微小的随机波动（±0.1%）
+                    import random
+                    price_variation = latest_close * (random.uniform(-0.001, 0.001))
+                    simulated_price = latest_close + price_variation
+                    
+                    data_point = {
+                        'time': time_str,
+                        'timestamp': timestamp_str,
+                        'price': simulated_price,
+                        'open': latest_close,
+                        'high': latest_close,
+                        'low': latest_close,
+                        'volume': 0,  # 非交易时间成交量为0
+                        'amount': 0,  # 非交易时间成交额为0
+                        'vwap': latest_close,
+                        'avg_price': latest_close,
+                        'cumulative_volume': 0,
+                        'cumulative_amount': 0,
+                        'total_shares': 0,
+                        'total_turnover': 0
+                    }
+                    result_data.append(data_point)
+                
+                # 生成下午时间段 (13:00-15:00)
+                for i in range(120):  # 120分钟
+                    hour = 13 + i // 60
+                    minute = i % 60
+                    if hour > 15 or (hour == 15 and minute > 0):
+                        break
+                    
+                    time_str = f"{hour:02d}:{minute:02d}"
+                    timestamp_str = f"{today} {time_str}:00"
+                    
+                    # 在收盘价基础上添加微小的随机波动（±0.1%）
+                    import random
+                    price_variation = latest_close * (random.uniform(-0.001, 0.001))
+                    simulated_price = latest_close + price_variation
+                    
+                    data_point = {
+                        'time': time_str,
+                        'timestamp': timestamp_str,
+                        'price': simulated_price,
+                        'open': latest_close,
+                        'high': latest_close,
+                        'low': latest_close,
+                        'volume': 0,  # 非交易时间成交量为0
+                        'amount': 0,  # 非交易时间成交额为0
+                        'vwap': latest_close,
+                        'avg_price': latest_close,
+                        'cumulative_volume': 0,
+                        'cumulative_amount': 0,
+                        'total_shares': 0,
+                        'total_turnover': 0
+                    }
+                    result_data.append(data_point)
+                
+                return jsonify({
+                    'success': True,
+                    'data': result_data,
+                    'total': len(result_data),
+                    'stock_code': stock_code,
+                    'date': today,
+                    'yesterday_close': latest_close,
+                    'period': period,
+                    'message': f'非交易时间，显示基于收盘价 {latest_close} 的模拟分时数据',
+                    'is_simulated': True  # 标记这是模拟数据
+                })
+                
+            except Exception as sim_error:
+                print(f"[分时数据] 生成模拟数据失败: {sim_error}")
+                return jsonify({
+                    'success': False,
+                    'error': '未获取到分时数据',
+                    'details': '非交易时间且无法生成模拟数据'
+                }), 404
         
         print(f"[分时数据] 成功获取{len(intraday_data)}条分时数据")
         
@@ -5925,6 +6514,24 @@ def get_stock_intraday_data(stock_code):
             # 这里可以通过其他API获取昨收价，暂时使用第一个价格作为参考
             yesterday_close = first_price
         
+        # 在交易时间，保存数据到缓存（特别是接近收盘时间）
+        current_time = datetime.now().time()
+        is_near_close = (
+            current_time >= datetime.strptime('14:50', '%H:%M').time() and 
+            current_time <= datetime.strptime('15:05', '%H:%M').time()
+        )
+        
+        # 如果是交易时间且有数据，保存到缓存
+        if (is_trading_day and is_trading_hours) and result_data:
+            try:
+                cache_saved = cache_manager.save_intraday_data(stock_code, result_data)
+                if cache_saved:
+                    print(f"[分时数据] 成功保存 {len(result_data)} 条数据到缓存")
+                else:
+                    print(f"[分时数据] 保存缓存失败")
+            except Exception as cache_error:
+                print(f"[分时数据] 保存缓存异常: {cache_error}")
+        
         return jsonify({
             'success': True,
             'data': result_data,
@@ -5933,7 +6540,8 @@ def get_stock_intraday_data(stock_code):
             'date': today,
             'yesterday_close': yesterday_close,
             'period': period,
-            'message': f'成功获取{len(result_data)}条分时数据'
+            'message': f'成功获取{len(result_data)}条分时数据',
+            'is_cached': False  # 标记这是实时数据
         })
         
     except Exception as e:
@@ -6057,6 +6665,11 @@ def get_top_list():
             'success': False,
             'error': str(e)
         }), 500
+
+@app.route('/test/intraday-cache')
+def intraday_cache_test():
+    """分时图缓存功能测试页面"""
+    return render_template('intraday_cache_test.html')
 
 if __name__ == '__main__':
     # 启动定时调度器

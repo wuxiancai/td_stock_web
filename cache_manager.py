@@ -426,6 +426,16 @@ class OptimizedCacheManager:
         """获取缓存文件路径"""
         return self.cache_dir / f'{market}_stocks_cache.json'
     
+    def get_intraday_cache_file_path(self, stock_code: str) -> Path:
+        """获取分时图缓存文件路径"""
+        # 创建分时图缓存子目录
+        intraday_dir = self.cache_dir / 'intraday'
+        intraday_dir.mkdir(exist_ok=True)
+        
+        # 按日期组织缓存文件
+        today = datetime.now().strftime('%Y%m%d')
+        return intraday_dir / f'{stock_code}_{today}_intraday.json'
+    
     def _save_data_with_backup(self, file_path: Path, data: Dict[str, Any]):
         """带备份的数据保存"""
         # 创建备份
@@ -689,6 +699,115 @@ class OptimizedCacheManager:
             })
         
         return info
+    
+    def save_intraday_data(self, stock_code: str, intraday_data: List[Dict[str, Any]]) -> bool:
+        """保存分时图数据到缓存"""
+        cache_file = self.get_intraday_cache_file_path(stock_code)
+        
+        # 获取文件锁
+        lock_fd = self.lock_manager.acquire_lock(str(cache_file))
+        if not lock_fd:
+            logger.warning(f"无法获取文件锁，保存分时图数据失败: {cache_file}")
+            return False
+        
+        try:
+            # 准备缓存数据
+            cache_data = {
+                'stock_code': stock_code,
+                'date': datetime.now().strftime('%Y%m%d'),
+                'save_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'data': intraday_data,
+                'data_count': len(intraday_data)
+            }
+            
+            # 保存数据
+            self._save_data_with_backup(cache_file, cache_data)
+            
+            logger.info(f"成功保存分时图缓存: {stock_code}, 数据量: {len(intraday_data)}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"保存分时图数据失败: {cache_file}, 错误: {e}")
+            return False
+            
+        finally:
+            self.lock_manager.release_lock(lock_fd, str(cache_file))
+    
+    def load_intraday_data(self, stock_code: str) -> Optional[List[Dict[str, Any]]]:
+        """从缓存加载分时图数据"""
+        cache_file = self.get_intraday_cache_file_path(stock_code)
+        
+        if not cache_file.exists():
+            logger.debug(f"分时图缓存文件不存在: {cache_file}")
+            return None
+        
+        # 获取文件锁
+        lock_fd = self.lock_manager.acquire_lock(str(cache_file))
+        if not lock_fd:
+            logger.warning(f"无法获取文件锁，加载分时图数据失败: {cache_file}")
+            return None
+        
+        try:
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                cache_data = json.load(f)
+            
+            # 验证缓存数据
+            if not isinstance(cache_data, dict) or 'data' not in cache_data:
+                logger.warning(f"分时图缓存数据格式错误: {cache_file}")
+                return None
+            
+            # 检查数据是否为当日数据
+            today = datetime.now().strftime('%Y%m%d')
+            cache_date = cache_data.get('date', '')
+            
+            if cache_date != today:
+                logger.debug(f"分时图缓存数据过期: {cache_file}, 缓存日期: {cache_date}, 当前日期: {today}")
+                return None
+            
+            intraday_data = cache_data['data']
+            logger.info(f"成功加载分时图缓存: {stock_code}, 数据量: {len(intraday_data)}")
+            return intraday_data
+            
+        except Exception as e:
+            logger.error(f"加载分时图数据失败: {cache_file}, 错误: {e}")
+            return None
+            
+        finally:
+            self.lock_manager.release_lock(lock_fd, str(cache_file))
+    
+    def cleanup_old_intraday_cache(self):
+        """清理过期的分时图缓存"""
+        try:
+            intraday_dir = self.cache_dir / 'intraday'
+            if not intraday_dir.exists():
+                return
+            
+            today = datetime.now().strftime('%Y%m%d')
+            cleaned_count = 0
+            
+            for cache_file in intraday_dir.glob('*_intraday.json'):
+                try:
+                    # 从文件名提取日期
+                    filename = cache_file.name
+                    # 格式: {stock_code}_{date}_intraday.json
+                    parts = filename.replace('_intraday.json', '').split('_')
+                    if len(parts) >= 2:
+                        file_date = parts[-1]  # 最后一部分是日期
+                        
+                        # 如果不是今天的文件，删除
+                        if file_date != today:
+                            cache_file.unlink()
+                            cleaned_count += 1
+                            logger.debug(f"删除过期分时图缓存: {cache_file}")
+                
+                except Exception as e:
+                    logger.error(f"清理分时图缓存文件失败 {cache_file}: {e}")
+            
+            if cleaned_count > 0:
+                logger.info(f"清理过期分时图缓存完成，删除 {cleaned_count} 个文件")
+            
+        except Exception as e:
+            logger.error(f"清理分时图缓存失败: {e}")
 
 # 创建全局缓存管理器实例
 cache_manager = OptimizedCacheManager()
