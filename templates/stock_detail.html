@@ -694,25 +694,42 @@
             <div class="indicators-section">
                 <div class="indicators-header">每日指标</div>
                 <div class="indicators-grid">
+                    <!-- 基础价格指标 -->
                     <div class="indicator-item">
-                        <div class="indicator-label">市值</div>
-                        <div id="totalMv" class="indicator-value">55.76亿</div>
+                        <div class="indicator-label">当日收盘价</div>
+                        <div id="close" class="indicator-value">--</div>
                     </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">当天开盘</div>
+                        <div id="open" class="indicator-value">¥41.01</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">当天涨幅</div>
+                        <div id="pctChg" class="indicator-value negative">-0.03%</div>
+                    </div>
+                    
+                    <!-- 成交量相关指标 -->
                     <div class="indicator-item">
                         <div class="indicator-label">成交额</div>
                         <div id="amount" class="indicator-value">2.53亿</div>
-                    </div>
-                    <div class="indicator-item">
-                        <div class="indicator-label">净流入额</div>
-                        <div id="netInflow" class="indicator-value negative">-5310.00万</div>
                     </div>
                     <div class="indicator-item">
                         <div class="indicator-label">换手率</div>
                         <div id="turnoverRate" class="indicator-value">7.71%</div>
                     </div>
                     <div class="indicator-item">
+                        <div class="indicator-label">换手率(自由流通)</div>
+                        <div id="turnoverRateF" class="indicator-value">--</div>
+                    </div>
+                    <div class="indicator-item">
                         <div class="indicator-label">量比</div>
                         <div id="volumeRatio" class="indicator-value">0.85</div>
+                    </div>
+                    
+                    <!-- 估值指标 -->
+                    <div class="indicator-item">
+                        <div class="indicator-label">市盈率(PE)</div>
+                        <div id="pe" class="indicator-value">--</div>
                     </div>
                     <div class="indicator-item">
                         <div class="indicator-label">市盈率(TTM)</div>
@@ -723,12 +740,52 @@
                         <div id="pb" class="indicator-value">7.36</div>
                     </div>
                     <div class="indicator-item">
-                        <div class="indicator-label">当天开盘</div>
-                        <div id="open" class="indicator-value">¥41.01</div>
+                        <div class="indicator-label">市销率(PS)</div>
+                        <div id="ps" class="indicator-value">--</div>
                     </div>
                     <div class="indicator-item">
-                        <div class="indicator-label">当天涨幅</div>
-                        <div id="pctChg" class="indicator-value negative">-0.03%</div>
+                        <div class="indicator-label">市销率(TTM)</div>
+                        <div id="psTtm" class="indicator-value">--</div>
+                    </div>
+                    
+                    <!-- 股息指标 -->
+                    <div class="indicator-item">
+                        <div class="indicator-label">股息率(%)</div>
+                        <div id="dvRatio" class="indicator-value">--</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">股息率(TTM)(%)</div>
+                        <div id="dvTtm" class="indicator-value">--</div>
+                    </div>
+                    
+                    <!-- 股本指标 -->
+                    <div class="indicator-item">
+                        <div class="indicator-label">总股本(万股)</div>
+                        <div id="totalShare" class="indicator-value">--</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">流通股本(万股)</div>
+                        <div id="floatShare" class="indicator-value">--</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">自由流通股本(万股)</div>
+                        <div id="freeShare" class="indicator-value">--</div>
+                    </div>
+                    
+                    <!-- 市值指标 -->
+                    <div class="indicator-item">
+                        <div class="indicator-label">总市值</div>
+                        <div id="totalMv" class="indicator-value">55.76亿</div>
+                    </div>
+                    <div class="indicator-item">
+                        <div class="indicator-label">流通市值</div>
+                        <div id="circMv" class="indicator-value">--</div>
+                    </div>
+                    
+                    <!-- 其他指标 -->
+                    <div class="indicator-item">
+                        <div class="indicator-label">净流入额</div>
+                        <div id="netInflow" class="indicator-value negative">-5310.00万</div>
                     </div>
                     <div class="indicator-item">
                         <div class="indicator-label">所属行业</div>
@@ -2241,21 +2298,45 @@
             setValueColor(changePctEl, changePct);
             
             // 更新指标数据（优先使用实时交易数据中的指标）
-            document.getElementById('totalMv').textContent = formatValue(dailyData.total_mv, 'large_number');
-            document.getElementById('amount').textContent = formatAmount(realtimeData.amount || 0);
-            document.getElementById('netInflow').textContent = formatValue(realtimeData.net_inflow || 0, 'large_number');
+            // 基础价格指标
+            document.getElementById('close').textContent = formatValue(dailyData.close, 'currency');
+            document.getElementById('open').textContent = formatValue(realtimeData.open || dailyData.close, 'currency');
+            
+            // 交易量指标
             document.getElementById('turnoverRate').textContent = formatValue(dailyData.turnover_rate, 'percentage');
+            document.getElementById('turnoverRateF').textContent = formatValue(dailyData.turnover_rate_f, 'percentage');
             document.getElementById('volumeRatio').textContent = formatValue(dailyData.volume_ratio, 'ratio');
+            document.getElementById('amount').textContent = formatAmount(realtimeData.amount || 0);
+            
+            // 估值指标
+            document.getElementById('pe').textContent = formatValue(dailyData.pe, 'ratio');
             document.getElementById('peTtm').textContent = formatValue(dailyData.pe_ttm, 'ratio');
             document.getElementById('pb').textContent = formatValue(dailyData.pb, 'ratio');
-            document.getElementById('open').textContent = formatValue(realtimeData.open || dailyData.close, 'currency');
+            document.getElementById('ps').textContent = formatValue(dailyData.ps, 'ratio');
+            document.getElementById('psTtm').textContent = formatValue(dailyData.ps_ttm, 'ratio');
+            
+            // 股息指标
+            document.getElementById('dvRatio').textContent = formatValue(dailyData.dv_ratio, 'percentage');
+            document.getElementById('dvTtm').textContent = formatValue(dailyData.dv_ttm, 'percentage');
+            
+            // 股本指标
+            document.getElementById('totalShare').textContent = formatValue(dailyData.total_share, 'large_number');
+            document.getElementById('floatShare').textContent = formatValue(dailyData.float_share, 'large_number');
+            document.getElementById('freeShare').textContent = formatValue(dailyData.free_share, 'large_number');
+            
+            // 市值指标
+            document.getElementById('totalMv').textContent = formatValue(dailyData.total_mv, 'large_number');
+            document.getElementById('circMv').textContent = formatValue(dailyData.circ_mv, 'large_number');
+            
+            // 其他指标
+            document.getElementById('netInflow').textContent = formatValue(realtimeData.net_mf_amount || 0, 'large_number');
             
             const pctChgEl = document.getElementById('pctChg');
             pctChgEl.textContent = formatValue(changePct, 'percentage');
             setValueColor(pctChgEl, changePct);
             
             const netInflowEl = document.getElementById('netInflow');
-            setValueColor(netInflowEl, realtimeData.net_inflow || 0);
+            setValueColor(netInflowEl, realtimeData.net_mf_amount || 0);
             
             document.getElementById('industry').textContent = stock_info.industry || '未知行业';
             
@@ -2276,21 +2357,35 @@
             if (!stockData) return;
             
             // 更新每日指标中可以从实时数据获取的字段
-            const totalMvElement = document.getElementById('totalMv');
-            const amountElement = document.getElementById('amount');
+            // 基础价格指标
+            const closeElement = document.getElementById('close');
+            const openElement = document.getElementById('open');
+            
+            // 交易量指标
             const turnoverRateElement = document.getElementById('turnoverRate');
+            const turnoverRateFElement = document.getElementById('turnoverRateF');
             const volumeRatioElement = document.getElementById('volumeRatio');
+            const amountElement = document.getElementById('amount');
+            
+            // 估值指标
+            const peElement = document.getElementById('pe');
             const peTtmElement = document.getElementById('peTtm');
             const pbElement = document.getElementById('pb');
+            const psElement = document.getElementById('ps');
+            const psTtmElement = document.getElementById('psTtm');
             
-            // 更新总市值（从实时数据获取）
-            if (stockData['总市值'] && totalMvElement) {
-                totalMvElement.textContent = formatValue(stockData['总市值'], 'large_number');
+            // 市值指标
+            const totalMvElement = document.getElementById('totalMv');
+            const circMvElement = document.getElementById('circMv');
+            
+            // 更新收盘价（从实时数据获取）
+            if (stockData['现价'] && closeElement) {
+                closeElement.textContent = formatValue(stockData['现价'], 'currency');
             }
             
-            // 更新成交额（从实时数据获取）
-            if (stockData['成交额'] && amountElement) {
-                amountElement.textContent = formatValue(stockData['成交额'], 'large_number');
+            // 更新开盘价（从实时数据获取）
+            if (stockData['今开'] && openElement) {
+                openElement.textContent = formatValue(stockData['今开'], 'currency');
             }
             
             // 更新换手率（从实时数据获取）
@@ -2303,6 +2398,11 @@
                 volumeRatioElement.textContent = formatValue(stockData['量比'], 'ratio');
             }
             
+            // 更新成交额（从实时数据获取）
+            if (stockData['成交额'] && amountElement) {
+                amountElement.textContent = formatValue(stockData['成交额'], 'large_number');
+            }
+            
             // 更新市盈率（从实时数据获取）
             if (stockData['市盈率-动态'] && peTtmElement) {
                 peTtmElement.textContent = formatValue(stockData['市盈率-动态'], 'ratio');
@@ -2311,6 +2411,16 @@
             // 更新市净率（从实时数据获取）
             if (stockData['市净率'] && pbElement) {
                 pbElement.textContent = formatValue(stockData['市净率'], 'ratio');
+            }
+            
+            // 更新总市值（从实时数据获取）
+            if (stockData['总市值'] && totalMvElement) {
+                totalMvElement.textContent = formatValue(stockData['总市值'], 'large_number');
+            }
+            
+            // 更新流通市值（从实时数据获取）
+            if (stockData['流通市值'] && circMvElement) {
+                circMvElement.textContent = formatValue(stockData['流通市值'], 'large_number');
             }
             
             console.log('[每日指标] 已使用实时交易数据更新每日指标');

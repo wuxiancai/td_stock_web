@@ -1070,6 +1070,23 @@ def calculate_rsi(df, period=14):
     return df
 
 
+def calculate_ema15(df, period=15):
+    """
+    计算EMA15指数移动平均线
+    参数:
+    - period: EMA周期，默认15天
+    """
+    df = df.copy()
+    
+    # 计算EMA15
+    df['ema15'] = df['close'].ewm(span=period, min_periods=1).mean()
+    
+    # 应用精度修复，避免显示包含"999"的浮点数
+    df['ema15'] = df['ema15'].apply(lambda x: clean_float_precision(x, 4))
+    
+    return df
+
+
 
 
 @app.route('/')
@@ -2257,6 +2274,9 @@ def get_stock_data(stock_code):
         # 计算RSI指标
         daily_data = calculate_rsi(daily_data)
         
+        # 计算EMA15指标
+        daily_data = calculate_ema15(daily_data)
+        
         # 确保所有数值字段不为None（除了BOLL指标）
         numeric_columns = ['open', 'high', 'low', 'close', 'vol', 'amount', 'nine_turn_up', 'nine_turn_down']
         for col in numeric_columns:
@@ -2401,7 +2421,7 @@ def get_stock_data(stock_code):
         indicator_columns = ['nine_turn_up', 'nine_turn_down', 'countdown_up', 'countdown_down', 
                            'boll_upper', 'boll_mid', 'boll_lower', 'boll_std',
                            'macd_dif', 'macd_dea', 'macd_histogram',
-                           'kdj_k', 'kdj_d', 'kdj_j', 'rsi']
+                           'kdj_k', 'kdj_d', 'kdj_j', 'rsi', 'ema15']
         
         # 只选择存在的列
         available_columns = [col for col in tushare_columns + indicator_columns if col in daily_data.columns]

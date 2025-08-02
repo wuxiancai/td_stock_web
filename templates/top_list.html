@@ -224,6 +224,126 @@
             margin-top: 5px;
         }
         
+        /* 筛选条件样式 - 单行显示 */
+        .filter-section {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .filter-title {
+            display: none;
+        }
+        
+        .filter-grid {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 0;
+        }
+        
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #495057;
+            line-height: 1;
+            margin-right: 4px;
+        }
+        
+        .filter-range {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .filter-input {
+            padding: 3px 5px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s ease;
+            width: 45px;
+            min-width: 45px;
+            max-width: 45px;
+            text-align: center;
+        }
+        
+        .filter-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.2);
+        }
+        
+        .filter-input-full {
+            width: 60px;
+            max-width: 60px;
+            min-width: 60px;
+        }
+        
+        .filter-separator {
+            color: #6c757d;
+            font-weight: bold;
+            font-size: 11px;
+            margin: 0 2px;
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+        
+        .filter-btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            min-width: 60px;
+            height: 28px;
+        }
+        
+        .filter-btn-clear {
+            background: linear-gradient(45deg, #6c757d, #495057);
+        }
+        
+        .filter-btn-clear:hover {
+            background: linear-gradient(45deg, #5a6268, #343a40);
+        }
+        
+        /* 整体容器布局 */
+        .filter-container {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        @media (max-width: 1200px) {
+            .filter-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .filter-grid {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .filter-actions {
+                margin-left: 0;
+                align-self: flex-end;
+            }
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -241,6 +361,66 @@
             .stock-table th,
             .stock-table td {
                 padding: 6px;
+            }
+            
+            .filter-section {
+                padding: 6px 8px;
+                margin-bottom: 10px;
+            }
+            
+            .filter-container {
+                flex-direction: column;
+                gap: 6px;
+            }
+            
+            .filter-title {
+                display: none;
+            }
+            
+            .filter-grid {
+                flex-direction: column;
+                gap: 6px;
+                width: 100%;
+            }
+            
+            .filter-item {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .filter-actions {
+                flex-direction: row;
+                justify-content: center;
+                gap: 6px;
+                width: 100%;
+                margin-left: 0;
+                align-self: center;
+            }
+            
+            .filter-btn {
+                padding: 4px 10px;
+                font-size: 11px;
+                min-width: 60px;
+                height: 26px;
+            }
+            
+            .filter-input {
+                width: 40px;
+                min-width: 40px;
+                max-width: 40px;
+                font-size: 11px;
+                padding: 2px 4px;
+            }
+            
+            .filter-input-full {
+                width: 50px;
+                max-width: 50px;
+                min-width: 50px;
+            }
+            
+            .filter-label {
+                font-size: 11px;
+                min-width: 80px;
             }
         }
     </style>
@@ -289,6 +469,70 @@
                 <p style="margin-top: 10px; font-size: 0.9em; color: #999;">请选择其他交易日期查看数据</p>
             </div>
             
+            <!-- 筛选条件区域 -->
+            <div id="filterSection" class="filter-section" style="display: none;">
+                <div class="filter-container">
+                    <div class="filter-grid">
+                        <div class="filter-item">
+                            <label class="filter-label">涨跌幅(%)</label>
+                            <div class="filter-range">
+                                <input type="number" id="pctChangeMin" class="filter-input" placeholder="最小" step="0.01">
+                                <span class="filter-separator">-</span>
+                                <input type="number" id="pctChangeMax" class="filter-input" placeholder="最大" step="0.01">
+                            </div>
+                        </div>
+                        
+                        <div class="filter-item">
+                            <label class="filter-label">量比</label>
+                            <div class="filter-range">
+                                <input type="number" id="volumeRatioMin" class="filter-input" placeholder="最小" step="0.1">
+                                <span class="filter-separator">-</span>
+                                <input type="number" id="volumeRatioMax" class="filter-input" placeholder="最大" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <div class="filter-item">
+                            <label class="filter-label">九转买入 - 红色(上涨)</label>
+                            <div class="filter-range">
+                                <input type="number" id="nineTurnUp" class="filter-input" placeholder="6" min="1" max="9" step="1">
+                                <span class="filter-separator">-</span>
+                                <input type="number" id="nineTurnUpMax" class="filter-input" placeholder="最大" min="1" max="9" step="1">
+                            </div>
+                        </div>
+                        
+                        <div class="filter-item">
+                            <label class="filter-label">净流入额(万元)</label>
+                            <div class="filter-range">
+                                <input type="number" id="netInflowMin" class="filter-input" placeholder="最小" step="1000">
+                                <span class="filter-separator">-</span>
+                                <input type="number" id="netInflowMax" class="filter-input" placeholder="最大" step="1000">
+                            </div>
+                        </div>
+                        
+                        <div class="filter-item">
+                            <label class="filter-label">股票代码</label>
+                            <div class="filter-range">
+                                <input type="text" id="stockCode" class="filter-input filter-input-full" placeholder="300" maxlength="6">
+                            </div>
+                        </div>
+                        
+                        <div class="filter-item">
+                            <label class="filter-label">当天涨幅(%)</label>
+                            <div class="filter-range">
+                                <input type="number" id="todayChangeMin" class="filter-input" placeholder="最小" step="0.01">
+                                <span class="filter-separator">-</span>
+                                <input type="number" id="todayChangeMax" class="filter-input" placeholder="最大" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button class="btn filter-btn" onclick="applyFilters()">筛选</button>
+                        <button class="btn filter-btn filter-btn-clear" onclick="clearFilters()">清除</button>
+                    </div>
+                </div>
+            </div>
+
             <div id="topListContent" style="display: none;">
                 <table class="stock-table" id="topListTable">
                     <thead>
@@ -402,12 +646,14 @@
                 document.getElementById('emptyDiv').style.display = 'block';
                 document.getElementById('topListContent').style.display = 'none';
                 document.getElementById('statsDiv').style.display = 'none';
+                document.getElementById('filterSection').style.display = 'none';
                 return;
             }
             
             document.getElementById('emptyDiv').style.display = 'none';
             document.getElementById('topListContent').style.display = 'block';
             document.getElementById('statsDiv').style.display = 'flex';
+            document.getElementById('filterSection').style.display = 'block';
             
             // 更新统计信息
             updateStats();
@@ -571,6 +817,164 @@
             `;
         }
         
+        // 筛选功能
+        let filteredData = [];
+        
+        function applyFilters() {
+            const filters = {
+                pctChangeMin: parseFloat(document.getElementById('pctChangeMin').value) || null,
+                pctChangeMax: parseFloat(document.getElementById('pctChangeMax').value) || null,
+                volumeRatioMin: parseFloat(document.getElementById('volumeRatioMin').value) || null,
+                volumeRatioMax: parseFloat(document.getElementById('volumeRatioMax').value) || null,
+                nineTurnUp: parseInt(document.getElementById('nineTurnUp').value) || null,
+                nineTurnUpMax: parseInt(document.getElementById('nineTurnUpMax').value) || null,
+                netInflowMin: parseFloat(document.getElementById('netInflowMin').value) || null,
+                netInflowMax: parseFloat(document.getElementById('netInflowMax').value) || null,
+                stockCode: document.getElementById('stockCode').value.trim() || null,
+                todayChangeMin: parseFloat(document.getElementById('todayChangeMin').value) || null,
+                todayChangeMax: parseFloat(document.getElementById('todayChangeMax').value) || null
+            };
+            
+            filteredData = topListData.filter(stock => {
+                // 涨跌幅筛选
+                if (filters.pctChangeMin !== null && (stock.pct_change || 0) < filters.pctChangeMin) return false;
+                if (filters.pctChangeMax !== null && (stock.pct_change || 0) > filters.pctChangeMax) return false;
+                
+                // 量比筛选 (注意：当前数据中可能没有量比字段，使用换手率作为替代)
+                if (filters.volumeRatioMin !== null && (stock.turnover_rate || 0) < filters.volumeRatioMin) return false;
+                if (filters.volumeRatioMax !== null && (stock.turnover_rate || 0) > filters.volumeRatioMax) return false;
+                
+                // 九转买入筛选
+                if (filters.nineTurnUp !== null || filters.nineTurnUpMax !== null) {
+                    const nineTurnValue = stock.nine_turn_up || 0;
+                    if (filters.nineTurnUp !== null && nineTurnValue < filters.nineTurnUp) return false;
+                    if (filters.nineTurnUpMax !== null && nineTurnValue > filters.nineTurnUpMax) return false;
+                    if (nineTurnValue === 0) return false; // 只显示有九转买入信号的股票
+                }
+                
+                // 净流入额筛选 (转换为万元)
+                if (filters.netInflowMin !== null && ((stock.net_amount || 0) / 10000) < filters.netInflowMin) return false;
+                if (filters.netInflowMax !== null && ((stock.net_amount || 0) / 10000) > filters.netInflowMax) return false;
+                
+                // 股票代码筛选
+                if (filters.stockCode !== null && !stock.ts_code.includes(filters.stockCode)) return false;
+                
+                // 当天涨幅筛选 (与涨跌幅相同)
+                if (filters.todayChangeMin !== null && (stock.pct_change || 0) < filters.todayChangeMin) return false;
+                if (filters.todayChangeMax !== null && (stock.pct_change || 0) > filters.todayChangeMax) return false;
+                
+                return true;
+            });
+            
+            // 显示筛选后的数据
+            displayFilteredData();
+        }
+        
+        function clearFilters() {
+            // 清空所有筛选输入框
+            document.getElementById('pctChangeMin').value = '';
+            document.getElementById('pctChangeMax').value = '';
+            document.getElementById('volumeRatioMin').value = '';
+            document.getElementById('volumeRatioMax').value = '';
+            document.getElementById('nineTurnUp').value = '';
+            document.getElementById('nineTurnUpMax').value = '';
+            document.getElementById('netInflowMin').value = '';
+            document.getElementById('netInflowMax').value = '';
+            document.getElementById('stockCode').value = '';
+            document.getElementById('todayChangeMin').value = '';
+            document.getElementById('todayChangeMax').value = '';
+            
+            // 重置筛选数据为原始数据
+            filteredData = [];
+            displayTopListData();
+        }
+        
+        function displayFilteredData() {
+            const dataToShow = filteredData.length > 0 ? filteredData : topListData;
+            
+            // 更新统计信息
+            updateStatsForData(dataToShow);
+            
+            // 应用排序
+            const sortedData = applySortToData(dataToShow);
+            
+            // 填充表格数据
+            const tbody = document.getElementById('topListTableBody');
+            tbody.innerHTML = '';
+            
+            if (sortedData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="15" style="text-align: center; padding: 20px; color: #666;">没有符合筛选条件的数据</td>`;
+                tbody.appendChild(row);
+                return;
+            }
+            
+            sortedData.forEach(stock => {
+                const row = document.createElement('tr');
+                
+                const changePercent = stock.pct_change || 0;
+                const priceClass = changePercent >= 0 ? 'price-positive' : 'price-negative';
+                const changeSign = changePercent >= 0 ? '+' : '';
+                
+                const netAmount = stock.net_amount || 0;
+                const netClass = netAmount >= 0 ? 'net-positive' : 'net-negative';
+                const netSign = netAmount >= 0 ? '+' : '';
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="stock-code">${stock.ts_code}</div>
+                    </td>
+                    <td>
+                        <div class="stock-name" onclick="viewStock('${stock.ts_code}')">${stock.name}</div>
+                    </td>
+                    <td class="${priceClass}">¥${(stock.close || 0).toFixed(2)}</td>
+                    <td class="${priceClass}">${changeSign}${changePercent.toFixed(2)}%</td>
+                    <td>${(stock.turnover_rate || 0).toFixed(2)}%</td>
+                    <td>${formatNumber((stock.amount || 0) / 100000000)}</td>
+                    <td>${formatNumber((stock.l_sell || 0) / 100000000)}</td>
+                    <td>${formatNumber((stock.l_buy || 0) / 100000000)}</td>
+                    <td>${formatNumber((stock.l_amount || 0) / 100000000)}</td>
+                    <td class="${netClass}">${netSign}${formatNumber((netAmount) / 100000000)}</td>
+                    <td class="${netClass}">${netSign}${(stock.net_rate || 0).toFixed(2)}%</td>
+                    <td>${(stock.amount_rate || 0).toFixed(2)}%</td>
+                    <td>${formatNumber((stock.float_values || 0) / 100000000)}</td>
+                    <td>
+                        ${(() => {
+                            if (stock.nine_turn_up && stock.nine_turn_up > 0) {
+                                return `<span style="color: red; font-weight: bold;">${stock.nine_turn_up}</span>`;
+                            } else if (stock.nine_turn_down && stock.nine_turn_down > 0) {
+                                return `<span style="color: green; font-weight: bold;">${stock.nine_turn_down}</span>`;
+                            } else if (stock.countdown_up && stock.countdown_up > 0) {
+                                return `<span style="color: red; font-weight: bold;">${stock.countdown_up}</span>`;
+                            } else if (stock.countdown_down && stock.countdown_down > 0) {
+                                return `<span style="color: green; font-weight: bold;">${stock.countdown_down}</span>`;
+                            } else {
+                                return '-';
+                            }
+                        })()} 
+                    </td>
+                    <td style="max-width: 200px; word-wrap: break-word;">${stock.reason || '-'}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            // 更新排序指示器
+            updateSortIndicators();
+        }
+        
+        function updateStatsForData(data) {
+            const totalCount = data.length;
+            const netBuyCount = data.filter(stock => (stock.net_amount || 0) > 0).length;
+            const netSellCount = data.filter(stock => (stock.net_amount || 0) < 0).length;
+            const totalAmount = data.reduce((sum, stock) => sum + (stock.amount || 0), 0) / 100000000; // 转换为亿
+            
+            document.getElementById('totalCount').textContent = totalCount;
+            document.getElementById('netBuyCount').textContent = netBuyCount;
+            document.getElementById('netSellCount').textContent = netSellCount;
+            document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+        }
+
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
             // 设置默认日期为今天

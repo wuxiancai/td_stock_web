@@ -47,7 +47,7 @@ class KlineChartManager {
             legend: {
                 bottom: 10,
                 left: 'center',
-                data: ['K线', 'MA5', 'MA10', 'MA20', 'MA30']
+                data: ['K线', 'MA5', 'MA10', 'MA20', 'MA30', 'EMA15']
             },
             tooltip: {
                 trigger: 'axis',
@@ -204,6 +204,7 @@ class KlineChartManager {
         const macdDif = [];
         const macdDea = [];
         const macdHistogram = [];
+        const ema15Data = [];
         
         // 计算移动平均线
         const calculateMA = (data, period) => {
@@ -251,6 +252,13 @@ class KlineChartManager {
                 macdDea.push(parseFloat(item.macd_dea) || 0);
                 macdHistogram.push(parseFloat(item.macd_histogram) || 0);
             }
+            
+            // EMA15指标
+            if (item.ema15 !== undefined) {
+                ema15Data.push(parseFloat(item.ema15) || '-');
+            } else {
+                ema15Data.push('-');
+            }
         });
         
         // 计算移动平均线
@@ -272,7 +280,8 @@ class KlineChartManager {
             bollLower,
             macdDif,
             macdDea,
-            macdHistogram
+            macdHistogram,
+            ema15Data
         };
     }
     
@@ -372,6 +381,19 @@ class KlineChartManager {
                 lineStyle: {
                     opacity: 0.5,
                     width: 1
+                },
+                symbol: 'none'
+            },
+            // EMA15
+            {
+                name: 'EMA15',
+                type: 'line',
+                data: data.ema15Data,
+                smooth: true,
+                lineStyle: {
+                    opacity: 0.8,
+                    width: 2,
+                    color: '#000000'  // 黑色线条
                 },
                 symbol: 'none'
             },
@@ -489,6 +511,13 @@ class KlineChartManager {
                     html += `<div style="margin-bottom: 2px;">${param.seriesName}: <span style="color: ${param.color}; font-weight: bold;">${parseFloat(param.data).toFixed(2)}</span></div>`;
                 }
             });
+            html += '</div>';
+        }
+        
+        // 添加EMA15指标信息
+        if (rawItem.ema15 !== undefined && rawItem.ema15 !== null) {
+            html += '<div style="margin-top: 8px; border-top: 1px solid #ddd; padding-top: 5px;">';
+            html += `<div style="margin-bottom: 2px;">EMA15: <span style="color: #000000; font-weight: bold;">${parseFloat(rawItem.ema15).toFixed(2)}</span></div>`;
             html += '</div>';
         }
         

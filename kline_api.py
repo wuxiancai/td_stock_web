@@ -118,7 +118,7 @@ def get_technical_indicators(symbol):
         df = df.sort_values('trade_date').reset_index(drop=True)
         
         # 计算技术指标 - 使用app.py中的函数
-        from app import calculate_macd, calculate_kdj, calculate_rsi
+        from app import calculate_macd, calculate_kdj, calculate_rsi, calculate_ema15
         
         # 计算各项技术指标
         if 'macd' in [i.strip().lower() for i in indicators]:
@@ -127,6 +127,8 @@ def get_technical_indicators(symbol):
             df = calculate_kdj(df)
         if 'rsi' in [i.strip().lower() for i in indicators]:
             df = calculate_rsi(df)
+        if 'ema15' in [i.strip().lower() for i in indicators]:
+            df = calculate_ema15(df)
         
         # 限制返回的数据量
         if len(df) > limit:
