@@ -180,8 +180,11 @@ class AkShareRateLimiter:
 
 # Tushare配置
 if TUSHARE_AVAILABLE:
-    ts.set_token('68a7f380e45182b216eb63a9666c277ee96e68e3754476976adc5019')
+    # 从环境变量获取Token，如果没有则使用默认值
+    tushare_token = os.environ.get('TUSHARE_TOKEN', '68a7f380e45182b216eb63a9666c277ee96e68e3754476976adc5019')
+    ts.set_token(tushare_token)
     pro = ts.pro_api()
+    print(f"Tushare Token已设置: {tushare_token[:20]}...")
 else:
     pro = None
 
@@ -1139,46 +1142,9 @@ def candlestick_chart(stock_code):
     """股票蜡烛图页面"""
     return render_template('candlestick_chart.html', stock_code=stock_code)
 
-@app.route('/stock/debug')
-def stock_debug():
-    """股票详情调试页面"""
-    return render_template('stock_detail_debug.html')
-
-@app.route('/test/simple')
-def simple_test():
-    """最简单的测试页面"""
-    return render_template('simple_test.html')
-
-@app.route('/test/step')
-def step_debug():
-    """逐步调试页面"""
-    return render_template('step_debug.html')
-
-@app.route('/test/error')
-def error_catch_test():
-    """错误捕获测试页面"""
-    return render_template('error_catch_test.html')
-
-@app.route('/test/function')
-def function_test():
-    """函数测试页面"""
-    return render_template('function_test.html')
-
-@app.route('/test/syntax')
-def syntax_test():
-    """语法测试页面"""
-    return render_template('syntax_test.html')
-
-
-
 @app.route('/watchlist')
 def watchlist():
     return render_template('watchlist.html')
-
-@app.route('/cache/monitor')
-def cache_monitor():
-    """缓存系统监控页面"""
-    return render_template('cache_monitor.html')
 
 @app.route('/red-filter')
 def red_filter():
@@ -1195,45 +1161,7 @@ def top_list():
     """龙虎榜页面"""
     return render_template('top_list.html')
 
-@app.route('/kline-test')
-def kline_test():
-    """K线图重构测试页面"""
-    return render_template('kline_test.html')
 
-@app.route('/indicator-test')
-def indicator_test():
-    """技术指标测试页面"""
-    return render_template('indicator_test.html')
-
-@app.route('/indicator-fix-test')
-def indicator_fix_test():
-    """技术指标修复测试页面"""
-    return render_template('indicator_fix_test.html')
-
-@app.route('/boll-debug')
-def boll_debug():
-    """BOLL指标调试页面"""
-    return render_template('boll_debug.html')
-
-@app.route('/boll-test')
-def boll_test():
-    """BOLL指标测试验证页面"""
-    return render_template('boll_test.html')
-
-@app.route('/test/refresh')
-def test_refresh():
-    """自动刷新功能测试页面"""
-    return render_template('test_refresh.html')
-
-@app.route('/test/ema15')
-def test_ema15():
-    """EMA15数据测试页面"""
-    return render_template('test_ema15_frontend.html')
-
-@app.route('/debug_nine_turn_add')
-def debug_nine_turn_add():
-    """九转数据添加调试页面"""
-    return render_template('debug_nine_turn_add.html')
 
 def get_stock_from_cache(ts_code):
     """从缓存中查找股票数据"""
@@ -1309,111 +1237,7 @@ def trigger_indices_failure():
         'next_retry_time': (datetime.now() + timedelta(seconds=retry_interval)).strftime('%Y-%m-%d %H:%M:%S')
     })
 
-@app.route('/api/indices/test_akshare_realtime')
-def test_akshare_realtime_indices():
-    """测试AKShare实时指数数据获取"""
-    try:
-        # 定义要获取的指数代码和名称
-        indices = {
-            'sh000001': '上证指数',
-            'sz399001': '深证成指', 
-            'sz399006': '创业板指',
-            'sh000688': '科创板'
-        }
-        
-        print("[测试] 开始测试AKShare实时指数数据获取...")
-        indices_data = get_indices_from_akshare_realtime(indices)
-        
-        if indices_data:
-            # 转换数据格式以匹配前端期望
-            formatted_data = {}
-            current_time = datetime.now().strftime('%H:%M:%S')
-            
-            for code, data in indices_data.items():
-                formatted_data[code] = {
-                    'name': data['name'],
-                    'current_price': data['price'],
-                    'change_pct': data['change_percent'],
-                    'change_amount': data['change'],
-                    'volume': data['volume'],
-                    'update_time': current_time
-                }
-            
-            return jsonify({
-                'success': True,
-                'data': formatted_data,
-                'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'source': 'akshare_realtime',
-                'message': f'AKShare实时数据获取成功，共获取到 {len(indices_data)} 个指数'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'data': {},
-                'message': 'AKShare实时数据获取失败',
-                'source': 'akshare_realtime'
-            })
-            
-    except Exception as e:
-        print(f"测试AKShare实时指数数据异常: {e}")
-        return jsonify({
-            'success': False,
-            'data': {},
-            'message': f'测试异常: {str(e)}',
-            'source': 'akshare_realtime'
-        })
 
-@app.route('/api/indices/test_tushare')
-def test_tushare_indices():
-    """测试Tushare指数数据获取（强制跳过AkShare）"""
-    try:
-        # 定义要获取的指数代码和名称
-        indices = {
-            'sh000001': '上证指数',
-            'sz399001': '深证成指', 
-            'sz399006': '创业板指',
-            'sh000688': '科创板'
-        }
-        
-        print("[测试] 强制使用Tushare获取指数数据...")
-        indices_data = get_indices_from_tushare(indices)
-        
-        if indices_data:
-            print("[测试] Tushare获取成功")
-            
-            # 转换数据格式以匹配前端期望
-            formatted_data = {}
-            for code, data in indices_data.items():
-                formatted_data[code] = {
-                    'name': data['name'],
-                    'current_price': data['price'],
-                    'change_pct': data['change_percent'],
-                    'change_amount': data['change'],
-                    'volume': data['volume'],
-                    'update_time': datetime.now().strftime('%H:%M:%S')
-                }
-            
-            return jsonify({
-                'success': True,
-                'data': formatted_data,
-                'fetch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'source': 'tushare_test'
-            })
-        else:
-            print("[测试] Tushare返回空数据")
-            return jsonify({
-                'success': False,
-                'error': 'Tushare返回空数据',
-                'source': 'tushare_test'
-            }), 500
-            
-    except Exception as e:
-        print(f"[测试] Tushare获取异常: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'source': 'tushare_test'
-        }), 500
 
 def is_market_open():
     """检查A股是否在开盘时间"""
@@ -6666,10 +6490,7 @@ def get_top_list():
             'error': str(e)
         }), 500
 
-@app.route('/test/intraday-cache')
-def intraday_cache_test():
-    """分时图缓存功能测试页面"""
-    return render_template('intraday_cache_test.html')
+
 
 if __name__ == '__main__':
     # 启动定时调度器

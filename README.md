@@ -1,6 +1,6 @@
-# 股票数据展示系统
+# TD Stock Web
 
-一个基于Flask的实时股票数据展示系统，支持K线图、分时图等多种数据可视化功能。
+基于九转序列的股票选股及四天持股交易系统
 
 ## 🌟 特性
 
@@ -58,7 +58,7 @@ cp config/development.yaml.example config/development.yaml
 3. 设置环境变量：
 ```bash
 export ENVIRONMENT=development
-export TUSHARE_TOKEN=your_token_here
+export TUSHARE_TOKEN=68a7f380e45182b216eb63a9666c277ee96e68e3754476976adc5019
 ```
 
 ### 启动应用
@@ -206,6 +206,16 @@ cache:
 - **错误处理**: 安全的错误信息返回
 
 ## 📱 部署指南
+
+### ⚠️ 部署提醒
+
+1. **✅ Tushare Token**：已预设，无需手动配置
+2. **✅ 域名配置**：已设置为 wuxiancai.win，无需手动配置
+3. **🔧 防火墙设置**：确保开放80端口（Nginx）和8080端口（Flask）
+4. **🔧 SSL证书**：建议配置HTTPS，使用命令：
+   ```bash
+   sudo certbot --nginx -d wuxiancai.win -d www.wuxiancai.win
+   ```
 
 ### 开发环境
 

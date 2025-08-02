@@ -77,7 +77,10 @@ check_requirements() {
     fi
     
     PYTHON_VER=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
-    if [[ $(echo "$PYTHON_VER < 3.8" | bc -l) -eq 1 ]]; then
+    PYTHON_MAJOR=$(echo $PYTHON_VER | cut -d'.' -f1)
+    PYTHON_MINOR=$(echo $PYTHON_VER | cut -d'.' -f2)
+    
+    if [[ $PYTHON_MAJOR -lt 3 ]] || [[ $PYTHON_MAJOR -eq 3 && $PYTHON_MINOR -lt 8 ]]; then
         log_error "Python版本过低，需要3.8+，当前版本: $PYTHON_VER"
         exit 1
     fi
@@ -92,6 +95,16 @@ check_requirements() {
     if [[ "$ENVIRONMENT" == "production" ]] && ! command -v systemctl &> /dev/null; then
         log_error "systemd 未安装，无法创建系统服务"
         exit 1
+    fi
+    
+    # 检查必要的系统工具
+    if ! command -v openssl &> /dev/null; then
+        log_error "openssl 未安装，无法生成安全密钥"
+        exit 1
+    fi
+    
+    if ! command -v netstat &> /dev/null && ! command -v ss &> /dev/null; then
+        log_warning "netstat 和 ss 都未安装，健康检查功能可能受限"
     fi
     
     log_success "系统要求检查通过"
@@ -152,7 +165,12 @@ setup_environment() {
         cat > "$ENV_FILE" << EOF
 # 环境配置
 ENVIRONMENT=$ENVIRONMENT
-DEBUG=$([ "$ENVIRONMENT" == "development" ] && echo "true" || echo "false")
+FLASK_ENV=$ENVIRONMENT
+FLASK_DEBUG=$([ "$ENVIRONMENT" == "development" ] && echo "true" || echo "false")
+
+# 服务器配置
+HOST=0.0.0.0
+PORT=8080
 
 # 数据库配置
 DATABASE_PATH=$PROJECT_DIR/data/stock_data.db
@@ -162,12 +180,17 @@ CACHE_DIRECTORY=$PROJECT_DIR/cache
 
 # 日志配置
 LOG_FILE_PATH=$PROJECT_DIR/logs/app.log
+LOG_LEVEL=INFO
 
-# API配置 (请设置您的Tushare Token)
-# TUSHARE_TOKEN=your_token_here
+# API配置
+TUSHARE_TOKEN=68a7f380e45182b216eb63a9666c277ee96e68e3754476976adc5019
 
 # 安全配置
 SECRET_KEY=$(openssl rand -hex 32)
+
+# 性能配置
+MAX_CONNECTIONS=1000
+REQUEST_TIMEOUT=60
 EOF
         log_success "环境变量文件创建完成"
     else
@@ -258,7 +281,7 @@ setup_nginx() {
     sudo tee "$NGINX_CONFIG" > /dev/null << EOF
 server {
     listen 80;
-    server_name your-domain.com;  # 请修改为您的域名
+    server_name wuxiancai.win www.wuxiancai.win;
     
     # 静态文件
     location /static/ {
@@ -366,7 +389,18 @@ health_check() {
     sleep 5
     
     # 检查端口
-    if netstat -tuln | grep -q ":8080 "; then
+    PORT_CHECK=false
+    if command -v netstat &> /dev/null; then
+        if netstat -tuln | grep -q ":8080 "; then
+            PORT_CHECK=true
+        fi
+    elif command -v ss &> /dev/null; then
+        if ss -tuln | grep -q ":8080 "; then
+            PORT_CHECK=true
+        fi
+    fi
+    
+    if $PORT_CHECK; then
         log_success "服务端口检查通过"
     else
         log_warning "服务端口8080未监听"
@@ -405,10 +439,17 @@ main() {
     
     if [[ "$ENVIRONMENT" == "production" ]]; then
         log_info "生产环境部署完成，服务已启动"
-        log_info "请确保："
-        log_info "1. 设置Tushare Token: 编辑 $PROJECT_DIR/.env"
-        log_info "2. 配置域名: 编辑 /etc/nginx/sites-available/$SERVICE_NAME"
-        log_info "3. 设置SSL证书 (推荐使用Let's Encrypt)"
+        log_info "配置信息："
+        log_info "1. ✅ Tushare Token: 已预设"
+        log_info "2. ✅ 域名配置: wuxiancai.win"
+        log_info "3. 🔧 建议设置SSL证书 (推荐使用Let's Encrypt)"
+        log_info ""
+        log_info "访问地址："
+        log_info "- HTTP: http://wuxiancai.win"
+        log_info "- 直接IP: http://$(curl -s ifconfig.me):80"
+        log_info ""
+        log_info "SSL证书配置命令："
+        log_info "sudo certbot --nginx -d wuxiancai.win -d www.wuxiancai.win"
     else
         log_info "开发环境部署完成"
         log_info "启动命令: cd $PROJECT_DIR && source venv/bin/activate && python app.py"
