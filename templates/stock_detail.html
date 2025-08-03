@@ -448,6 +448,15 @@
             border-bottom: none;
         }
 
+        /* 净流入汇总区域的特殊边框规则（2列布局） */
+        .moneyflow-category-grid[style*="repeat(2, 1fr)"] .moneyflow-item:nth-child(2n) {
+            border-right: none;
+        }
+
+        .moneyflow-category-grid[style*="repeat(2, 1fr)"] .moneyflow-item:nth-last-child(-n+2) {
+            border-bottom: none;
+        }
+
         .moneyflow-item:hover {
             background-color: #f8f9fa;
         }
@@ -827,18 +836,6 @@
                     </div>
                     <div id="moneyflowError" class="moneyflow-error" style="display: none;"></div>
                     <div id="moneyflowGrid" class="moneyflow-grid" style="display: none;">
-                        <!-- 净流入汇总 -->
-                        <div class="moneyflow-summary">
-                            <div class="moneyflow-summary-item">
-                                <div class="moneyflow-summary-label">净流入量</div>
-                                <div id="mf_net_vol" class="moneyflow-summary-value">--</div>
-                            </div>
-                            <div class="moneyflow-summary-item">
-                                <div class="moneyflow-summary-label">净流入额</div>
-                                <div id="mf_net_amount" class="moneyflow-summary-value">--</div>
-                            </div>
-                        </div>
-                        
                         <!-- 详细资金流向 -->
                         <div class="moneyflow-details">
                             <!-- 小单 -->
@@ -945,6 +942,21 @@
                                     <div class="moneyflow-item">
                                         <div class="moneyflow-label">净买入额</div>
                                         <div id="mf_net_elg_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 净流入汇总 -->
+                            <div class="moneyflow-category">
+                                <div class="moneyflow-category-title">净流入汇总</div>
+                                <div class="moneyflow-category-grid" style="grid-template-columns: repeat(2, 1fr);">
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">净流入额</div>
+                                        <div id="mf_net_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">净流入量</div>
+                                        <div id="mf_net_vol" class="moneyflow-value">--</div>
                                     </div>
                                 </div>
                             </div>
