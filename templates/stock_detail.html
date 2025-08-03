@@ -457,6 +457,46 @@
             border-bottom: none;
         }
 
+        /* 净流入汇总区域的特殊边框规则（1列布局） */
+        .moneyflow-category-grid[style*="1fr"] .moneyflow-item {
+            border-right: none;
+        }
+
+        .moneyflow-category-grid[style*="1fr"] .moneyflow-item:last-child {
+            border-bottom: none;
+        }
+
+        /* 净流入汇总区域的特殊样式优化 */
+        .moneyflow-summary-category .moneyflow-category-title {
+            text-align: center;
+        }
+
+        .moneyflow-summary-category .moneyflow-item {
+            padding: 10px 15px;
+        }
+
+        /* 堆叠布局的样式 */
+        .moneyflow-item-group {
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .moneyflow-stacked-category .moneyflow-category-grid {
+            gap: 10px;
+        }
+
+        .moneyflow-stacked-category .moneyflow-item {
+            border: none;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .moneyflow-stacked-category .moneyflow-item:last-child {
+            border-bottom: none;
+        }
+
         .moneyflow-item:hover {
             background-color: #f8f9fa;
         }
@@ -839,117 +879,141 @@
                         <!-- 详细资金流向 -->
                         <div class="moneyflow-details">
                             <!-- 小单 -->
-                            <div class="moneyflow-category">
+                            <div class="moneyflow-category moneyflow-stacked-category">
                                 <div class="moneyflow-category-title">小单（<5万）</div>
-                                <div class="moneyflow-category-grid">
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">买入量</div>
-                                        <div id="mf_buy_sm_vol" class="moneyflow-value">--</div>
+                                <div class="moneyflow-category-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">买入量</div>
+                                            <div id="mf_buy_sm_vol" class="moneyflow-value">--</div>
+                                        </div>
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">买入额</div>
+                                            <div id="mf_buy_sm_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">买入额</div>
-                                        <div id="mf_buy_sm_amount" class="moneyflow-value">--</div>
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">卖出量</div>
+                                            <div id="mf_sell_sm_vol" class="moneyflow-value">--</div>
+                                        </div>
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">卖出额</div>
+                                            <div id="mf_sell_sm_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">卖出量</div>
-                                        <div id="mf_sell_sm_vol" class="moneyflow-value">--</div>
-                                    </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">卖出额</div>
-                                        <div id="mf_sell_sm_amount" class="moneyflow-value">--</div>
-                                    </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">净买入额</div>
-                                        <div id="mf_net_sm_amount" class="moneyflow-value">--</div>
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">净买入额</div>
+                                            <div id="mf_net_sm_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- 中单 -->
-                            <div class="moneyflow-category">
+                            <div class="moneyflow-category moneyflow-stacked-category">
                                 <div class="moneyflow-category-title">中单（5-20万）</div>
-                                <div class="moneyflow-category-grid">
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">买入量</div>
-                                        <div id="mf_buy_md_vol" class="moneyflow-value">--</div>
+                                <div class="moneyflow-category-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">买入量</div>
+                                            <div id="mf_buy_md_vol" class="moneyflow-value">--</div>
+                                        </div>
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">买入额</div>
+                                            <div id="mf_buy_md_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">买入额</div>
-                                        <div id="mf_buy_md_amount" class="moneyflow-value">--</div>
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">卖出量</div>
+                                            <div id="mf_sell_md_vol" class="moneyflow-value">--</div>
+                                        </div>
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">卖出额</div>
+                                            <div id="mf_sell_md_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">卖出量</div>
-                                        <div id="mf_sell_md_vol" class="moneyflow-value">--</div>
-                                    </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">卖出额</div>
-                                        <div id="mf_sell_md_amount" class="moneyflow-value">--</div>
-                                    </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">净买入额</div>
-                                        <div id="mf_net_md_amount" class="moneyflow-value">--</div>
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">净买入额</div>
+                                            <div id="mf_net_md_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- 大单 -->
-                            <div class="moneyflow-category">
+                            <div class="moneyflow-category moneyflow-stacked-category">
                                 <div class="moneyflow-category-title">大单（20-100万）</div>
-                                <div class="moneyflow-category-grid">
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">买入量</div>
-                                        <div id="mf_buy_lg_vol" class="moneyflow-value">--</div>
+                                <div class="moneyflow-category-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">买入量</div>
+                                            <div id="mf_buy_lg_vol" class="moneyflow-value">--</div>
+                                        </div>
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">买入额</div>
+                                            <div id="mf_buy_lg_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">买入额</div>
-                                        <div id="mf_buy_lg_amount" class="moneyflow-value">--</div>
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">卖出量</div>
+                                            <div id="mf_sell_lg_vol" class="moneyflow-value">--</div>
+                                        </div>
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">卖出额</div>
+                                            <div id="mf_sell_lg_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">卖出量</div>
-                                        <div id="mf_sell_lg_vol" class="moneyflow-value">--</div>
-                                    </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">卖出额</div>
-                                        <div id="mf_sell_lg_amount" class="moneyflow-value">--</div>
-                                    </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">净买入额</div>
-                                        <div id="mf_net_lg_amount" class="moneyflow-value">--</div>
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">净买入额</div>
+                                            <div id="mf_net_lg_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- 特大单 -->
-                            <div class="moneyflow-category">
+                            <div class="moneyflow-category moneyflow-stacked-category">
                                 <div class="moneyflow-category-title">特大单（>100万）</div>
-                                <div class="moneyflow-category-grid">
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">买入量</div>
-                                        <div id="mf_buy_elg_vol" class="moneyflow-value">--</div>
+                                <div class="moneyflow-category-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">买入量</div>
+                                            <div id="mf_buy_elg_vol" class="moneyflow-value">--</div>
+                                        </div>
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">买入额</div>
+                                            <div id="mf_buy_elg_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">买入额</div>
-                                        <div id="mf_buy_elg_amount" class="moneyflow-value">--</div>
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">卖出量</div>
+                                            <div id="mf_sell_elg_vol" class="moneyflow-value">--</div>
+                                        </div>
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">卖出额</div>
+                                            <div id="mf_sell_elg_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">卖出量</div>
-                                        <div id="mf_sell_elg_vol" class="moneyflow-value">--</div>
-                                    </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">卖出额</div>
-                                        <div id="mf_sell_elg_amount" class="moneyflow-value">--</div>
-                                    </div>
-                                    <div class="moneyflow-item">
-                                        <div class="moneyflow-label">净买入额</div>
-                                        <div id="mf_net_elg_amount" class="moneyflow-value">--</div>
+                                    <div class="moneyflow-item-group">
+                                        <div class="moneyflow-item">
+                                            <div class="moneyflow-label">净买入额</div>
+                                            <div id="mf_net_elg_amount" class="moneyflow-value">--</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- 净流入汇总 -->
-                            <div class="moneyflow-category">
+                            <div class="moneyflow-category moneyflow-summary-category">
                                 <div class="moneyflow-category-title">净流入汇总</div>
-                                <div class="moneyflow-category-grid" style="grid-template-columns: repeat(2, 1fr);">
+                                <div class="moneyflow-category-grid" style="grid-template-columns: 1fr;">
                                     <div class="moneyflow-item">
                                         <div class="moneyflow-label">净流入额</div>
                                         <div id="mf_net_amount" class="moneyflow-value">--</div>
