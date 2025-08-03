@@ -428,7 +428,7 @@
 
         .moneyflow-category-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 0;
         }
 
@@ -440,11 +440,11 @@
             transition: background-color 0.2s ease;
         }
 
-        .moneyflow-item:nth-child(2n) {
+        .moneyflow-item:nth-child(5n) {
             border-right: none;
         }
 
-        .moneyflow-item:nth-last-child(-n+2) {
+        .moneyflow-item:nth-last-child(-n+5) {
             border-bottom: none;
         }
 
@@ -861,6 +861,10 @@
                                         <div class="moneyflow-label">卖出额</div>
                                         <div id="mf_sell_sm_amount" class="moneyflow-value">--</div>
                                     </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">净买入额</div>
+                                        <div id="mf_net_sm_amount" class="moneyflow-value">--</div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -883,6 +887,10 @@
                                     <div class="moneyflow-item">
                                         <div class="moneyflow-label">卖出额</div>
                                         <div id="mf_sell_md_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">净买入额</div>
+                                        <div id="mf_net_md_amount" class="moneyflow-value">--</div>
                                     </div>
                                 </div>
                             </div>
@@ -907,6 +915,10 @@
                                         <div class="moneyflow-label">卖出额</div>
                                         <div id="mf_sell_lg_amount" class="moneyflow-value">--</div>
                                     </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">净买入额</div>
+                                        <div id="mf_net_lg_amount" class="moneyflow-value">--</div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -929,6 +941,10 @@
                                     <div class="moneyflow-item">
                                         <div class="moneyflow-label">卖出额</div>
                                         <div id="mf_sell_elg_amount" class="moneyflow-value">--</div>
+                                    </div>
+                                    <div class="moneyflow-item">
+                                        <div class="moneyflow-label">净买入额</div>
+                                        <div id="mf_net_elg_amount" class="moneyflow-value">--</div>
                                     </div>
                                 </div>
                             </div>
@@ -1983,6 +1999,46 @@
                 const element = document.getElementById(field.id);
                 if (element) {
                     element.textContent = formatMoneyflowValueV2(field.value, field.type);
+                }
+            });
+
+            // 计算和显示买入额-卖出额
+            const netAmounts = [
+                {
+                    id: 'mf_net_sm_amount',
+                    buyAmount: moneyflowData.buy_sm_amount || 0,
+                    sellAmount: moneyflowData.sell_sm_amount || 0
+                },
+                {
+                    id: 'mf_net_md_amount',
+                    buyAmount: moneyflowData.buy_md_amount || 0,
+                    sellAmount: moneyflowData.sell_md_amount || 0
+                },
+                {
+                    id: 'mf_net_lg_amount',
+                    buyAmount: moneyflowData.buy_lg_amount || 0,
+                    sellAmount: moneyflowData.sell_lg_amount || 0
+                },
+                {
+                    id: 'mf_net_elg_amount',
+                    buyAmount: moneyflowData.buy_elg_amount || 0,
+                    sellAmount: moneyflowData.sell_elg_amount || 0
+                }
+            ];
+
+            netAmounts.forEach(item => {
+                const netAmount = item.buyAmount - item.sellAmount;
+                const element = document.getElementById(item.id);
+                if (element) {
+                    element.textContent = formatMoneyflowValueV2(netAmount, 'amount');
+                    // 设置颜色：负数绿色，正数红色
+                    if (netAmount < 0) {
+                        element.style.color = '#00aa00'; // 绿色
+                    } else if (netAmount > 0) {
+                        element.style.color = '#ff4444'; // 红色
+                    } else {
+                        element.style.color = '#666'; // 灰色（零值）
+                    }
                 }
             });
 
