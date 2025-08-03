@@ -118,6 +118,7 @@ create_directories() {
     sudo mkdir -p "$PROJECT_DIR/logs"
     sudo mkdir -p "$PROJECT_DIR/data"
     sudo mkdir -p "$PROJECT_DIR/cache"
+    sudo mkdir -p "$PROJECT_DIR/cache/intraday"
     sudo mkdir -p "$PROJECT_DIR/config"
     sudo mkdir -p "$BACKUP_DIR"
     
@@ -126,6 +127,25 @@ create_directories() {
     sudo chmod -R 755 "$PROJECT_DIR"
     
     log_success "目录结构创建完成"
+}
+
+# 初始化缓存目录
+init_cache() {
+    log_info "初始化缓存目录..."
+    
+    cd "$PROJECT_DIR"
+    
+    # 运行缓存初始化脚本
+    if [[ -f "init_cache.py" ]]; then
+        source venv/bin/activate
+        python init_cache.py
+        log_success "缓存目录初始化完成"
+    else
+        log_warning "缓存初始化脚本不存在，手动创建缓存目录"
+        mkdir -p cache/intraday
+        touch cache/.gitkeep
+        touch cache/intraday/.gitkeep
+    fi
 }
 
 # 安装Python依赖
@@ -426,6 +446,7 @@ main() {
     create_directories
     install_dependencies
     setup_environment
+    init_cache
     init_database
     create_service
     setup_nginx
