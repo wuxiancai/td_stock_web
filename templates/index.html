@@ -1883,8 +1883,8 @@
      function formatNetMfAmount(value) {
          if (value === undefined || value === null) return '-';
          
-         // 转换为万元单位
-         const amountInWan = value * 1000;
+         // 后端返回的是千万元单位，需要转换为万元显示
+         const amountInWan = value / 1000;
          const absValue = Math.abs(amountInWan);
          const sign = amountInWan >= 0 ? '+' : '-';
          

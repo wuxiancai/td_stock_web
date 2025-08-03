@@ -307,8 +307,8 @@
                 return '<span style="color: #666; font-weight: bold;">-</span>';
             }
             
-            // 转换为万元单位
-            const amountInWan = amount * 1000;
+            // 后端返回的是千万元单位，需要转换为万元显示
+            const amountInWan = amount / 10000;
             const absValue = Math.abs(amountInWan);
             let formatted;
             let sign = amountInWan >= 0 ? '+' : '-';
@@ -790,7 +790,7 @@
                 const turnoverRate = stock.turnover_rate || 0;
                 const volumeRatio = stock.volume_ratio || 0;
                 const nineTurnUp = stock.nine_turn_up || 0;
-                const netMfAmount = (stock.net_mf_amount || 0) * 1000; // 转换为万元
+                const netMfAmount = (stock.net_mf_amount || 0) / 10000; // 转换为万元
                 const stockCode = (stock.ts_code || '').toLowerCase();
                 const pctChg = stock.pct_chg || 0;
                 
