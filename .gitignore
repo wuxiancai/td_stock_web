@@ -188,10 +188,8 @@ data/
 *.xlsx
 *.json
 
-# Cache - 保留目录结构，忽略数据文件
-cache/*.json
-cache/*.json.backup
-cache/intraday/*.json
+# Cache
+cache/
 .cache/
 
 # Backup files
