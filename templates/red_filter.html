@@ -303,32 +303,34 @@
         
         // 格式化净流入额显示
         function formatNetMfAmount(amount) {
-            if (amount === undefined || amount === null) {
-                return '<span style="color: #666; font-weight: bold;">-</span>';
+            if (amount === null || amount === undefined || amount === '') {
+                return '<span style="color: #999;">--</span>';
             }
             
-            // 后端返回的是千万元单位，需要转换为万元显示
-            const amountInWan = amount / 10000;
-            const absValue = Math.abs(amountInWan);
-            let formatted;
-            let sign = amountInWan >= 0 ? '+' : '-';
-            
-            if (absValue >= 10000) {
-                formatted = (absValue / 10000).toFixed(2) + '亿';
-            } else {
-                formatted = absValue.toFixed(2) + '万';
-            }
+            const num = parseFloat(amount);
+            if (isNaN(num)) return amount;
             
             let color;
-            if (amountInWan > 0) {
-                color = '#ff4444'; // 红色表示净流入
-            } else if (amountInWan < 0) {
-                color = '#44aa44'; // 绿色表示净流出
+            if (num > 0) {
+                color = '#ff4444'; // 红色表示流入
+            } else if (num < 0) {
+                color = '#00aa00'; // 绿色表示流出
             } else {
-                color = '#666'; // 灰色表示无变化
+                color = '#999'; // 灰色表示无变化
             }
             
-            return `<span style="color: ${color}; font-weight: bold;">${sign}${formatted}</span>`;
+            // API返回的是千万元单位，需要转换显示
+            let formattedValue;
+            const absNum = Math.abs(num);
+            if (absNum >= 10) {
+                // 大于等于10千万元（即1亿元），显示为亿元
+                formattedValue = `${(num / 10).toFixed(3)}亿`;
+            } else {
+                // 小于10千万元，转换为万元显示
+                formattedValue = `${(num * 1000).toFixed(0)}万`;
+            }
+            
+            return `<span style="color: ${color}; font-weight: bold;">${formattedValue}</span>`;
         }
         
         function loadFilterData() {
@@ -790,7 +792,7 @@
                 const turnoverRate = stock.turnover_rate || 0;
                 const volumeRatio = stock.volume_ratio || 0;
                 const nineTurnUp = stock.nine_turn_up || 0;
-                const netMfAmount = (stock.net_mf_amount || 0) / 10000; // 转换为万元
+                const netMfAmount = (stock.net_mf_amount || 0); // 已经是万元单位
                 const stockCode = (stock.ts_code || '').toLowerCase();
                 const pctChg = stock.pct_chg || 0;
                 

@@ -818,7 +818,7 @@
                     <span>资金流向</span>
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <span id="moneyflowTimestamp" style="font-size: 12px; color: #6c757d;">--</span>
-                        <button id="moneyflowRefreshBtn" class="moneyflow-refresh-btn" onclick="refreshMoneyflowData()">刷新</button>
+                        <button id="moneyflowRefreshBtn" class="moneyflow-refresh-btn" onclick="refreshMoneyflowDataV2()">刷新</button>
                     </div>
                 </div>
                 <div id="moneyflowContent">
@@ -1149,12 +1149,18 @@
                 case 'percentage':
                     return `${num.toFixed(2)}%`;
                 case 'large_number':
-                    if (num >= 100000000) {
-                        return `${(num / 100000000).toFixed(2)}亿`;
-                    } else if (num >= 10000) {
-                        return `${(num / 10000).toFixed(2)}万`;
+                    // API返回的是元单位，需要转换显示
+                    const absNum = Math.abs(num);
+                    if (absNum >= 100000000) {
+                        // 大于等于1亿元，显示为亿元
+                        return `${(num / 100000000).toFixed(1)}亿`;
+                    } else if (absNum >= 10000) {
+                        // 大于等于1万元，显示为万元
+                        return `${(num / 10000).toFixed(1)}万`;
+                    } else {
+                        // 小于1万元，直接显示元
+                        return `${num.toFixed(0)}元`;
                     }
-                    return num.toFixed(2);
                 case 'ratio':
                     return num.toFixed(2);
                 default:
@@ -1233,8 +1239,8 @@
                 
                 displayStockData(dailyBasicResult, realtimeResult);
                 
-                // 加载资金流向数据
-                await loadMoneyflowData();
+                // 加载资金流向数据 - 使用独立版本
+                await loadMoneyflowDataV2();
                 
                 // 加载实时交易数据
                 await loadRealtimeData();
@@ -1726,6 +1732,13 @@
             document.getElementById('mf_net_vol').textContent = formatMoneyflowValue(moneyflowData.net_mf_vol, 'volume');
             document.getElementById('mf_net_amount').textContent = formatMoneyflowValue(moneyflowData.net_mf_amount, 'amount');
             
+            // 同时更新页面顶部的净流入额显示
+            const topNetInflowElement = document.getElementById('netInflow');
+            if (topNetInflowElement) {
+                topNetInflowElement.textContent = formatMoneyflowValue(moneyflowData.net_mf_amount, 'amount');
+                setMoneyflowValueColor(topNetInflowElement, moneyflowData.net_mf_amount);
+            }
+            
             // 设置净流入额的颜色
             const netAmountElement = document.getElementById('mf_net_amount');
             setMoneyflowValueColor(netAmountElement, moneyflowData.net_mf_amount);
@@ -1770,6 +1783,8 @@
         }
 
         // 格式化资金流向数值
+        // 严格按照Tushare官方文档：https://tushare.pro/document/2?doc_id=170
+        // 所有金额字段单位都是万元，包括net_mf_amount
         function formatMoneyflowValue(value, type = 'number') {
             if (value === null || value === undefined || value === '' || value === 0) {
                 return '--';
@@ -1787,12 +1802,14 @@
                     }
                     return `${num.toFixed(0)}手`;
                 case 'amount':
-                    if (Math.abs(num) >= 100000000) {
-                        return `${(num / 100000000).toFixed(2)}亿元`;
-                    } else if (Math.abs(num) >= 10000) {
-                        return `${(num / 10000).toFixed(2)}万元`;
+                    // 根据Tushare官方文档，API返回的净流入额是万元单位
+                    if (Math.abs(num) >= 10000) {
+                        // 大于等于10000万元（即1亿元），显示为亿元
+                        return `${(num / 10000).toFixed(3)}亿元`;
+                    } else {
+                        // 小于10000万元，直接显示为万元
+                        return `${num.toFixed(0)}万元`;
                     }
-                    return `${num.toFixed(2)}元`;
                 case 'number':
                 default:
                     return num.toFixed(2);
@@ -1852,6 +1869,163 @@
             }
             
             document.getElementById('moneyflowTimestamp').textContent = displayText;
+        }
+
+        // ========== 独立资金流向处理器 ==========
+        // 加载资金流向数据 - 独立版本
+        // 使用新的API端点 /api/stock/{code}/moneyflow_v2
+        // 严格按照Tushare官方文档，net_mf_amount字段为万元单位
+        async function loadMoneyflowDataV2(showLoading = true) {
+            try {
+                if (showLoading) {
+                    showMoneyflowLoading(true);
+                }
+                
+                const response = await fetch(`/api/stock/${currentStockCode}/moneyflow_v2`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || '获取资金流向数据失败');
+                }
+                
+                displayMoneyflowDataV2(result.data, result);
+                
+            } catch (error) {
+                console.error('独立资金流向数据加载失败:', error);
+                
+                let errorMessage = '独立资金流向数据加载失败';
+                if (error.message.includes('HTTP')) {
+                    errorMessage = `服务器错误: ${error.message}`;
+                } else {
+                    errorMessage = error.message || '未知错误，请稍后重试';
+                }
+                
+                if (showLoading) {
+                    showMoneyflowError(errorMessage);
+                }
+            } finally {
+                if (showLoading) {
+                    showMoneyflowLoading(false);
+                }
+            }
+        }
+
+        // 刷新资金流向数据 - 独立版本
+        async function refreshMoneyflowDataV2() {
+            const refreshBtn = document.getElementById('moneyflowRefreshBtn');
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = '刷新中...';
+            
+            try {
+                await loadMoneyflowDataV2();
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '刷新';
+            }
+        }
+
+        // 显示资金流向数据 - 独立版本
+        // 严格按照Tushare官方文档处理万元单位
+        function displayMoneyflowDataV2(data, result = null) {
+            if (!data || data.length === 0) {
+                showMoneyflowError('暂无资金流向数据');
+                return;
+            }
+
+            // 获取最新的资金流向数据（通常是第一条）
+            const moneyflowData = data[0];
+
+            // 显示净流入汇总
+            document.getElementById('mf_net_vol').textContent = formatMoneyflowValueV2(moneyflowData.net_mf_vol, 'volume');
+            document.getElementById('mf_net_amount').textContent = formatMoneyflowValueV2(moneyflowData.net_mf_amount, 'amount');
+            
+            // 同时更新页面顶部的净流入额显示
+            const topNetInflowElement = document.getElementById('netInflow');
+            if (topNetInflowElement) {
+                topNetInflowElement.textContent = formatMoneyflowValueV2(moneyflowData.net_mf_amount, 'amount');
+                setMoneyflowValueColor(topNetInflowElement, moneyflowData.net_mf_amount);
+            }
+            
+            // 设置净流入额的颜色
+            const netAmountElement = document.getElementById('mf_net_amount');
+            setMoneyflowValueColor(netAmountElement, moneyflowData.net_mf_amount);
+
+            // 显示详细资金流向数据
+            const fields = [
+                // 小单
+                { id: 'mf_buy_sm_vol', value: moneyflowData.buy_sm_vol, type: 'volume' },
+                { id: 'mf_buy_sm_amount', value: moneyflowData.buy_sm_amount, type: 'amount' },
+                { id: 'mf_sell_sm_vol', value: moneyflowData.sell_sm_vol, type: 'volume' },
+                { id: 'mf_sell_sm_amount', value: moneyflowData.sell_sm_amount, type: 'amount' },
+                // 中单
+                { id: 'mf_buy_md_vol', value: moneyflowData.buy_md_vol, type: 'volume' },
+                { id: 'mf_buy_md_amount', value: moneyflowData.buy_md_amount, type: 'amount' },
+                { id: 'mf_sell_md_vol', value: moneyflowData.sell_md_vol, type: 'volume' },
+                { id: 'mf_sell_md_amount', value: moneyflowData.sell_md_amount, type: 'amount' },
+                // 大单
+                { id: 'mf_buy_lg_vol', value: moneyflowData.buy_lg_vol, type: 'volume' },
+                { id: 'mf_buy_lg_amount', value: moneyflowData.buy_lg_amount, type: 'amount' },
+                { id: 'mf_sell_lg_vol', value: moneyflowData.sell_lg_vol, type: 'volume' },
+                { id: 'mf_sell_lg_amount', value: moneyflowData.sell_lg_amount, type: 'amount' },
+                // 特大单
+                { id: 'mf_buy_elg_vol', value: moneyflowData.buy_elg_vol, type: 'volume' },
+                { id: 'mf_buy_elg_amount', value: moneyflowData.buy_elg_amount, type: 'amount' },
+                { id: 'mf_sell_elg_vol', value: moneyflowData.sell_elg_vol, type: 'volume' },
+                { id: 'mf_sell_elg_amount', value: moneyflowData.sell_elg_amount, type: 'amount' }
+            ];
+
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                if (element) {
+                    element.textContent = formatMoneyflowValueV2(field.value, field.type);
+                }
+            });
+
+            // 显示数据网格
+            document.getElementById('moneyflowGrid').style.display = 'block';
+            document.getElementById('moneyflowError').style.display = 'none';
+            
+            // 更新时间戳
+            updateMoneyflowTimestamp(result);
+        }
+
+        // 格式化资金流向数值 - 独立版本
+        // 严格按照Tushare官方文档：https://tushare.pro/document/2?doc_id=170
+        // 所有金额字段单位都是万元，包括net_mf_amount
+        function formatMoneyflowValueV2(value, type = 'number') {
+            if (value === null || value === undefined || value === '' || value === 0) {
+                return '--';
+            }
+            
+            const num = parseFloat(value);
+            if (isNaN(num)) return value;
+            
+            switch (type) {
+                case 'volume':
+                    if (Math.abs(num) >= 100000000) {
+                        return `${(num / 100000000).toFixed(2)}亿手`;
+                    } else if (Math.abs(num) >= 10000) {
+                        return `${(num / 10000).toFixed(2)}万手`;
+                    }
+                    return `${num.toFixed(0)}手`;
+                case 'amount':
+                    // 根据Tushare官方文档，API返回的净流入额是万元单位
+                    if (Math.abs(num) >= 10000) {
+                        // 大于等于10000万元（即1亿元），显示为亿元
+                        return `${(num / 10000).toFixed(3)}亿元`;
+                    } else {
+                        // 小于10000万元，直接显示为万元
+                        return `${num.toFixed(0)}万元`;
+                    }
+                case 'number':
+                default:
+                    return num.toFixed(2);
+            }
         }
 
         // 加载K线数据
@@ -2366,15 +2540,9 @@
             document.getElementById('totalMv').textContent = formatValue(dailyData.total_mv, 'large_number');
             document.getElementById('circMv').textContent = formatValue(dailyData.circ_mv, 'large_number');
             
-            // 其他指标
-            document.getElementById('netInflow').textContent = formatValue(realtimeData.net_mf_amount || 0, 'large_number');
-            
             const pctChgEl = document.getElementById('pctChg');
             pctChgEl.textContent = formatValue(changePct, 'percentage');
             setValueColor(pctChgEl, changePct);
-            
-            const netInflowEl = document.getElementById('netInflow');
-            setValueColor(netInflowEl, realtimeData.net_mf_amount || 0);
             
             document.getElementById('industry').textContent = stock_info.industry || '未知行业';
             

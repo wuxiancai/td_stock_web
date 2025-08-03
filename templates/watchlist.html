@@ -810,21 +810,23 @@
         
         // 格式化净流入额函数
         function formatNetMfAmount(value) {
-            if (value === undefined || value === null) return '-';
+            if (value === null || value === undefined || value === '') return '--';
             
-            // 后端返回的是千万元单位，需要转换为万元显示
-            const amountInWan = value / 1000;
-            const absValue = Math.abs(amountInWan);
-            const sign = amountInWan >= 0 ? '+' : '-';
+            const num = parseFloat(value);
+            if (isNaN(num)) return value;
             
-            let formatted;
-            if (absValue >= 10000) {
-                formatted = (absValue / 10000).toFixed(2) + '亿';
+            // API返回的是千万元单位，需要转换显示
+            let formattedValue;
+            const absNum = Math.abs(num);
+            if (absNum >= 10) {
+                // 大于等于10千万元（即1亿元），显示为亿元
+                formattedValue = `${(num / 10).toFixed(3)}亿`;
             } else {
-                formatted = absValue.toFixed(2) + '万';
+                // 小于10千万元，转换为万元显示
+                formattedValue = `${(num * 1000).toFixed(0)}万`;
             }
             
-            return sign + formatted;
+            return formattedValue;
         }
         
         // 页面加载时获取自选股数据

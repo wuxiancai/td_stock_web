@@ -30,6 +30,16 @@ except ImportError as e:
     KLINE_API_AVAILABLE = False
     print(f"警告：K线API模块导入失败: {e}")
 
+# 导入独立的资金流向处理器
+try:
+    from moneyflow_handler import MoneyflowHandler
+    MONEYFLOW_HANDLER_AVAILABLE = True
+    print("独立资金流向处理器已成功导入")
+except ImportError as e:
+    MoneyflowHandler = None
+    MONEYFLOW_HANDLER_AVAILABLE = False
+    print(f"警告：独立资金流向处理器导入失败: {e}")
+
 app = Flask(__name__)
 CORS(app)
 
@@ -185,8 +195,16 @@ if TUSHARE_AVAILABLE:
     ts.set_token(tushare_token)
     pro = ts.pro_api()
     print(f"Tushare Token已设置: {tushare_token[:20]}...")
+    
+    # 初始化独立的资金流向处理器
+    if MONEYFLOW_HANDLER_AVAILABLE:
+        moneyflow_handler = MoneyflowHandler(tushare_token)
+        print("独立资金流向处理器已初始化")
+    else:
+        moneyflow_handler = None
 else:
     pro = None
+    moneyflow_handler = None
 
 # 包装tushare API调用的函数
 def safe_tushare_call(func, *args, **kwargs):
@@ -3356,6 +3374,65 @@ def get_stock_moneyflow(stock_code):
         
     except Exception as e:
         print(f"[资金流向] 获取失败: {e}")
+        return jsonify({'error': f'获取资金流向数据失败: {str(e)}'}), 500
+
+
+@app.route('/api/stock/<stock_code>/moneyflow_v2')
+def get_stock_moneyflow_v2(stock_code):
+    """
+    获取股票资金流向数据 - 独立版本
+    使用独立的MoneyflowHandler处理器，严格按照Tushare官方文档返回万元单位
+    
+    Args:
+        stock_code: 股票代码，如 000001 或 000001.SZ
+        
+    Query Parameters:
+        trade_date: 交易日期 YYYY-MM-DD，默认为最新交易日
+        start_date: 开始日期 YYYY-MM-DD
+        end_date: 结束日期 YYYY-MM-DD
+        
+    Returns:
+        JSON: 资金流向数据，net_mf_amount字段为万元单位
+    """
+    try:
+        if not MONEYFLOW_HANDLER_AVAILABLE or moneyflow_handler is None:
+            return jsonify({'error': '独立资金流向处理器不可用'}), 503
+        
+        # 获取参数
+        trade_date = request.args.get('trade_date')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        print(f"[资金流向V2] 获取{stock_code}的资金流向数据")
+        
+        # 确保股票代码格式正确
+        if len(stock_code) == 6:
+            if stock_code.startswith(('60', '68')):
+                ts_code = f"{stock_code}.SH"
+            elif stock_code.startswith(('43', '83', '87')):
+                ts_code = f"{stock_code}.BJ"
+            else:
+                ts_code = f"{stock_code}.SZ"
+        else:
+            ts_code = stock_code
+        
+        # 使用独立的资金流向处理器获取数据
+        result = moneyflow_handler.get_moneyflow_data(
+            ts_code=ts_code,
+            trade_date=trade_date,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        if not result['success']:
+            return jsonify(result), 400
+        
+        print(f"[资金流向V2] 成功获取{stock_code}的资金流向数据")
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"[资金流向V2] 获取失败: {e}")
         return jsonify({'error': f'获取资金流向数据失败: {str(e)}'}), 500
 
 
