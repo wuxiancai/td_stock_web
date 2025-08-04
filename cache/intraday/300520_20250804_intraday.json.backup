@@ -1,7 +1,7 @@
 {
   "stock_code": "300520",
   "date": "20250804",
-  "save_time": "2025-08-04 09:57:57",
+  "save_time": "2025-08-04 09:58:07",
   "data": [
     {
       "time": "09:30",
@@ -454,21 +454,37 @@
     {
       "time": "09:58",
       "timestamp": "2025-08-04 09:58:00",
-      "price": 25.28,
+      "price": 25.27,
       "open": 25.31,
       "high": 25.31,
-      "low": 25.28,
-      "volume": 1806.0,
-      "amount": 4568504.0,
-      "vwap": 2547.3819560908673,
-      "avg_price": 25.473819560908677,
-      "cumulative_volume": 52472.0,
-      "cumulative_amount": 133666226.0,
-      "total_shares": 5247200.0,
-      "total_turnover": 133666226.0
+      "low": 25.27,
+      "volume": 1868.0,
+      "amount": 4725184.0,
+      "vwap": 2547.3580157612214,
+      "avg_price": 25.47358015761221,
+      "cumulative_volume": 52534.0,
+      "cumulative_amount": 133822906.0,
+      "total_shares": 5253400.0,
+      "total_turnover": 133822906.0
+    },
+    {
+      "time": "09:59",
+      "timestamp": "2025-08-04 09:59:00",
+      "price": 25.28,
+      "open": 25.29,
+      "high": 25.29,
+      "low": 25.27,
+      "volume": 441.0,
+      "amount": 1114774.0,
+      "vwap": 2547.195469561114,
+      "avg_price": 25.47195469561114,
+      "cumulative_volume": 52975.0,
+      "cumulative_amount": 134937680.0,
+      "total_shares": 5297500.0,
+      "total_turnover": 134937680.0
     }
   ],
-  "data_count": 29,
-  "_checksum": "a77d5a3f863d6b7c737962af2722ebbc",
-  "_save_time": 1754272677.591182
+  "data_count": 30,
+  "_checksum": "39feecd436299fe57c0e48148ad537af",
+  "_save_time": 1754272687.571352
 }
