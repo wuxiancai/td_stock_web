@@ -189,7 +189,7 @@ data/
 *.json
 
 # Cache
-cache/
+
 .cache/
 
 # Backup files
