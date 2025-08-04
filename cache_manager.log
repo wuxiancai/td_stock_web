@@ -1,0 +1,14 @@
+2025-07-31 09:37:50,224 - cache_manager - INFO - 缓存管理器初始化完成，缓存目录: cache
+2025-07-31 09:39:27,461 - cache_manager - INFO - 缓存管理器初始化完成，缓存目录: cache
+2025-07-31 09:39:27,461 - cache_manager - INFO - 缓存管理器初始化完成，缓存目录: cache
+2025-07-31 09:39:27,461 - cache_manager - INFO - 成功获取文件锁: cache/cyb_stocks_cache.json
+2025-07-31 09:39:27,487 - cache_manager - WARNING - 缓存数据校验和不匹配: cache/cyb_stocks_cache.json，可能是数据清理导致，继续使用
+2025-07-31 09:39:27,490 - cache_manager - INFO - 成功获取文件锁: cache/hu_stocks_cache.json
+2025-07-31 09:39:27,509 - cache_manager - WARNING - 缓存数据校验和不匹配: cache/hu_stocks_cache.json，可能是数据清理导致，继续使用
+2025-07-31 09:39:27,516 - cache_manager - INFO - 成功获取文件锁: cache/zxb_stocks_cache.json
+2025-07-31 09:39:27,602 - cache_manager - WARNING - 缓存数据校验和不匹配: cache/zxb_stocks_cache.json，可能是数据清理导致，继续使用
+2025-07-31 09:39:27,603 - cache_manager - INFO - 成功获取文件锁: cache/kcb_stocks_cache.json
+2025-07-31 09:39:27,610 - cache_manager - WARNING - 缓存数据校验和不匹配: cache/kcb_stocks_cache.json，可能是数据清理导致，继续使用
+2025-07-31 09:39:27,620 - cache_manager - INFO - 成功获取文件锁: cache/bj_stocks_cache.json
+2025-07-31 09:39:27,623 - cache_manager - WARNING - 缓存数据校验和不匹配: cache/bj_stocks_cache.json，可能是数据清理导致，继续使用
+2025-08-02 21:03:03,965 - cache_manager - INFO - 缓存管理器初始化完成，缓存目录: cache
