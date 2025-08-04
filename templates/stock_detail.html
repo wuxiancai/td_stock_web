@@ -2602,7 +2602,8 @@
         // 显示股票数据
         function displayStockData(dailyBasicResult, realtimeResult) {
             const { data: dailyData, stock_info } = dailyBasicResult;
-            const realtimeData = realtimeResult.success ? realtimeResult.data : {};
+            // 正确获取实时数据：使用spot数据而不是整个data对象
+            const realtimeData = realtimeResult.success && realtimeResult.spot ? realtimeResult.spot : {};
             
             // 更新股票基本信息
             document.getElementById('stockName').textContent = stock_info.name || '股票名称';
@@ -2626,8 +2627,9 @@
                 }
             });
             
-            const changeAmount = realtimeData.change || 0;
-            const changePct = realtimeData.pct_chg || 0;
+            // 使用正确的字段名获取涨跌额和涨跌幅
+            const changeAmount = realtimeData.change_amount || 0;
+            const changePct = realtimeData.change_percent || 0;
             
             // 初始显示加载中状态
             document.getElementById('stockPrice').textContent = '加载中...';
@@ -2641,20 +2643,20 @@
             setValueColor(changeAmountEl, changeAmount);
             setValueColor(changePctEl, changePct);
             
-            // 更新指标数据（优先使用实时交易数据中的指标）
-            // 基础价格指标
-            document.getElementById('close').textContent = formatValue(dailyData.close, 'currency');
+            // 更新指标数据（优先使用实时数据中的指标）
+            // 基础价格指标 - 使用实时最新价作为收盘价显示
+            document.getElementById('close').textContent = formatValue(realtimeData.latest_price || dailyData.close, 'currency');
             document.getElementById('open').textContent = formatValue(realtimeData.open || dailyData.close, 'currency');
             
             // 交易量指标
-            document.getElementById('turnoverRate').textContent = formatValue(dailyData.turnover_rate, 'percentage');
+            document.getElementById('turnoverRate').textContent = formatValue(realtimeData.turnover_rate || dailyData.turnover_rate, 'percentage');
             document.getElementById('turnoverRateF').textContent = formatValue(dailyData.turnover_rate_f, 'percentage');
-            document.getElementById('volumeRatio').textContent = formatValue(dailyData.volume_ratio, 'ratio');
+            document.getElementById('volumeRatio').textContent = formatValue(realtimeData.volume_ratio || dailyData.volume_ratio, 'ratio');
             document.getElementById('amount').textContent = formatAmount(realtimeData.amount || 0);
             
-            // 估值指标
+            // 估值指标 - 优先使用实时数据
             document.getElementById('pe').textContent = formatValue(dailyData.pe, 'ratio');
-            document.getElementById('peTtm').textContent = formatValue(dailyData.pe_ttm, 'ratio');
+            document.getElementById('peTtm').textContent = formatValue(realtimeData.pe_ratio || dailyData.pe_ttm, 'ratio');
             document.getElementById('pb').textContent = formatValue(dailyData.pb, 'ratio');
             document.getElementById('ps').textContent = formatValue(dailyData.ps, 'ratio');
             document.getElementById('psTtm').textContent = formatValue(dailyData.ps_ttm, 'ratio');
@@ -2668,8 +2670,8 @@
             document.getElementById('floatShare').textContent = formatValue(dailyData.float_share, 'large_number');
             document.getElementById('freeShare').textContent = formatValue(dailyData.free_share, 'large_number');
             
-            // 市值指标
-            document.getElementById('totalMv').textContent = formatValue(dailyData.total_mv, 'large_number');
+            // 市值指标 - 优先使用实时数据
+            document.getElementById('totalMv').textContent = formatValue(realtimeData.market_cap || dailyData.total_mv, 'large_number');
             document.getElementById('circMv').textContent = formatValue(dailyData.circ_mv, 'large_number');
             
             const pctChgEl = document.getElementById('pctChg');
