@@ -1,7 +1,7 @@
 {
   "stock_code": "300520",
   "date": "20250804",
-  "save_time": "2025-08-04 09:58:07",
+  "save_time": "2025-08-04 09:58:27",
   "data": [
     {
       "time": "09:30",
@@ -470,21 +470,21 @@
     {
       "time": "09:59",
       "timestamp": "2025-08-04 09:59:00",
-      "price": 25.28,
+      "price": 25.36,
       "open": 25.29,
-      "high": 25.29,
+      "high": 25.36,
       "low": 25.27,
-      "volume": 441.0,
-      "amount": 1114774.0,
-      "vwap": 2547.195469561114,
-      "avg_price": 25.47195469561114,
-      "cumulative_volume": 52975.0,
-      "cumulative_amount": 134937680.0,
-      "total_shares": 5297500.0,
-      "total_turnover": 134937680.0
+      "volume": 1107.0,
+      "amount": 2800277.0,
+      "vwap": 2546.9917227493893,
+      "avg_price": 25.469917227493895,
+      "cumulative_volume": 53641.0,
+      "cumulative_amount": 136623183.0,
+      "total_shares": 5364100.0,
+      "total_turnover": 136623183.0
     }
   ],
   "data_count": 30,
-  "_checksum": "39feecd436299fe57c0e48148ad537af",
-  "_save_time": 1754272687.571352
+  "_checksum": "a66c219599a51c1e2981b922fb208e40",
+  "_save_time": 1754272707.553366
 }
