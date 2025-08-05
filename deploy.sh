@@ -32,7 +32,7 @@ log_error() {
 # 默认配置
 ENVIRONMENT="development"
 PROJECT_DIR="$HOME/td_stock_web"
-SERVICE_NAME="td-stock"
+SERVICE_NAME="td-stock-web"
 PYTHON_VERSION="3.9"
 BACKUP_DIR="/var/backups/td_stock"
 
@@ -114,16 +114,30 @@ check_requirements() {
 create_directories() {
     log_info "创建目录结构..."
     
-    sudo mkdir -p "$PROJECT_DIR"
-    sudo mkdir -p "$PROJECT_DIR/logs"
-    sudo mkdir -p "$PROJECT_DIR/data"
-    sudo mkdir -p "$PROJECT_DIR/cache"
-    sudo mkdir -p "$PROJECT_DIR/config"
-    sudo mkdir -p "$BACKUP_DIR"
-    
-    # 设置权限
-    sudo chown -R $USER:$USER "$PROJECT_DIR"
-    sudo chmod -R 755 "$PROJECT_DIR"
+    if [[ "$ENVIRONMENT" == "production" ]]; then
+        # 生产环境使用sudo创建目录
+        sudo mkdir -p "$PROJECT_DIR"
+        sudo mkdir -p "$PROJECT_DIR/logs"
+        sudo mkdir -p "$PROJECT_DIR/data"
+        sudo mkdir -p "$PROJECT_DIR/cache"
+        sudo mkdir -p "$PROJECT_DIR/config"
+        sudo mkdir -p "$BACKUP_DIR"
+        
+        # 设置权限
+        sudo chown -R $USER:staff "$PROJECT_DIR"
+        sudo chmod -R 755 "$PROJECT_DIR"
+    else
+        # 开发和测试环境直接创建目录
+        mkdir -p "$PROJECT_DIR"
+        mkdir -p "$PROJECT_DIR/logs"
+        mkdir -p "$PROJECT_DIR/data"
+        mkdir -p "$PROJECT_DIR/cache"
+        mkdir -p "$PROJECT_DIR/config"
+        mkdir -p "$BACKUP_DIR" 2>/dev/null || log_warning "无法创建备份目录 $BACKUP_DIR，跳过"
+        
+        # 设置权限
+        chmod -R 755 "$PROJECT_DIR"
+    fi
     
     log_success "目录结构创建完成"
 }
@@ -373,11 +387,48 @@ start_service() {
     cd "$PROJECT_DIR"
     
     if [[ "$ENVIRONMENT" == "production" ]]; then
+        # 停止可能正在运行的服务
+        sudo systemctl stop "$SERVICE_NAME" 2>/dev/null || true
+        
+        # 启动服务
         sudo systemctl start "$SERVICE_NAME"
-        sudo systemctl status "$SERVICE_NAME" --no-pager
-        log_success "生产服务启动完成"
+        
+        # 检查服务状态
+        if sudo systemctl is-active --quiet "$SERVICE_NAME"; then
+            log_success "系统服务 $SERVICE_NAME 启动成功"
+            sudo systemctl status "$SERVICE_NAME" --no-pager
+        else
+            log_error "系统服务 $SERVICE_NAME 启动失败"
+            sudo systemctl status "$SERVICE_NAME" --no-pager
+            exit 1
+        fi
     else
-        log_info "开发环境，请手动启动: cd $PROJECT_DIR && source venv/bin/activate && python app.py"
+        # 开发和测试环境也自动启动服务
+        log_info "非生产环境，启动开发服务器..."
+        
+        # 检查是否有进程在使用8080端口
+        if netstat -tuln 2>/dev/null | grep -q ":8080 " || ss -tuln 2>/dev/null | grep -q ":8080 "; then
+            log_warning "端口8080已被占用，尝试停止现有进程..."
+            pkill -f "python.*app.py" 2>/dev/null || true
+            sleep 2
+        fi
+        
+        # 激活虚拟环境并启动应用
+        source venv/bin/activate
+        nohup python app.py > logs/app.log 2>&1 &
+        APP_PID=$!
+        
+        # 等待服务启动
+        sleep 3
+        
+        # 检查进程是否还在运行
+        if kill -0 $APP_PID 2>/dev/null; then
+            log_success "开发服务器启动成功 (PID: $APP_PID)"
+            echo $APP_PID > "$PROJECT_DIR/app.pid"
+        else
+            log_error "开发服务器启动失败"
+            exit 1
+        fi
     fi
 }
 
@@ -438,21 +489,42 @@ main() {
     log_success "========================================="
     
     if [[ "$ENVIRONMENT" == "production" ]]; then
-        log_info "生产环境部署完成，服务已启动"
+        log_info "生产环境部署完成，系统服务 $SERVICE_NAME 已启动"
         log_info "配置信息："
         log_info "1. ✅ Tushare Token: 已预设"
         log_info "2. ✅ 域名配置: wuxiancai.win"
-        log_info "3. 🔧 建议设置SSL证书 (推荐使用Let's Encrypt)"
+        log_info "3. ✅ 系统服务: $SERVICE_NAME"
+        log_info "4. 🔧 建议设置SSL证书 (推荐使用Let's Encrypt)"
+        log_info ""
+        log_info "服务管理命令："
+        log_info "- 启动服务: sudo systemctl start $SERVICE_NAME"
+        log_info "- 停止服务: sudo systemctl stop $SERVICE_NAME"
+        log_info "- 重启服务: sudo systemctl restart $SERVICE_NAME"
+        log_info "- 查看状态: sudo systemctl status $SERVICE_NAME"
+        log_info "- 查看日志: sudo journalctl -u $SERVICE_NAME -f"
         log_info ""
         log_info "访问地址："
         log_info "- HTTP: http://wuxiancai.win"
-        log_info "- 直接IP: http://$(curl -s ifconfig.me):80"
+        log_info "- 直接IP: http://$(curl -s ifconfig.me 2>/dev/null || echo 'localhost'):80"
+        log_info "- 本地测试: http://localhost:8080"
         log_info ""
         log_info "SSL证书配置命令："
         log_info "sudo certbot --nginx -d wuxiancai.win -d www.wuxiancai.win"
     else
-        log_info "开发环境部署完成"
-        log_info "启动命令: cd $PROJECT_DIR && source venv/bin/activate && python app.py"
+        log_info "$ENVIRONMENT 环境部署完成，开发服务器已启动"
+        log_info "配置信息："
+        log_info "1. ✅ Tushare Token: 已预设"
+        log_info "2. ✅ 服务端口: 8080"
+        log_info "3. ✅ 进程PID: $(cat $PROJECT_DIR/app.pid 2>/dev/null || echo '未知')"
+        log_info ""
+        log_info "访问地址："
+        log_info "- 本地访问: http://localhost:8080"
+        log_info "- 网络访问: http://$(curl -s ifconfig.me 2>/dev/null || echo 'localhost'):8080"
+        log_info ""
+        log_info "服务管理："
+        log_info "- 停止服务: kill \$(cat $PROJECT_DIR/app.pid)"
+        log_info "- 查看日志: tail -f $PROJECT_DIR/logs/app.log"
+        log_info "- 手动启动: cd $PROJECT_DIR && source venv/bin/activate && python app.py"
     fi
 }
 

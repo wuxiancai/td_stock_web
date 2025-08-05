@@ -1,6 +1,6 @@
 {
-  "filter_time": "2025-08-01T22:12:35.495620",
-  "filter_date": "2025-08-01",
+  "filter_time": "2025-08-05T09:53:53.851329",
+  "filter_date": "2025-08-05",
   "total": 336,
   "stocks": [
     {
@@ -22,8 +22,8 @@
       "pct_chg": 5.2475,
       "net_mf_amount": -1.81,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "001367.SZ",
@@ -41,8 +41,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002437.SZ",
@@ -60,8 +60,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301150.SZ",
@@ -82,8 +82,8 @@
       "pct_chg": -1.9258,
       "net_mf_amount": -0.82,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300235.SZ",
@@ -104,8 +104,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:37:09",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688244.SH",
@@ -123,8 +123,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300030.SZ",
@@ -145,8 +145,8 @@
       "countdown_up": 8,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:31:46",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300063.SZ",
@@ -167,8 +167,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:32:38",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688775.SH",
@@ -185,8 +185,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300058.SZ",
@@ -207,8 +207,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:32:31",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300452.SZ",
@@ -229,8 +229,8 @@
       "pct_chg": -2.3208,
       "net_mf_amount": -4.68,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000681.SZ",
@@ -248,8 +248,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300006.SZ",
@@ -270,8 +270,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:31:07",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300229.SZ",
@@ -292,8 +292,8 @@
       "countdown_up": 4,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:36:59",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300289.SZ",
@@ -314,8 +314,8 @@
       "countdown_up": 5,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:38:38",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688020.SH",
@@ -333,8 +333,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688048.SH",
@@ -352,8 +352,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600501.SH",
@@ -374,8 +374,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:29:52",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002364.SZ",
@@ -393,8 +393,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300677.SZ",
@@ -415,8 +415,8 @@
       "pct_chg": 8.5298,
       "net_mf_amount": 25.34,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300364.SZ",
@@ -437,8 +437,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:40:33",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300841.SZ",
@@ -459,8 +459,8 @@
       "pct_chg": 2.5171,
       "net_mf_amount": 2.46,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600730.SH",
@@ -481,8 +481,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:36:33",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600733.SH",
@@ -503,8 +503,8 @@
       "countdown_up": 11,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:36:39",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300940.SZ",
@@ -525,8 +525,8 @@
       "pct_chg": 4.4895,
       "net_mf_amount": 4.48,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300520.SZ",
@@ -547,8 +547,8 @@
       "pct_chg": 2.486,
       "net_mf_amount": 2.88,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300071.SZ",
@@ -569,8 +569,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:32:49",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688498.SH",
@@ -588,8 +588,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688657.SH",
@@ -607,8 +607,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000691.SZ",
@@ -626,8 +626,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "430047.BJ",
@@ -645,8 +645,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688269.SH",
@@ -664,8 +664,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301018.SZ",
@@ -686,8 +686,8 @@
       "pct_chg": -4.1273,
       "net_mf_amount": -5.03,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688199.SH",
@@ -705,8 +705,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600345.SH",
@@ -727,8 +727,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:25:57",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688095.SH",
@@ -746,8 +746,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688292.SH",
@@ -765,8 +765,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002536.SZ",
@@ -784,8 +784,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600216.SH",
@@ -806,8 +806,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:22:29",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688695.SH",
@@ -825,8 +825,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300453.SZ",
@@ -847,8 +847,8 @@
       "pct_chg": 2.2779,
       "net_mf_amount": 0.71,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300290.SZ",
@@ -869,8 +869,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:38:40",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688365.SH",
@@ -888,8 +888,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688519.SH",
@@ -907,8 +907,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688300.SH",
@@ -926,8 +926,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688167.SH",
@@ -945,8 +945,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688252.SH",
@@ -964,8 +964,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002268.SZ",
@@ -983,8 +983,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688058.SH",
@@ -1002,8 +1002,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688661.SH",
@@ -1021,8 +1021,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688088.SH",
@@ -1040,8 +1040,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600536.SH",
@@ -1062,8 +1062,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:30:56",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688030.SH",
@@ -1081,8 +1081,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "603039.SH",
@@ -1103,8 +1103,8 @@
       "pct_chg": 2.1327,
       "net_mf_amount": -3.46,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002518.SZ",
@@ -1122,8 +1122,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688293.SH",
@@ -1141,8 +1141,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "001270.SZ",
@@ -1160,8 +1160,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688169.SH",
@@ -1179,8 +1179,8 @@
       "nine_turn_up": 6,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300966.SZ",
@@ -1201,8 +1201,8 @@
       "pct_chg": 8.4112,
       "net_mf_amount": -1.47,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300254.SZ",
@@ -1223,8 +1223,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:37:42",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301126.SZ",
@@ -1245,8 +1245,8 @@
       "pct_chg": 8.8658,
       "net_mf_amount": 0.76,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300519.SZ",
@@ -1267,8 +1267,8 @@
       "pct_chg": 12.7563,
       "net_mf_amount": 3.07,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300322.SZ",
@@ -1289,8 +1289,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:39:31",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600513.SH",
@@ -1311,8 +1311,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:30:15",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688110.SH",
@@ -1330,8 +1330,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300009.SZ",
@@ -1352,8 +1352,8 @@
       "countdown_up": 3,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:31:12",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002317.SZ",
@@ -1371,8 +1371,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300199.SZ",
@@ -1393,8 +1393,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:36:12",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "603083.SH",
@@ -1415,8 +1415,8 @@
       "pct_chg": -6.2822,
       "net_mf_amount": -28.37,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002490.SZ",
@@ -1434,8 +1434,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300696.SZ",
@@ -1456,8 +1456,8 @@
       "pct_chg": 4.8454,
       "net_mf_amount": 10.16,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300731.SZ",
@@ -1478,8 +1478,8 @@
       "pct_chg": -2.039,
       "net_mf_amount": 5.96,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300149.SZ",
@@ -1500,8 +1500,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:34:53",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301022.SZ",
@@ -1522,8 +1522,8 @@
       "pct_chg": 6.4892,
       "net_mf_amount": 5.57,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "001318.SZ",
@@ -1541,8 +1541,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300238.SZ",
@@ -1563,8 +1563,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:37:14",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300400.SZ",
@@ -1585,8 +1585,8 @@
       "countdown_up": 7,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:41:32",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600666.SH",
@@ -1607,8 +1607,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:34:43",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300404.SZ",
@@ -1629,8 +1629,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:41:39",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "838227.BJ",
@@ -1648,8 +1648,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688757.SH",
@@ -1667,8 +1667,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002402.SZ",
@@ -1686,8 +1686,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300491.SZ",
@@ -1708,8 +1708,8 @@
       "pct_chg": 3.591,
       "net_mf_amount": 0.54,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300319.SZ",
@@ -1730,8 +1730,8 @@
       "countdown_up": 8,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:39:26",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301007.SZ",
@@ -1752,8 +1752,8 @@
       "pct_chg": -1.973,
       "net_mf_amount": -7.18,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002295.SZ",
@@ -1771,8 +1771,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600343.SH",
@@ -1793,8 +1793,8 @@
       "countdown_up": 7,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:25:55",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "832566.BJ",
@@ -1812,8 +1812,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301096.SZ",
@@ -1834,8 +1834,8 @@
       "pct_chg": 2.1044,
       "net_mf_amount": 2.93,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300434.SZ",
@@ -1856,8 +1856,8 @@
       "pct_chg": -0.9743,
       "net_mf_amount": -3.05,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300693.SZ",
@@ -1878,8 +1878,8 @@
       "pct_chg": 4.5695,
       "net_mf_amount": 11.64,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688418.SH",
@@ -1897,8 +1897,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301025.SZ",
@@ -1919,8 +1919,8 @@
       "pct_chg": 4.3711,
       "net_mf_amount": 4.13,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300907.SZ",
@@ -1941,8 +1941,8 @@
       "pct_chg": 1.7617,
       "net_mf_amount": 0.54,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688668.SH",
@@ -1960,8 +1960,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300958.SZ",
@@ -1982,8 +1982,8 @@
       "pct_chg": 2.7417,
       "net_mf_amount": 0.72,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600895.SH",
@@ -2004,8 +2004,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:41:18",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688258.SH",
@@ -2023,8 +2023,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300713.SZ",
@@ -2045,8 +2045,8 @@
       "pct_chg": 3.0522,
       "net_mf_amount": 2.54,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300233.SZ",
@@ -2067,8 +2067,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:37:06",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301130.SZ",
@@ -2089,8 +2089,8 @@
       "pct_chg": 2.0248,
       "net_mf_amount": -0.42,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300494.SZ",
@@ -2111,8 +2111,8 @@
       "pct_chg": 0.9682,
       "net_mf_amount": -2.98,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300517.SZ",
@@ -2133,8 +2133,8 @@
       "pct_chg": 0.6584,
       "net_mf_amount": -0.17,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300976.SZ",
@@ -2155,8 +2155,8 @@
       "pct_chg": 2.0052,
       "net_mf_amount": 0.64,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600594.SH",
@@ -2177,8 +2177,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:32:37",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600828.SH",
@@ -2199,8 +2199,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:39:22",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300990.SZ",
@@ -2221,8 +2221,8 @@
       "pct_chg": -1.0585,
       "net_mf_amount": -1.2,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002012.SZ",
@@ -2240,8 +2240,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688229.SH",
@@ -2259,8 +2259,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600613.SH",
@@ -2281,8 +2281,8 @@
       "countdown_up": 3,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:33:15",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600855.SH",
@@ -2303,8 +2303,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:40:03",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688108.SH",
@@ -2322,8 +2322,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688225.SH",
@@ -2341,8 +2341,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300971.SZ",
@@ -2363,8 +2363,8 @@
       "pct_chg": -2.154,
       "net_mf_amount": -3.04,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300805.SZ",
@@ -2385,8 +2385,8 @@
       "pct_chg": 1.3937,
       "net_mf_amount": -0.31,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300597.SZ",
@@ -2407,8 +2407,8 @@
       "pct_chg": 2.9412,
       "net_mf_amount": 2.32,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300191.SZ",
@@ -2429,8 +2429,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:35:58",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688392.SH",
@@ -2448,8 +2448,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300263.SZ",
@@ -2470,8 +2470,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:37:56",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002019.SZ",
@@ -2489,8 +2489,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300204.SZ",
@@ -2511,8 +2511,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:36:19",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002038.SZ",
@@ -2530,8 +2530,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300502.SZ",
@@ -2552,8 +2552,8 @@
       "pct_chg": -3.2186,
       "net_mf_amount": -30.53,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002384.SZ",
@@ -2571,8 +2571,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600222.SH",
@@ -2593,8 +2593,8 @@
       "countdown_up": 5,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:22:39",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688788.SH",
@@ -2612,8 +2612,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300602.SZ",
@@ -2634,8 +2634,8 @@
       "pct_chg": 1.0182,
       "net_mf_amount": 2.85,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688531.SH",
@@ -2653,8 +2653,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002313.SZ",
@@ -2672,8 +2672,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688109.SH",
@@ -2691,8 +2691,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300959.SZ",
@@ -2713,8 +2713,8 @@
       "pct_chg": 1.9213,
       "net_mf_amount": 0.84,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301123.SZ",
@@ -2735,8 +2735,8 @@
       "pct_chg": 0.4106,
       "net_mf_amount": -0.84,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301163.SZ",
@@ -2757,8 +2757,8 @@
       "pct_chg": 0.4476,
       "net_mf_amount": 0.87,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000788.SZ",
@@ -2776,8 +2776,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300641.SZ",
@@ -2798,8 +2798,8 @@
       "pct_chg": 0.9725,
       "net_mf_amount": -2.16,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688068.SH",
@@ -2817,8 +2817,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600833.SH",
@@ -2839,8 +2839,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:39:30",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300920.SZ",
@@ -2861,8 +2861,8 @@
       "pct_chg": -0.6649,
       "net_mf_amount": -2.57,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300615.SZ",
@@ -2883,8 +2883,8 @@
       "pct_chg": 0.9059,
       "net_mf_amount": 0.34,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600062.SH",
@@ -2905,8 +2905,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:18:21",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688251.SH",
@@ -2924,8 +2924,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300308.SZ",
@@ -2946,8 +2946,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:39:11",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300369.SZ",
@@ -2968,8 +2968,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:40:40",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300497.SZ",
@@ -2990,8 +2990,8 @@
       "pct_chg": 1.7928,
       "net_mf_amount": 0.81,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000919.SZ",
@@ -3009,8 +3009,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300138.SZ",
@@ -3031,8 +3031,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:34:34",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688143.SH",
@@ -3050,8 +3050,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300808.SZ",
@@ -3072,8 +3072,8 @@
       "pct_chg": 1.105,
       "net_mf_amount": -0.73,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688070.SH",
@@ -3091,8 +3091,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002020.SZ",
@@ -3110,8 +3110,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300510.SZ",
@@ -3132,8 +3132,8 @@
       "pct_chg": 2.2044,
       "net_mf_amount": 3.14,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688382.SH",
@@ -3151,8 +3151,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688658.SH",
@@ -3170,8 +3170,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688231.SH",
@@ -3189,8 +3189,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600498.SH",
@@ -3211,8 +3211,8 @@
       "countdown_up": 4,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:29:44",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300935.SZ",
@@ -3233,8 +3233,8 @@
       "pct_chg": 2.9244,
       "net_mf_amount": 0.77,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002463.SZ",
@@ -3252,8 +3252,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300419.SZ",
@@ -3274,8 +3274,8 @@
       "pct_chg": 2.6408,
       "net_mf_amount": 2.44,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002515.SZ",
@@ -3293,8 +3293,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301017.SZ",
@@ -3315,8 +3315,8 @@
       "pct_chg": 1.6055,
       "net_mf_amount": 0.07,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000915.SZ",
@@ -3334,8 +3334,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002624.SZ",
@@ -3353,8 +3353,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000078.SZ",
@@ -3372,8 +3372,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300251.SZ",
@@ -3394,8 +3394,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:37:37",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688183.SH",
@@ -3413,8 +3413,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300702.SZ",
@@ -3435,8 +3435,8 @@
       "pct_chg": -2.4,
       "net_mf_amount": -2.55,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300270.SZ",
@@ -3457,8 +3457,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:38:09",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000586.SZ",
@@ -3476,8 +3476,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688322.SH",
@@ -3495,8 +3495,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002414.SZ",
@@ -3514,8 +3514,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000952.SZ",
@@ -3533,8 +3533,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300901.SZ",
@@ -3555,8 +3555,8 @@
       "pct_chg": 3.6994,
       "net_mf_amount": 1.93,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000004.SZ",
@@ -3574,8 +3574,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300125.SZ",
@@ -3596,8 +3596,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:34:13",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688208.SH",
@@ -3615,8 +3615,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600812.SH",
@@ -3637,8 +3637,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:38:53",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688692.SH",
@@ -3656,8 +3656,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002221.SZ",
@@ -3675,8 +3675,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300165.SZ",
@@ -3697,8 +3697,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:35:18",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600673.SH",
@@ -3719,8 +3719,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:34:51",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000736.SZ",
@@ -3738,8 +3738,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688111.SH",
@@ -3757,8 +3757,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300137.SZ",
@@ -3779,8 +3779,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:34:32",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688161.SH",
@@ -3798,8 +3798,8 @@
       "nine_turn_up": 5,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002370.SZ",
@@ -3817,8 +3817,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688189.SH",
@@ -3836,8 +3836,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300965.SZ",
@@ -3858,8 +3858,8 @@
       "pct_chg": -3.9242,
       "net_mf_amount": 0.04,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "601606.SH",
@@ -3880,8 +3880,8 @@
       "pct_chg": 1.7878,
       "net_mf_amount": 22.9,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300410.SZ",
@@ -3902,8 +3902,8 @@
       "pct_chg": 4.1176,
       "net_mf_amount": 2.89,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300505.SZ",
@@ -3924,8 +3924,8 @@
       "pct_chg": 3.8961,
       "net_mf_amount": 7.14,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300547.SZ",
@@ -3946,8 +3946,8 @@
       "pct_chg": 0.5482,
       "net_mf_amount": -6.05,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "836433.BJ",
@@ -3965,8 +3965,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300486.SZ",
@@ -3987,8 +3987,8 @@
       "pct_chg": 20.0,
       "net_mf_amount": 11.12,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688205.SH",
@@ -4006,8 +4006,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688603.SH",
@@ -4025,8 +4025,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688800.SH",
@@ -4044,8 +4044,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "873167.BJ",
@@ -4063,8 +4063,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300600.SZ",
@@ -4085,8 +4085,8 @@
       "pct_chg": -4.1176,
       "net_mf_amount": -4.91,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300684.SZ",
@@ -4107,8 +4107,8 @@
       "pct_chg": 0.4665,
       "net_mf_amount": 8.31,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300016.SZ",
@@ -4129,8 +4129,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:31:24",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300264.SZ",
@@ -4151,8 +4151,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:37:58",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002552.SZ",
@@ -4170,8 +4170,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600302.SH",
@@ -4192,8 +4192,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:24:46",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300499.SZ",
@@ -4214,8 +4214,8 @@
       "pct_chg": -1.3413,
       "net_mf_amount": -0.98,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "832885.BJ",
@@ -4233,8 +4233,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "603063.SH",
@@ -4255,8 +4255,8 @@
       "pct_chg": 0.5277,
       "net_mf_amount": 21.49,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300875.SZ",
@@ -4277,8 +4277,8 @@
       "pct_chg": -4.8685,
       "net_mf_amount": -9.34,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301165.SZ",
@@ -4299,8 +4299,8 @@
       "pct_chg": -1.8136,
       "net_mf_amount": -10.96,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "836871.BJ",
@@ -4318,8 +4318,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300635.SZ",
@@ -4340,8 +4340,8 @@
       "pct_chg": 3.2491,
       "net_mf_amount": 1.29,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300007.SZ",
@@ -4362,8 +4362,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:31:09",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "870204.BJ",
@@ -4381,8 +4381,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002107.SZ",
@@ -4400,8 +4400,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002121.SZ",
@@ -4419,8 +4419,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300417.SZ",
@@ -4441,8 +4441,8 @@
       "pct_chg": -2.8955,
       "net_mf_amount": -2.83,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "430017.BJ",
@@ -4460,8 +4460,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000803.SZ",
@@ -4479,8 +4479,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300937.SZ",
@@ -4501,8 +4501,8 @@
       "pct_chg": 2.5649,
       "net_mf_amount": 0.81,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600557.SH",
@@ -4523,8 +4523,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:31:28",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000705.SZ",
@@ -4542,8 +4542,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688176.SH",
@@ -4561,8 +4561,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300167.SZ",
@@ -4583,8 +4583,8 @@
       "countdown_up": 7,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:35:22",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688556.SH",
@@ -4602,8 +4602,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600129.SH",
@@ -4624,8 +4624,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:20:05",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300913.SZ",
@@ -4646,8 +4646,8 @@
       "pct_chg": 1.1542,
       "net_mf_amount": -3.96,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688610.SH",
@@ -4665,8 +4665,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300469.SZ",
@@ -4687,8 +4687,8 @@
       "pct_chg": -4.9779,
       "net_mf_amount": -6.93,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600255.SH",
@@ -4709,8 +4709,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:23:29",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300394.SZ",
@@ -4731,8 +4731,8 @@
       "countdown_up": 4,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:41:21",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300039.SZ",
@@ -4753,8 +4753,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:32:00",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300002.SZ",
@@ -4775,8 +4775,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:31:00",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688091.SH",
@@ -4794,8 +4794,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688373.SH",
@@ -4813,8 +4813,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000801.SZ",
@@ -4832,8 +4832,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "601890.SH",
@@ -4854,8 +4854,8 @@
       "pct_chg": -2.1154,
       "net_mf_amount": -6.89,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301158.SZ",
@@ -4876,8 +4876,8 @@
       "pct_chg": -1.7666,
       "net_mf_amount": -4.63,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300981.SZ",
@@ -4898,8 +4898,8 @@
       "pct_chg": 8.0451,
       "net_mf_amount": 5.65,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300247.SZ",
@@ -4920,8 +4920,8 @@
       "countdown_up": 3,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:37:30",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688631.SH",
@@ -4939,8 +4939,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600211.SH",
@@ -4961,8 +4961,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:22:23",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "601869.SH",
@@ -4983,8 +4983,8 @@
       "pct_chg": -0.236,
       "net_mf_amount": 4.13,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002082.SZ",
@@ -5002,8 +5002,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688170.SH",
@@ -5021,8 +5021,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688488.SH",
@@ -5040,8 +5040,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688288.SH",
@@ -5059,8 +5059,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "837403.BJ",
@@ -5078,8 +5078,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688038.SH",
@@ -5097,8 +5097,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "603023.SH",
@@ -5119,8 +5119,8 @@
       "pct_chg": -1.5152,
       "net_mf_amount": -0.82,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002412.SZ",
@@ -5138,8 +5138,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688466.SH",
@@ -5157,8 +5157,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300281.SZ",
@@ -5179,8 +5179,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:38:26",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002198.SZ",
@@ -5198,8 +5198,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600021.SH",
@@ -5220,8 +5220,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:17:17",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300558.SZ",
@@ -5242,8 +5242,8 @@
       "pct_chg": 2.3079,
       "net_mf_amount": 2.67,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "603067.SH",
@@ -5264,8 +5264,8 @@
       "pct_chg": 2.5874,
       "net_mf_amount": 6.48,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300084.SZ",
@@ -5286,8 +5286,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:33:13",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600976.SH",
@@ -5308,8 +5308,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:42:42",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301091.SZ",
@@ -5330,8 +5330,8 @@
       "pct_chg": -1.4793,
       "net_mf_amount": -6.64,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688505.SH",
@@ -5349,8 +5349,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300005.SZ",
@@ -5371,8 +5371,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:31:05",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688309.SH",
@@ -5390,8 +5390,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "301155.SZ",
@@ -5412,8 +5412,8 @@
       "pct_chg": 2.1945,
       "net_mf_amount": 3.97,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688580.SH",
@@ -5431,8 +5431,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002328.SZ",
@@ -5450,8 +5450,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600543.SH",
@@ -5472,8 +5472,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:31:07",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688600.SH",
@@ -5491,8 +5491,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600360.SH",
@@ -5513,8 +5513,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:26:24",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600664.SH",
@@ -5535,8 +5535,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:34:38",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002287.SZ",
@@ -5554,8 +5554,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688021.SH",
@@ -5573,8 +5573,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300876.SZ",
@@ -5595,8 +5595,8 @@
       "pct_chg": 1.1551,
       "net_mf_amount": 0.47,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688611.SH",
@@ -5614,8 +5614,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600329.SH",
@@ -5636,8 +5636,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:25:31",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300209.SZ",
@@ -5658,8 +5658,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:36:25",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688168.SH",
@@ -5677,8 +5677,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002483.SZ",
@@ -5696,8 +5696,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600993.SH",
@@ -5718,8 +5718,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:43:13",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600380.SH",
@@ -5740,8 +5740,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:27:05",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600771.SH",
@@ -5762,8 +5762,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:37:44",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600488.SH",
@@ -5784,8 +5784,8 @@
       "countdown_up": 9,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:29:28",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688182.SH",
@@ -5803,8 +5803,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688681.SH",
@@ -5822,8 +5822,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688177.SH",
@@ -5841,8 +5841,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300101.SZ",
@@ -5863,8 +5863,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:33:38",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600381.SH",
@@ -5885,8 +5885,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:27:07",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600572.SH",
@@ -5907,8 +5907,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:31:56",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002275.SZ",
@@ -5926,8 +5926,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688575.SH",
@@ -5945,8 +5945,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688278.SH",
@@ -5964,8 +5964,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600535.SH",
@@ -5986,8 +5986,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:30:53",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600867.SH",
@@ -6008,8 +6008,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:40:27",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002294.SZ",
@@ -6027,8 +6027,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600938.SH",
@@ -6049,8 +6049,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:42:01",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002099.SZ",
@@ -6068,8 +6068,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688625.SH",
@@ -6087,8 +6087,8 @@
       "nine_turn_up": 4,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300732.SZ",
@@ -6109,8 +6109,8 @@
       "pct_chg": -5.7592,
       "net_mf_amount": -15.13,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "835305.BJ",
@@ -6128,8 +6128,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "834950.BJ",
@@ -6147,8 +6147,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688507.SH",
@@ -6166,8 +6166,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000813.SZ",
@@ -6185,8 +6185,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688291.SH",
@@ -6204,8 +6204,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300069.SZ",
@@ -6226,8 +6226,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:32:46",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "001267.SZ",
@@ -6245,8 +6245,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000716.SZ",
@@ -6264,8 +6264,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300807.SZ",
@@ -6286,8 +6286,8 @@
       "pct_chg": 4.1969,
       "net_mf_amount": 1.45,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688011.SH",
@@ -6305,8 +6305,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "603130.SH",
@@ -6327,8 +6327,8 @@
       "pct_chg": 1.7949,
       "net_mf_amount": 1.08,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300878.SZ",
@@ -6349,8 +6349,8 @@
       "pct_chg": 20.0,
       "net_mf_amount": -0.88,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688221.SH",
@@ -6368,8 +6368,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002150.SZ",
@@ -6387,8 +6387,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600727.SH",
@@ -6409,8 +6409,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:36:27",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "837344.BJ",
@@ -6428,8 +6428,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688500.SH",
@@ -6447,8 +6447,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688247.SH",
@@ -6466,8 +6466,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "002453.SZ",
@@ -6485,8 +6485,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300762.SZ",
@@ -6507,8 +6507,8 @@
       "pct_chg": 2.1959,
       "net_mf_amount": 3.02,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300747.SZ",
@@ -6529,8 +6529,8 @@
       "pct_chg": 0.101,
       "net_mf_amount": -0.12,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600712.SH",
@@ -6551,8 +6551,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:35:58",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600860.SH",
@@ -6573,8 +6573,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:40:11",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "871970.BJ",
@@ -6592,8 +6592,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688511.SH",
@@ -6611,8 +6611,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300381.SZ",
@@ -6633,8 +6633,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:40:59",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300986.SZ",
@@ -6655,8 +6655,8 @@
       "pct_chg": -0.8559,
       "net_mf_amount": -2.64,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688197.SH",
@@ -6674,8 +6674,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600330.SH",
@@ -6696,8 +6696,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:25:34",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600080.SH",
@@ -6718,8 +6718,8 @@
       "countdown_up": 2,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:18:46",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300215.SZ",
@@ -6740,8 +6740,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 17:36:36",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688302.SH",
@@ -6759,8 +6759,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600538.SH",
@@ -6781,8 +6781,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:31:00",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688267.SH",
@@ -6800,8 +6800,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000700.SZ",
@@ -6819,8 +6819,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "300441.SZ",
@@ -6841,8 +6841,8 @@
       "pct_chg": 0.2404,
       "net_mf_amount": -0.66,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "688130.SH",
@@ -6860,8 +6860,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600851.SH",
@@ -6882,8 +6882,8 @@
       "countdown_up": 3,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:39:57",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "600088.SH",
@@ -6904,8 +6904,8 @@
       "countdown_up": 0,
       "countdown_down": 0,
       "nine_turn_last_update": "20250801 18:18:56",
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     },
     {
       "ts_code": "000423.SZ",
@@ -6923,8 +6923,8 @@
       "nine_turn_up": 3,
       "nine_turn_down": 0,
       "data_loaded": true,
-      "filter_date": "2025-08-01",
-      "filter_time": "22:12:35"
+      "filter_date": "2025-08-05",
+      "filter_time": "09:53:53"
     }
   ]
 }

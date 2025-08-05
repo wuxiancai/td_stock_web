@@ -3,4518 +3,4518 @@
     {
       "name": "上证指数",
       "code": "sh000001",
-      "price": 3583.3088,
-      "change": 23.357,
-      "change_percent": 0.656,
-      "volume": 6397.75598457
+      "price": 3617.2263,
+      "change": 33.918,
+      "change_percent": 0.947,
+      "volume": 6489.59361492
     },
     {
       "name": "Ａ股指数",
       "code": "sh000002",
-      "price": 3755.934,
-      "change": 24.393,
-      "change_percent": 0.654,
-      "volume": 6380.34630347
+      "price": 3791.3358,
+      "change": 35.402,
+      "change_percent": 0.943,
+      "volume": 6472.65558782
     },
     {
       "name": "Ｂ股指数",
       "code": "sh000003",
-      "price": 267.0338,
-      "change": 1.53,
-      "change_percent": 0.576,
-      "volume": 0.83993258
+      "price": 268.1855,
+      "change": 1.152,
+      "change_percent": 0.431,
+      "volume": 1.28549972
     },
     {
       "name": "工业指数",
       "code": "sh000004",
-      "price": 3094.5666,
-      "change": 24.967,
-      "change_percent": 0.813,
-      "volume": 4774.50110017
+      "price": 3118.3742,
+      "change": 23.808,
+      "change_percent": 0.769,
+      "volume": 4785.59072255
     },
     {
       "name": "商业指数",
       "code": "sh000005",
-      "price": 2858.0229,
-      "change": 16.713,
-      "change_percent": 0.588,
-      "volume": 431.64830122
+      "price": 2895.0667,
+      "change": 37.044,
+      "change_percent": 1.296,
+      "volume": 446.86082867
     },
     {
       "name": "地产指数",
       "code": "sh000006",
-      "price": 4608.9515,
-      "change": 4.139,
-      "change_percent": 0.09,
-      "volume": 33.89661971
+      "price": 4639.9795,
+      "change": 31.028,
+      "change_percent": 0.673,
+      "volume": 34.85409894
     },
     {
       "name": "公用指数",
       "code": "sh000007",
-      "price": 4622.3724,
-      "change": 9.203,
-      "change_percent": 0.199,
-      "volume": 287.44418525
+      "price": 4644.8614,
+      "change": 22.489,
+      "change_percent": 0.487,
+      "volume": 304.742748
     },
     {
       "name": "综合指数",
       "code": "sh000008",
-      "price": 3487.7812,
-      "change": 16.719,
-      "change_percent": 0.482,
-      "volume": 870.2657782
+      "price": 3533.8721,
+      "change": 46.091,
+      "change_percent": 1.321,
+      "volume": 917.54521676
     },
     {
       "name": "上证380",
       "code": "sh000009",
-      "price": 5822.4482,
-      "change": 44.193,
-      "change_percent": 0.765,
-      "volume": 1306.69828799
+      "price": 5868.133,
+      "change": 45.685,
+      "change_percent": 0.785,
+      "volume": 1308.38684042
     },
     {
       "name": "上证180",
       "code": "sh000010",
-      "price": 9002.3247,
-      "change": 39.781,
-      "change_percent": 0.444,
-      "volume": 1755.01711972
+      "price": 9069.0033,
+      "change": 66.679,
+      "change_percent": 0.741,
+      "volume": 1748.48301028
     },
     {
       "name": "基金指数",
       "code": "sh000011",
-      "price": 6985.902,
-      "change": 4.66,
-      "change_percent": 0.067,
-      "volume": 2680.04409815
+      "price": 6992.8087,
+      "change": 6.907,
+      "change_percent": 0.099,
+      "volume": 2892.09352316
     },
     {
       "name": "国债指数",
       "code": "sh000012",
-      "price": 225.7032,
-      "change": 0.037,
+      "price": 225.7505,
+      "change": 0.036,
       "change_percent": 0.016,
-      "volume": 193.90270667
+      "volume": 261.51346778
     },
     {
       "name": "红利指数",
       "code": "sh000015",
-      "price": 3097.0062,
-      "change": 16.089,
-      "change_percent": 0.522,
-      "volume": 261.75131547
+      "price": 3128.3671,
+      "change": 31.361,
+      "change_percent": 1.013,
+      "volume": 252.74734661
     },
     {
       "name": "上证50",
       "code": "sh000016",
-      "price": 2769.3934,
-      "change": 15.263,
-      "change_percent": 0.554,
-      "volume": 802.52037766
+      "price": 2789.8976,
+      "change": 20.504,
+      "change_percent": 0.74,
+      "volume": 769.98067751
     },
     {
       "name": "新综指",
       "code": "sh000017",
-      "price": 3028.327,
-      "change": 19.743,
-      "change_percent": 0.656,
-      "volume": 6303.86527543
+      "price": 3057.0129,
+      "change": 28.686,
+      "change_percent": 0.947,
+      "volume": 6387.56820874
     },
     {
       "name": "180金融",
       "code": "sh000018",
-      "price": 5915.4642,
-      "change": 34.885,
-      "change_percent": 0.593,
-      "volume": 411.62775264
+      "price": 6002.5843,
+      "change": 87.12,
+      "change_percent": 1.473,
+      "volume": 471.93580329
     },
     {
       "name": "治理指数",
       "code": "sh000019",
-      "price": 1157.1147,
-      "change": 7.135,
-      "change_percent": 0.62,
-      "volume": 1210.14490316
+      "price": 1166.7714,
+      "change": 9.657,
+      "change_percent": 0.835,
+      "volume": 1230.60442349
     },
     {
       "name": "中型综指",
       "code": "sh000020",
-      "price": 1430.5295,
-      "change": 20.84,
-      "change_percent": 1.478,
-      "volume": 1778.7366264
+      "price": 1440.2789,
+      "change": 9.749,
+      "change_percent": 0.682,
+      "volume": 1793.77860474
     },
     {
       "name": "180治理",
       "code": "sh000021",
-      "price": 1018.9959,
-      "change": 5.968,
-      "change_percent": 0.589,
-      "volume": 848.11470623
+      "price": 1027.754,
+      "change": 8.758,
+      "change_percent": 0.859,
+      "volume": 883.46703326
     },
     {
       "name": "沪公司债",
       "code": "sh000022",
-      "price": 251.5803,
-      "change": 0.057,
-      "change_percent": 0.023,
-      "volume": 18.36994825
+      "price": 251.5977,
+      "change": 0.017,
+      "change_percent": 0.007,
+      "volume": 7.60773976
     },
     {
       "name": "180基建",
       "code": "sh000025",
-      "price": 1847.6145,
-      "change": 0.752,
-      "change_percent": 0.041,
-      "volume": 154.651164
+      "price": 1853.8409,
+      "change": 6.226,
+      "change_percent": 0.337,
+      "volume": 158.1276449
     },
     {
       "name": "180资源",
       "code": "sh000026",
-      "price": 4011.6834,
-      "change": 48.119,
-      "change_percent": 1.214,
-      "volume": 234.04857153
+      "price": 4032.2154,
+      "change": 20.532,
+      "change_percent": 0.512,
+      "volume": 191.10836988
     },
     {
       "name": "180运输",
       "code": "sh000027",
-      "price": 754.7396,
-      "change": 0.612,
-      "change_percent": 0.081,
-      "volume": 34.74042752
+      "price": 757.4367,
+      "change": 2.697,
+      "change_percent": 0.357,
+      "volume": 36.53246793
     },
     {
       "name": "180成长",
       "code": "sh000028",
-      "price": 3352.8185,
-      "change": 26.253,
-      "change_percent": 0.789,
-      "volume": 696.310608
+      "price": 3371.5187,
+      "change": 18.7,
+      "change_percent": 0.558,
+      "volume": 649.09064226
     },
     {
       "name": "180价值",
       "code": "sh000029",
-      "price": 4432.0964,
-      "change": 21.125,
-      "change_percent": 0.479,
-      "volume": 534.28988389
+      "price": 4489.046,
+      "change": 56.95,
+      "change_percent": 1.285,
+      "volume": 570.56233804
     },
     {
       "name": "180R成长",
       "code": "sh000030",
-      "price": 2185.2629,
-      "change": 13.424,
-      "change_percent": 0.618,
-      "volume": 1273.26148466
+      "price": 2197.1622,
+      "change": 11.899,
+      "change_percent": 0.545,
+      "volume": 1234.74896371
     },
     {
       "name": "180R价值",
       "code": "sh000031",
-      "price": 3184.4228,
-      "change": 11.374,
-      "change_percent": 0.358,
-      "volume": 1111.24076055
+      "price": 3220.9007,
+      "change": 36.478,
+      "change_percent": 1.146,
+      "volume": 1156.22065949
     },
     {
       "name": "上证能源",
       "code": "sh000032",
-      "price": 1819.0192,
-      "change": 2.399,
-      "change_percent": 0.132,
-      "volume": 74.20713273
+      "price": 1837.0057,
+      "change": 17.987,
+      "change_percent": 0.989,
+      "volume": 75.82510303
     },
     {
       "name": "上证材料",
       "code": "sh000033",
-      "price": 2595.1979,
-      "change": 30.463,
-      "change_percent": 1.188,
-      "volume": 427.7364953
+      "price": 2607.9308,
+      "change": 12.733,
+      "change_percent": 0.491,
+      "volume": 366.96076253
     },
     {
       "name": "上证工业",
       "code": "sh000034",
-      "price": 2114.0119,
-      "change": -0.434,
-      "change_percent": -0.021,
-      "volume": 276.54424668
+      "price": 2124.7752,
+      "change": 10.763,
+      "change_percent": 0.509,
+      "volume": 311.08423104
     },
     {
       "name": "上证可选",
       "code": "sh000035",
-      "price": 2737.8247,
-      "change": 21.564,
-      "change_percent": 0.794,
-      "volume": 203.94313457
+      "price": 2773.0767,
+      "change": 35.252,
+      "change_percent": 1.288,
+      "volume": 223.78377421
     },
     {
       "name": "上证消费",
       "code": "sh000036",
-      "price": 10951.7198,
-      "change": 33.457,
-      "change_percent": 0.306,
-      "volume": 95.08372326
+      "price": 11038.2552,
+      "change": 86.535,
+      "change_percent": 0.79,
+      "volume": 110.84846397
     },
     {
       "name": "上证医药",
       "code": "sh000037",
-      "price": 6837.5166,
-      "change": -10.595,
-      "change_percent": -0.155,
-      "volume": 327.41846641
+      "price": 6871.4111,
+      "change": 33.895,
+      "change_percent": 0.496,
+      "volume": 252.18513572
     },
     {
       "name": "上证金融",
       "code": "sh000038",
-      "price": 5899.2575,
-      "change": 34.441,
-      "change_percent": 0.587,
-      "volume": 356.33818172
+      "price": 5985.0673,
+      "change": 85.81,
+      "change_percent": 1.455,
+      "volume": 390.46099669
     },
     {
       "name": "上证信息",
       "code": "sh000039",
-      "price": 4055.5348,
-      "change": 43.76,
-      "change_percent": 1.091,
-      "volume": 519.2436092
+      "price": 4073.6313,
+      "change": 18.097,
+      "change_percent": 0.446,
+      "volume": 480.09532573
     },
     {
       "name": "上证电信",
       "code": "sh000040",
-      "price": 3657.0338,
-      "change": 9.099,
-      "change_percent": 0.249,
-      "volume": 124.72505147
+      "price": 3688.0851,
+      "change": 31.051,
+      "change_percent": 0.849,
+      "volume": 144.16108639
     },
     {
       "name": "上证公用",
       "code": "sh000041",
-      "price": 2485.7053,
-      "change": 6.7,
-      "change_percent": 0.27,
-      "volume": 93.25398331
+      "price": 2497.8899,
+      "change": 12.185,
+      "change_percent": 0.49,
+      "volume": 91.50777079
     },
     {
       "name": "上证央企",
       "code": "sh000042",
-      "price": 1779.3159,
-      "change": 9.166,
-      "change_percent": 0.518,
-      "volume": 519.00216135
+      "price": 1792.0803,
+      "change": 12.764,
+      "change_percent": 0.717,
+      "volume": 552.02535317
     },
     {
       "name": "超大盘",
       "code": "sh000043",
-      "price": 2252.3346,
-      "change": 15.122,
-      "change_percent": 0.676,
-      "volume": 452.92733135
+      "price": 2271.491,
+      "change": 19.156,
+      "change_percent": 0.851,
+      "volume": 434.51194408
     },
     {
       "name": "上证中盘",
       "code": "sh000044",
-      "price": 4203.524,
-      "change": 14.156,
-      "change_percent": 0.338,
-      "volume": 952.49674206
+      "price": 4247.7741,
+      "change": 44.25,
+      "change_percent": 1.053,
+      "volume": 978.50233277
     },
     {
       "name": "上证小盘",
       "code": "sh000045",
-      "price": 4980.5447,
-      "change": 44.945,
-      "change_percent": 0.911,
-      "volume": 1416.22639675
+      "price": 5013.8737,
+      "change": 33.329,
+      "change_percent": 0.669,
+      "volume": 1427.00316403
     },
     {
       "name": "上证中小",
       "code": "sh000046",
-      "price": 4586.2777,
-      "change": 27.264,
-      "change_percent": 0.598,
-      "volume": 2368.72313881
+      "price": 4626.544,
+      "change": 40.266,
+      "change_percent": 0.878,
+      "volume": 2405.5054968
     },
     {
       "name": "上证全指",
       "code": "sh000047",
-      "price": 3558.3013,
-      "change": 20.458,
-      "change_percent": 0.578,
-      "volume": 3171.24351647
+      "price": 3587.337,
+      "change": 29.036,
+      "change_percent": 0.816,
+      "volume": 3175.48617431
     },
     {
       "name": "责任指数",
       "code": "sh000048",
-      "price": 1432.0155,
-      "change": 7.472,
-      "change_percent": 0.525,
-      "volume": 551.10305605
+      "price": 1444.8685,
+      "change": 12.853,
+      "change_percent": 0.898,
+      "volume": 556.43790452
     },
     {
       "name": "上证民企",
       "code": "sh000049",
-      "price": 1660.7032,
-      "change": 8.639,
-      "change_percent": 0.523,
-      "volume": 474.34847839
+      "price": 1669.4345,
+      "change": 8.731,
+      "change_percent": 0.526,
+      "volume": 431.15148429
     },
     {
       "name": "50等权",
       "code": "sh000050",
-      "price": 2150.4961,
-      "change": 11.231,
-      "change_percent": 0.525,
-      "volume": 802.52037766
+      "price": 2166.1209,
+      "change": 15.625,
+      "change_percent": 0.727,
+      "volume": 769.98067751
     },
     {
       "name": "180等权",
       "code": "sh000051",
-      "price": 8468.9537,
-      "change": 29.272,
-      "change_percent": 0.347,
-      "volume": 1755.01711972
+      "price": 8537.1006,
+      "change": 68.147,
+      "change_percent": 0.805,
+      "volume": 1748.48301028
     },
     {
       "name": "50基本",
       "code": "sh000052",
-      "price": 2883.3548,
-      "change": 11.486,
-      "change_percent": 0.4,
-      "volume": 802.52037766
+      "price": 2910.1429,
+      "change": 26.788,
+      "change_percent": 0.929,
+      "volume": 769.98067751
     },
     {
       "name": "180基本",
       "code": "sh000053",
-      "price": 12122.3514,
-      "change": 40.387,
-      "change_percent": 0.334,
-      "volume": 1755.01711972
+      "price": 12253.5983,
+      "change": 131.247,
+      "change_percent": 1.083,
+      "volume": 1748.48301028
     },
     {
       "name": "上证海外",
       "code": "sh000054",
-      "price": 1467.0204,
-      "change": 8.345,
-      "change_percent": 0.572,
-      "volume": 646.1393761
+      "price": 1481.8284,
+      "change": 14.808,
+      "change_percent": 1.009,
+      "volume": 626.0415168
     },
     {
       "name": "上证地企",
       "code": "sh000055",
-      "price": 1463.3971,
-      "change": 7.553,
-      "change_percent": 0.519,
-      "volume": 574.24652833
+      "price": 1477.8539,
+      "change": 14.457,
+      "change_percent": 0.988,
+      "volume": 583.48011596
     },
     {
       "name": "上证国企",
       "code": "sh000056",
-      "price": 1153.1061,
-      "change": 6.72,
-      "change_percent": 0.586,
-      "volume": 761.51969695
+      "price": 1160.5668,
+      "change": 7.461,
+      "change_percent": 0.647,
+      "volume": 715.86904687
     },
     {
       "name": "全指成长",
       "code": "sh000057",
-      "price": 3380.2235,
-      "change": 26.699,
-      "change_percent": 0.796,
-      "volume": 1025.16827851
+      "price": 3402.7052,
+      "change": 22.482,
+      "change_percent": 0.665,
+      "volume": 994.12775984
     },
     {
       "name": "全指价值",
       "code": "sh000058",
-      "price": 4576.2465,
-      "change": 17.856,
-      "change_percent": 0.392,
-      "volume": 797.15315876
+      "price": 4628.411,
+      "change": 52.164,
+      "change_percent": 1.14,
+      "volume": 839.58608259
     },
     {
       "name": "全R成长",
       "code": "sh000059",
-      "price": 2858.0842,
-      "change": 21.933,
-      "change_percent": 0.773,
-      "volume": 2502.6879687
+      "price": 2874.9186,
+      "change": 16.834,
+      "change_percent": 0.589,
+      "volume": 2460.42384912
     },
     {
       "name": "全R价值",
       "code": "sh000060",
-      "price": 4225.9949,
-      "change": 17.456,
-      "change_percent": 0.415,
-      "volume": 2274.67284895
+      "price": 4268.5475,
+      "change": 42.553,
+      "change_percent": 1.007,
+      "volume": 2305.88217187
     },
     {
       "name": "沪企债30",
       "code": "sh000061",
-      "price": 178.4109,
-      "change": 0.046,
-      "change_percent": 0.026,
-      "volume": 0.66282562
+      "price": 178.4067,
+      "change": -0.004,
+      "change_percent": -0.002,
+      "volume": 1.33025847
     },
     {
       "name": "上证沪企",
       "code": "sh000062",
-      "price": 1971.5114,
-      "change": 7.074,
-      "change_percent": 0.36,
-      "volume": 283.40264099
+      "price": 1998.1129,
+      "change": 26.602,
+      "change_percent": 1.349,
+      "volume": 366.14717684
     },
     {
       "name": "上证周期",
       "code": "sh000063",
-      "price": 3730.3518,
-      "change": 27.321,
-      "change_percent": 0.738,
-      "volume": 613.02302978
+      "price": 3772.7361,
+      "change": 42.384,
+      "change_percent": 1.136,
+      "volume": 601.46370492
     },
     {
       "name": "非周期",
       "code": "sh000064",
-      "price": 3212.6002,
-      "change": 9.877,
-      "change_percent": 0.308,
-      "volume": 1044.16245397
+      "price": 3229.1497,
+      "change": 16.55,
+      "change_percent": 0.515,
+      "volume": 1021.6064804
     },
     {
       "name": "上证龙头",
       "code": "sh000065",
-      "price": 3334.1278,
-      "change": 9.148,
-      "change_percent": 0.275,
-      "volume": 954.48924702
+      "price": 3356.8341,
+      "change": 22.706,
+      "change_percent": 0.681,
+      "volume": 982.6756869
     },
     {
       "name": "上证商品",
       "code": "sh000066",
-      "price": 2812.5275,
-      "change": 21.324,
-      "change_percent": 0.764,
-      "volume": 433.04724127
+      "price": 2835.5854,
+      "change": 23.058,
+      "change_percent": 0.82,
+      "volume": 374.00839006
     },
     {
       "name": "上证新兴",
       "code": "sh000067",
-      "price": 7337.8483,
-      "change": 38.551,
-      "change_percent": 0.528,
-      "volume": 725.85867187
+      "price": 7359.1642,
+      "change": 21.316,
+      "change_percent": 0.29,
+      "volume": 646.13465108
     },
     {
       "name": "上证资源",
       "code": "sh000068",
-      "price": 3026.8144,
-      "change": 37.058,
-      "change_percent": 1.239,
-      "volume": 383.11506783
+      "price": 3047.2312,
+      "change": 20.417,
+      "change_percent": 0.675,
+      "volume": 323.39889604
     },
     {
       "name": "消费80",
       "code": "sh000069",
-      "price": 4876.7916,
-      "change": 17.706,
-      "change_percent": 0.364,
-      "volume": 467.99828126
+      "price": 4913.7319,
+      "change": 36.94,
+      "change_percent": 0.757,
+      "volume": 444.38259248
     },
     {
       "name": "能源等权",
       "code": "sh000070",
-      "price": 2586.801,
-      "change": 10.744,
-      "change_percent": 0.417,
-      "volume": 74.20713273
+      "price": 2617.2528,
+      "change": 30.452,
+      "change_percent": 1.177,
+      "volume": 75.82510303
     },
     {
       "name": "材料等权",
       "code": "sh000071",
-      "price": 3523.0357,
-      "change": 34.422,
-      "change_percent": 0.987,
-      "volume": 427.7364953
+      "price": 3547.907,
+      "change": 24.871,
+      "change_percent": 0.706,
+      "volume": 366.96076253
     },
     {
       "name": "工业等权",
       "code": "sh000072",
-      "price": 2771.5416,
-      "change": -0.489,
-      "change_percent": -0.018,
-      "volume": 276.54424668
+      "price": 2787.5891,
+      "change": 16.048,
+      "change_percent": 0.579,
+      "volume": 311.08423104
     },
     {
       "name": "可选等权",
       "code": "sh000073",
-      "price": 3167.3067,
-      "change": 35.126,
-      "change_percent": 1.121,
-      "volume": 203.94313457
+      "price": 3210.1497,
+      "change": 42.843,
+      "change_percent": 1.353,
+      "volume": 223.78377421
     },
     {
       "name": "消费等权",
       "code": "sh000074",
-      "price": 6817.9332,
-      "change": 8.051,
-      "change_percent": 0.118,
-      "volume": 95.08372326
+      "price": 6864.8918,
+      "change": 46.959,
+      "change_percent": 0.689,
+      "volume": 110.84846397
     },
     {
       "name": "医药等权",
       "code": "sh000075",
-      "price": 7703.9145,
-      "change": -7.169,
-      "change_percent": -0.093,
-      "volume": 327.41846641
+      "price": 7727.1132,
+      "change": 23.199,
+      "change_percent": 0.301,
+      "volume": 252.18513572
     },
     {
       "name": "金融等权",
       "code": "sh000076",
-      "price": 5780.7495,
-      "change": 31.11,
-      "change_percent": 0.541,
-      "volume": 362.80075704
+      "price": 5877.2476,
+      "change": 96.498,
+      "change_percent": 1.669,
+      "volume": 391.75054633
     },
     {
       "name": "信息等权",
       "code": "sh000077",
-      "price": 4636.4168,
-      "change": 33.34,
-      "change_percent": 0.724,
-      "volume": 519.2436092
+      "price": 4649.0101,
+      "change": 12.593,
+      "change_percent": 0.272,
+      "volume": 480.09532573
     },
     {
       "name": "电信等权",
       "code": "sh000078",
-      "price": 3101.6101,
-      "change": 15.976,
-      "change_percent": 0.518,
-      "volume": 124.72505147
+      "price": 3122.2245,
+      "change": 20.614,
+      "change_percent": 0.665,
+      "volume": 144.16108639
     },
     {
       "name": "公用等权",
       "code": "sh000079",
-      "price": 2372.655,
-      "change": 7.866,
-      "change_percent": 0.333,
-      "volume": 93.25398331
+      "price": 2388.2814,
+      "change": 15.626,
+      "change_percent": 0.659,
+      "volume": 91.50777079
     },
     {
       "name": "上证流通",
       "code": "sh000090",
-      "price": 1301.2728,
-      "change": 9.204,
-      "change_percent": 0.712,
-      "volume": 6303.86527543
+      "price": 1311.7396,
+      "change": 10.467,
+      "change_percent": 0.804,
+      "volume": 6387.56820874
     },
     {
       "name": "沪财中小",
       "code": "sh000091",
-      "price": 13024.0902,
-      "change": 142.0,
-      "change_percent": 1.102,
-      "volume": 373.66334286
+      "price": 13113.1026,
+      "change": 89.012,
+      "change_percent": 0.683,
+      "volume": 391.30697665
     },
     {
       "name": "资源50",
       "code": "sh000092",
-      "price": 3656.6805,
-      "change": 32.28,
-      "change_percent": 0.891,
-      "volume": 423.33166626
+      "price": 3679.5594,
+      "change": 22.879,
+      "change_percent": 0.626,
+      "volume": 356.81914455
     },
     {
       "name": "180分层",
       "code": "sh000093",
-      "price": 11307.3841,
-      "change": 43.181,
-      "change_percent": 0.383,
-      "volume": 1755.01711972
+      "price": 11385.3333,
+      "change": 77.949,
+      "change_percent": 0.689,
+      "volume": 1748.48301028
     },
     {
       "name": "上证上游",
       "code": "sh000094",
-      "price": 3302.8426,
-      "change": 46.011,
-      "change_percent": 1.413,
-      "volume": 378.50115109
+      "price": 3321.4409,
+      "change": 18.598,
+      "change_percent": 0.563,
+      "volume": 319.87882136
     },
     {
       "name": "上证中游",
       "code": "sh000095",
-      "price": 3098.3712,
-      "change": 20.008,
-      "change_percent": 0.65,
-      "volume": 1326.66532059
+      "price": 3117.5207,
+      "change": 19.15,
+      "change_percent": 0.618,
+      "volume": 1328.52290949
     },
     {
       "name": "上证下游",
       "code": "sh000096",
-      "price": 4303.5134,
-      "change": 14.248,
-      "change_percent": 0.332,
-      "volume": 776.37986142
+      "price": 4325.6686,
+      "change": 22.155,
+      "change_percent": 0.515,
+      "volume": 713.02530416
     },
     {
       "name": "高端装备",
       "code": "sh000097",
-      "price": 8923.3437,
-      "change": 79.567,
-      "change_percent": 0.9,
-      "volume": 656.49241864
+      "price": 8975.7036,
+      "change": 52.36,
+      "change_percent": 0.587,
+      "volume": 680.96676411
     },
     {
       "name": "上证F200",
       "code": "sh000098",
-      "price": 5300.7629,
-      "change": 16.505,
-      "change_percent": 0.312,
-      "volume": 1432.87030972
+      "price": 5357.4073,
+      "change": 56.644,
+      "change_percent": 1.069,
+      "volume": 1522.88835204
     },
     {
       "name": "上证F300",
       "code": "sh000099",
-      "price": 8183.766,
-      "change": 30.686,
-      "change_percent": 0.376,
-      "volume": 1044.27658457
+      "price": 8246.3058,
+      "change": 62.54,
+      "change_percent": 0.764,
+      "volume": 1060.66868522
     },
     {
       "name": "上证F500",
       "code": "sh000100",
-      "price": 5916.5083,
-      "change": 19.004,
-      "change_percent": 0.322,
-      "volume": 2477.14689429
+      "price": 5976.9302,
+      "change": 60.422,
+      "change_percent": 1.021,
+      "volume": 2583.55703726
     },
     {
       "name": "5年信用",
       "code": "sh000101",
-      "price": 249.3572,
-      "change": 0.048,
-      "change_percent": 0.019,
-      "volume": 4.56189561
+      "price": 249.372,
+      "change": 0.015,
+      "change_percent": 0.006,
+      "volume": 3.41599397
     },
     {
       "name": "沪投资品",
       "code": "sh000102",
-      "price": 5900.5913,
-      "change": 34.688,
-      "change_percent": 0.591,
-      "volume": 459.19946088
+      "price": 5941.6254,
+      "change": 41.034,
+      "change_percent": 0.695,
+      "volume": 421.58134473
     },
     {
       "name": "沪消费品",
       "code": "sh000103",
-      "price": 8317.108,
-      "change": 5.572,
-      "change_percent": 0.067,
-      "volume": 348.54591785
+      "price": 8334.9131,
+      "change": 17.805,
+      "change_percent": 0.214,
+      "volume": 291.32821962
     },
     {
       "name": "380能源",
       "code": "sh000104",
-      "price": 1289.8547,
-      "change": 3.561,
-      "change_percent": 0.277,
-      "volume": 18.571826
+      "price": 1305.687,
+      "change": 15.832,
+      "change_percent": 1.227,
+      "volume": 22.70268419
     },
     {
       "name": "380材料",
       "code": "sh000105",
-      "price": 4336.3817,
-      "change": 36.568,
-      "change_percent": 0.85,
-      "volume": 189.13177922
+      "price": 4356.6305,
+      "change": 20.249,
+      "change_percent": 0.467,
+      "volume": 162.2220189
     },
     {
       "name": "380工业",
       "code": "sh000106",
-      "price": 4969.6233,
-      "change": 62.438,
-      "change_percent": 1.272,
-      "volume": 351.88020614
+      "price": 5007.497,
+      "change": 37.874,
+      "change_percent": 0.762,
+      "volume": 352.76772154
     },
     {
       "name": "380可选",
       "code": "sh000107",
-      "price": 5197.6137,
-      "change": 68.133,
-      "change_percent": 1.328,
-      "volume": 99.63445651
+      "price": 5288.0918,
+      "change": 90.478,
+      "change_percent": 1.741,
+      "volume": 99.67042114
     },
     {
       "name": "380消费",
       "code": "sh000108",
-      "price": 11878.365,
-      "change": 25.8,
-      "change_percent": 0.218,
-      "volume": 27.78624404
+      "price": 11934.8767,
+      "change": 56.512,
+      "change_percent": 0.476,
+      "volume": 29.76567107
     },
     {
       "name": "380医药",
       "code": "sh000109",
-      "price": 11182.1765,
-      "change": 65.441,
-      "change_percent": 0.589,
-      "volume": 195.8315506
+      "price": 11180.6291,
+      "change": -1.547,
+      "change_percent": -0.014,
+      "volume": 146.64405247
     },
     {
       "name": "380金融",
       "code": "sh000110",
-      "price": 4220.5291,
-      "change": 7.434,
-      "change_percent": 0.176,
-      "volume": 74.21537634
+      "price": 4287.845,
+      "change": 67.316,
+      "change_percent": 1.595,
+      "volume": 103.10498389
     },
     {
       "name": "380信息",
       "code": "sh000111",
-      "price": 8431.1088,
-      "change": 51.897,
-      "change_percent": 0.619,
-      "volume": 188.87588979
+      "price": 8465.8209,
+      "change": 34.712,
+      "change_percent": 0.412,
+      "volume": 184.1051045
     },
     {
       "name": "380电信",
       "code": "sh000112",
-      "price": 4852.5101,
-      "change": 26.587,
-      "change_percent": 0.551,
-      "volume": 90.46928166
+      "price": 4914.2352,
+      "change": 61.725,
+      "change_percent": 1.272,
+      "volume": 105.33508383
     },
     {
       "name": "380公用",
       "code": "sh000113",
-      "price": 2610.4605,
-      "change": 10.992,
-      "change_percent": 0.423,
-      "volume": 36.96972808
+      "price": 2629.6031,
+      "change": 19.143,
+      "change_percent": 0.733,
+      "volume": 36.02539126
     },
     {
       "name": "持续产业",
       "code": "sh000114",
-      "price": 1159.3161,
-      "change": -3.351,
-      "change_percent": -0.288,
-      "volume": 160.29233349
+      "price": 1165.3797,
+      "change": 6.064,
+      "change_percent": 0.523,
+      "volume": 148.36919417
     },
     {
       "name": "380等权",
       "code": "sh000115",
-      "price": 7769.3176,
-      "change": 53.1,
-      "change_percent": 0.688,
-      "volume": 1306.69828799
+      "price": 7822.495,
+      "change": 53.177,
+      "change_percent": 0.684,
+      "volume": 1308.38684042
     },
     {
       "name": "信用100",
       "code": "sh000116",
-      "price": 198.4259,
-      "change": 0.055,
-      "change_percent": 0.028,
-      "volume": 1.20721075
+      "price": 198.4242,
+      "change": -0.003,
+      "change_percent": -0.001,
+      "volume": 1.55777203
     },
     {
       "name": "380成长",
       "code": "sh000117",
-      "price": 3763.5861,
-      "change": 43.774,
-      "change_percent": 1.177,
-      "volume": 497.67047983
+      "price": 3800.3197,
+      "change": 36.734,
+      "change_percent": 0.976,
+      "volume": 463.25584227
     },
     {
       "name": "380价值",
       "code": "sh000118",
-      "price": 9225.4903,
-      "change": 40.484,
-      "change_percent": 0.441,
-      "volume": 245.42064438
+      "price": 9291.4441,
+      "change": 65.954,
+      "change_percent": 0.715,
+      "volume": 233.22261812
     },
     {
       "name": "380R成长",
       "code": "sh000119",
-      "price": 3814.6448,
-      "change": 38.433,
-      "change_percent": 1.018,
-      "volume": 1121.94381433
+      "price": 3846.8269,
+      "change": 32.182,
+      "change_percent": 0.844,
+      "volume": 1127.10124176
     },
     {
       "name": "380R价值",
       "code": "sh000120",
-      "price": 8697.1675,
-      "change": 43.105,
-      "change_percent": 0.498,
-      "volume": 869.69397888
+      "price": 8759.9679,
+      "change": 62.8,
+      "change_percent": 0.722,
+      "volume": 897.06801761
     },
     {
       "name": "医药主题",
       "code": "sh000121",
-      "price": 8900.8335,
-      "change": -4.071,
-      "change_percent": -0.046,
-      "volume": 350.20968027
+      "price": 8919.57,
+      "change": 18.736,
+      "change_percent": 0.211,
+      "volume": 267.87075493
     },
     {
       "name": "农业主题",
       "code": "sh000122",
-      "price": 1584.9966,
-      "change": 8.099,
-      "change_percent": 0.514,
-      "volume": 41.68480936
+      "price": 1589.7461,
+      "change": 4.75,
+      "change_percent": 0.3,
+      "volume": 39.55695098
     },
     {
       "name": "180动态",
       "code": "sh000123",
-      "price": 6022.6533,
-      "change": 29.417,
-      "change_percent": 0.491,
-      "volume": 981.72885978
+      "price": 6083.1794,
+      "change": 60.526,
+      "change_percent": 1.005,
+      "volume": 991.80175112
     },
     {
       "name": "180稳定",
       "code": "sh000125",
-      "price": 11591.8622,
-      "change": 53.754,
-      "change_percent": 0.466,
-      "volume": 759.20337058
+      "price": 11678.7041,
+      "change": 86.842,
+      "change_percent": 0.749,
+      "volume": 736.90758405
     },
     {
       "name": "消费50",
       "code": "sh000126",
-      "price": 7914.095,
-      "change": 46.902,
-      "change_percent": 0.596,
-      "volume": 222.90254258
+      "price": 7994.4678,
+      "change": 80.373,
+      "change_percent": 1.016,
+      "volume": 257.87789452
     },
     {
       "name": "380基本",
       "code": "sh000128",
-      "price": 8232.9408,
-      "change": 36.791,
-      "change_percent": 0.449,
-      "volume": 1306.69828799
+      "price": 8293.2697,
+      "change": 60.329,
+      "change_percent": 0.733,
+      "volume": 1308.38684042
     },
     {
       "name": "180波动",
       "code": "sh000129",
-      "price": 15065.7112,
-      "change": 44.293,
-      "change_percent": 0.295,
-      "volume": 813.81836253
+      "price": 15192.1208,
+      "change": 126.41,
+      "change_percent": 0.839,
+      "volume": 842.25349768
     },
     {
       "name": "380波动",
       "code": "sh000130",
-      "price": 12673.8651,
-      "change": 65.234,
-      "change_percent": 0.517,
-      "volume": 219.21513814
+      "price": 12752.5365,
+      "change": 78.671,
+      "change_percent": 0.621,
+      "volume": 205.4636228
     },
     {
       "name": "上证高新",
       "code": "sh000131",
-      "price": 3362.1195,
-      "change": 46.203,
-      "change_percent": 1.393,
-      "volume": 353.09353316
+      "price": 3380.679,
+      "change": 18.56,
+      "change_percent": 0.552,
+      "volume": 320.31567254
     },
     {
       "name": "上证100",
       "code": "sh000132",
-      "price": 5351.0447,
-      "change": 71.233,
-      "change_percent": 1.349,
-      "volume": 357.27458785
+      "price": 5405.2127,
+      "change": 54.168,
+      "change_percent": 1.012,
+      "volume": 330.59174239
     },
     {
       "name": "上证150",
       "code": "sh000133",
-      "price": 5778.8188,
-      "change": 86.971,
-      "change_percent": 1.528,
-      "volume": 355.62545857
+      "price": 5816.31,
+      "change": 37.491,
+      "change_percent": 0.649,
+      "volume": 379.89832809
     },
     {
       "name": "上证银行",
       "code": "sh000134",
-      "price": 1089.5863,
-      "change": 9.132,
-      "change_percent": 0.845,
-      "volume": 280.3303355
+      "price": 1107.3949,
+      "change": 17.809,
+      "change_percent": 1.634,
+      "volume": 289.0762158
     },
     {
       "name": "180高贝",
       "code": "sh000135",
-      "price": 5604.7284,
-      "change": 11.229,
-      "change_percent": 0.201,
-      "volume": 738.63532799
+      "price": 5650.4341,
+      "change": 45.706,
+      "change_percent": 0.815,
+      "volume": 737.24225214
     },
     {
       "name": "180低贝",
       "code": "sh000136",
-      "price": 11925.3925,
-      "change": 363.454,
-      "change_percent": 3.144,
-      "volume": 516.6582356
+      "price": 12030.6719,
+      "change": 105.279,
+      "change_percent": 0.883,
+      "volume": 476.10282036
     },
     {
       "name": "380高贝",
       "code": "sh000137",
-      "price": 5059.8389,
-      "change": 41.832,
-      "change_percent": 0.834,
-      "volume": 455.42083463
+      "price": 5098.903,
+      "change": 39.064,
+      "change_percent": 0.772,
+      "volume": 420.5421094
     },
     {
       "name": "380低贝",
       "code": "sh000138",
-      "price": 7602.9877,
-      "change": 17.71,
-      "change_percent": 0.233,
-      "volume": 223.6117503
+      "price": 7704.6003,
+      "change": 101.613,
+      "change_percent": 1.336,
+      "volume": 260.12411809
     },
     {
       "name": "上证转债",
       "code": "sh000139",
-      "price": 404.6029,
-      "change": 3.251,
-      "change_percent": 0.81,
-      "volume": 286.36498796
+      "price": 408.1746,
+      "change": 3.572,
+      "change_percent": 0.883,
+      "volume": 304.1985255
     },
     {
       "name": "380动态",
       "code": "sh000141",
-      "price": 3412.076,
-      "change": 24.002,
-      "change_percent": 0.708,
-      "volume": 795.3313167
+      "price": 3442.7165,
+      "change": 30.641,
+      "change_percent": 0.898,
+      "volume": 798.94223357
     },
     {
       "name": "380稳定",
       "code": "sh000142",
-      "price": 8912.098,
-      "change": 75.146,
-      "change_percent": 0.85,
-      "volume": 506.15439269
+      "price": 8971.9515,
+      "change": 59.853,
+      "change_percent": 0.672,
+      "volume": 495.06957109
     },
     {
       "name": "优势资源",
       "code": "sh000145",
-      "price": 5937.2075,
-      "change": 87.107,
-      "change_percent": 1.489,
-      "volume": 355.2405025
+      "price": 5976.6873,
+      "change": 39.48,
+      "change_percent": 0.665,
+      "volume": 299.69482003
     },
     {
       "name": "优势制造",
       "code": "sh000146",
-      "price": 6639.9651,
-      "change": 25.737,
-      "change_percent": 0.389,
-      "volume": 369.65018221
+      "price": 6683.5709,
+      "change": 43.606,
+      "change_percent": 0.657,
+      "volume": 386.88739852
     },
     {
       "name": "优势消费",
       "code": "sh000147",
-      "price": 6974.941,
-      "change": 36.612,
-      "change_percent": 0.528,
-      "volume": 268.03264533
+      "price": 7008.8616,
+      "change": 33.921,
+      "change_percent": 0.486,
+      "volume": 243.52392687
     },
     {
       "name": "消费领先",
       "code": "sh000148",
-      "price": 9152.9024,
-      "change": 28.537,
-      "change_percent": 0.313,
-      "volume": 922.7691904
+      "price": 9212.3089,
+      "change": 59.406,
+      "change_percent": 0.649,
+      "volume": 871.94279851
     },
     {
       "name": "180红利",
       "code": "sh000149",
-      "price": 4104.0406,
-      "change": 18.418,
-      "change_percent": 0.451,
-      "volume": 334.68706225
+      "price": 4162.1912,
+      "change": 58.151,
+      "change_percent": 1.417,
+      "volume": 340.36910172
     },
     {
       "name": "380红利",
       "code": "sh000150",
-      "price": 11696.1958,
-      "change": 46.613,
-      "change_percent": 0.4,
-      "volume": 41.14556462
+      "price": 11818.1243,
+      "change": 121.929,
+      "change_percent": 1.042,
+      "volume": 49.07960417
     },
     {
       "name": "上国红利",
       "code": "sh000151",
-      "price": 1559.4426,
-      "change": 7.1,
-      "change_percent": 0.457,
-      "volume": 202.31659135
+      "price": 1576.6141,
+      "change": 17.171,
+      "change_percent": 1.101,
+      "volume": 188.19052097
     },
     {
       "name": "上央红利",
       "code": "sh000152",
-      "price": 2823.8844,
-      "change": 12.796,
-      "change_percent": 0.455,
-      "volume": 250.24351146
+      "price": 2854.9375,
+      "change": 31.053,
+      "change_percent": 1.1,
+      "volume": 234.8549271
     },
     {
       "name": "上民红利",
       "code": "sh000153",
-      "price": 3047.5566,
-      "change": 19.051,
-      "change_percent": 0.629,
-      "volume": 40.69409965
+      "price": 3069.7854,
+      "change": 22.229,
+      "change_percent": 0.729,
+      "volume": 35.51635408
     },
     {
       "name": "市值百强",
       "code": "sh000155",
-      "price": 2998.7301,
-      "change": 15.892,
-      "change_percent": 0.533,
-      "volume": 1393.49031134
+      "price": 3023.8038,
+      "change": 25.074,
+      "change_percent": 0.836,
+      "volume": 1355.08011162
     },
     {
       "name": "上证环保",
       "code": "sh000158",
-      "price": 1155.3676,
-      "change": -7.292,
-      "change_percent": -0.627,
-      "volume": 171.78823354
+      "price": 1167.3311,
+      "change": 11.964,
+      "change_percent": 1.035,
+      "volume": 156.19734258
     },
     {
       "name": "沪股通",
       "code": "sh000159",
-      "price": 3298.1578,
-      "change": 21.348,
-      "change_percent": 0.651,
-      "volume": 5299.10265977
+      "price": 3324.3777,
+      "change": 26.22,
+      "change_percent": 0.795,
+      "volume": 5346.49270385
     },
     {
       "name": "沪新丝路",
       "code": "sh000160",
-      "price": 1840.5357,
-      "change": 3.983,
-      "change_percent": 0.217,
-      "volume": 368.94033504
+      "price": 1853.5289,
+      "change": 12.993,
+      "change_percent": 0.706,
+      "volume": 420.26010128
     },
     {
       "name": "沪中国造",
       "code": "sh000161",
-      "price": 1542.8436,
-      "change": 10.074,
-      "change_percent": 0.657,
-      "volume": 745.60408053
+      "price": 1549.5707,
+      "change": 6.727,
+      "change_percent": 0.436,
+      "volume": 774.32881579
     },
     {
       "name": "沪互联+",
       "code": "sh000162",
-      "price": 3485.1272,
-      "change": 7.31,
-      "change_percent": 0.21,
-      "volume": 393.50506056
+      "price": 3505.722,
+      "change": 20.595,
+      "change_percent": 0.591,
+      "volume": 423.10492961
     },
     {
       "name": "50AH优选",
       "code": "sh000170",
-      "price": 5640.9407,
-      "change": 34.126,
-      "change_percent": 0.609,
-      "volume": 610.37166494
+      "price": 5693.4065,
+      "change": 51.964,
+      "change_percent": 0.921,
+      "volume": 586.64712806
     },
     {
       "name": "沪深300",
       "code": "sh000300",
-      "price": 4070.7023,
-      "change": 15.774,
-      "change_percent": 0.389,
-      "volume": 2959.76826632
+      "price": 4102.6986,
+      "change": 31.996,
+      "change_percent": 0.786,
+      "volume": 3032.12199573
     },
     {
       "name": "中证A500",
       "code": "sh000510",
-      "price": 4814.0672,
-      "change": 21.648,
-      "change_percent": 0.452,
-      "volume": 4248.90325881
+      "price": 4845.7293,
+      "change": 31.662,
+      "change_percent": 0.658,
+      "volume": 4213.50840254
     },
     {
       "name": "科创综指",
       "code": "sh000680",
-      "price": 1345.6465,
-      "change": 19.242,
-      "change_percent": 1.451,
-      "volume": 1551.45044088
+      "price": 1351.9172,
+      "change": 6.271,
+      "change_percent": 0.466,
+      "volume": 1425.06658087
     },
     {
       "name": "科创价格",
       "code": "sh000681",
-      "price": 1300.1438,
-      "change": 18.583,
-      "change_percent": 1.45,
-      "volume": 1551.45044088
+      "price": 1306.2025,
+      "change": 6.059,
+      "change_percent": 0.466,
+      "volume": 1425.06658087
     },
     {
       "name": "科创信息",
       "code": "sh000682",
-      "price": 1452.1623,
-      "change": 26.716,
-      "change_percent": 1.874,
-      "volume": 365.85764884
+      "price": 1456.6084,
+      "change": 4.446,
+      "change_percent": 0.306,
+      "volume": 299.68841822
     },
     {
       "name": "科创生物",
       "code": "sh000683",
-      "price": 1203.8108,
-      "change": -3.886,
-      "change_percent": -0.322,
-      "volume": 167.01998493
+      "price": 1210.0721,
+      "change": 6.261,
+      "change_percent": 0.52,
+      "volume": 136.1835688
     },
     {
       "name": "科创高装",
       "code": "sh000687",
-      "price": 1124.704,
-      "change": 26.161,
-      "change_percent": 2.381,
-      "volume": 167.01621355
+      "price": 1139.3371,
+      "change": 14.633,
+      "change_percent": 1.301,
+      "volume": 164.84968169
     },
     {
       "name": "科创50",
       "code": "sh000688",
-      "price": 1049.4062,
-      "change": 12.632,
-      "change_percent": 1.218,
-      "volume": 332.22283957
+      "price": 1053.3349,
+      "change": 3.929,
+      "change_percent": 0.374,
+      "volume": 265.38657601
     },
     {
       "name": "科创材料",
       "code": "sh000689",
-      "price": 937.26,
-      "change": 9.757,
-      "change_percent": 1.052,
-      "volume": 90.84801461
+      "price": 942.6133,
+      "change": 5.353,
+      "change_percent": 0.571,
+      "volume": 92.59238753
     },
     {
       "name": "科创成长",
       "code": "sh000690",
-      "price": 1266.826,
-      "change": 16.159,
-      "change_percent": 1.292,
-      "volume": 318.77060106
+      "price": 1280.7713,
+      "change": 13.945,
+      "change_percent": 1.101,
+      "volume": 280.61075384
     },
     {
       "name": "科创ESG",
       "code": "sh000691",
-      "price": 1171.1936,
-      "change": 21.783,
-      "change_percent": 1.895,
-      "volume": 279.80225535
+      "price": 1174.6669,
+      "change": 3.473,
+      "change_percent": 0.297,
+      "volume": 217.29071712
     },
     {
       "name": "科创新能",
       "code": "sh000692",
-      "price": 934.9983,
-      "change": -0.27,
-      "change_percent": -0.029,
-      "volume": 97.89207692
+      "price": 944.2336,
+      "change": 9.235,
+      "change_percent": 0.988,
+      "volume": 90.16524275
     },
     {
       "name": "科创机械",
       "code": "sh000693",
-      "price": 1201.1864,
-      "change": 23.262,
-      "change_percent": 1.975,
-      "volume": 115.21057807
+      "price": 1211.2655,
+      "change": 10.079,
+      "change_percent": 0.839,
+      "volume": 115.41953586
     },
     {
       "name": "科长三角",
       "code": "sh000695",
-      "price": 848.2491,
-      "change": 8.132,
-      "change_percent": 0.968,
-      "volume": 233.2728184
+      "price": 851.4759,
+      "change": 3.227,
+      "change_percent": 0.38,
+      "volume": 189.23606711
     },
     {
       "name": "科大湾区",
       "code": "sh000697",
-      "price": 1123.5206,
-      "change": 16.449,
-      "change_percent": 1.486,
-      "volume": 140.5099591
+      "price": 1126.0768,
+      "change": 2.556,
+      "change_percent": 0.228,
+      "volume": 117.6525149
     },
     {
       "name": "科创100",
       "code": "sh000698",
-      "price": 1169.1605,
-      "change": 18.453,
-      "change_percent": 1.604,
-      "volume": 394.60457251
+      "price": 1174.2564,
+      "change": 5.096,
+      "change_percent": 0.436,
+      "volume": 352.61486144
     },
     {
       "name": "科创200",
       "code": "sh000699",
-      "price": 1134.3349,
-      "change": 20.579,
-      "change_percent": 1.848,
-      "volume": 506.68080973
+      "price": 1135.9396,
+      "change": 1.605,
+      "change_percent": 0.141,
+      "volume": 465.79980445
     },
     {
       "name": "500沪市",
       "code": "sh000802",
-      "price": 6564.9131,
-      "change": 54.505,
-      "change_percent": 0.837,
-      "volume": 1030.40693135
+      "price": 6614.481,
+      "change": 49.568,
+      "change_percent": 0.755,
+      "volume": 1055.17168196
     },
     {
       "name": "有色金属",
       "code": "sh000819",
-      "price": 5993.9969,
-      "change": 101.779,
-      "change_percent": 1.727,
-      "volume": 454.37293193
+      "price": 6019.192,
+      "change": 25.195,
+      "change_percent": 0.42,
+      "volume": 389.53811739
     },
     {
       "name": "800有色",
       "code": "sh000823",
-      "price": 6882.5161,
-      "change": 119.953,
-      "change_percent": 1.774,
-      "volume": 410.69615628
+      "price": 6912.5151,
+      "change": 29.999,
+      "change_percent": 0.436,
+      "volume": 349.35238462
     },
     {
       "name": "中证环保",
       "code": "sh000827",
-      "price": 1423.5889,
-      "change": -0.428,
-      "change_percent": -0.03,
-      "volume": 430.36050291
+      "price": 1431.8903,
+      "change": 8.301,
+      "change_percent": 0.583,
+      "volume": 398.42272777
     },
     {
       "name": "腾讯济安",
       "code": "sh000847",
-      "price": 3186.6531,
-      "change": 30.769,
-      "change_percent": 0.975,
-      "volume": 519.87442058
+      "price": 3201.3233,
+      "change": 14.67,
+      "change_percent": 0.46,
+      "volume": 513.66938446
     },
     {
       "name": "300非银",
       "code": "sh000849",
-      "price": 10449.7823,
-      "change": 22.102,
-      "change_percent": 0.212,
-      "volume": 239.19063897
+      "price": 10583.0392,
+      "change": 133.257,
+      "change_percent": 1.275,
+      "volume": 310.10483563
     },
     {
       "name": "百发100",
       "code": "sh000851",
-      "price": 17596.9132,
-      "change": 184.47,
-      "change_percent": 1.059,
-      "volume": 462.86573785
+      "price": 17801.5172,
+      "change": 204.604,
+      "change_percent": 1.163,
+      "volume": 546.74874596
     },
     {
       "name": "中证1000",
       "code": "sh000852",
-      "price": 6739.6936,
-      "change": 69.222,
-      "change_percent": 1.038,
-      "volume": 3295.54815219
+      "price": 6786.1048,
+      "change": 46.411,
+      "change_percent": 0.689,
+      "volume": 3446.47108481
     },
     {
       "name": "CSSW丝路",
       "code": "sh000853",
-      "price": 1370.2112,
-      "change": 5.362,
-      "change_percent": 0.393,
-      "volume": 669.42181582
+      "price": 1377.2186,
+      "change": 7.007,
+      "change_percent": 0.511,
+      "volume": 660.60683242
     },
     {
       "name": "500原料",
       "code": "sh000854",
-      "price": 4446.1972,
-      "change": 23.143,
-      "change_percent": 0.523,
-      "volume": 339.96104794
+      "price": 4475.755,
+      "change": 29.558,
+      "change_percent": 0.665,
+      "volume": 303.36585067
     },
     {
       "name": "央视500",
       "code": "sh000855",
-      "price": 1434.8579,
-      "change": 6.184,
-      "change_percent": 0.433,
-      "volume": 4023.30076566
+      "price": 1445.4687,
+      "change": 10.611,
+      "change_percent": 0.74,
+      "volume": 4039.13937602
     },
     {
       "name": "500工业",
       "code": "sh000856",
-      "price": 5888.0765,
-      "change": 76.405,
-      "change_percent": 1.315,
-      "volume": 531.89787985
+      "price": 5912.5009,
+      "change": 24.424,
+      "change_percent": 0.415,
+      "volume": 492.26885334
     },
     {
       "name": "500医药",
       "code": "sh000857",
-      "price": 11127.588,
-      "change": 94.034,
-      "change_percent": 0.852,
-      "volume": 266.1206432
+      "price": 11146.6792,
+      "change": 19.091,
+      "change_percent": 0.172,
+      "volume": 220.23378615
     },
     {
       "name": "500信息",
       "code": "sh000858",
-      "price": 8074.9514,
-      "change": 42.574,
-      "change_percent": 0.53,
-      "volume": 537.47842711
+      "price": 8098.8987,
+      "change": 23.947,
+      "change_percent": 0.297,
+      "volume": 569.73333832
     },
     {
       "name": "结构调整",
       "code": "sh000860",
-      "price": 1146.8859,
-      "change": 4.308,
-      "change_percent": 0.377,
-      "volume": 560.41313879
+      "price": 1153.9408,
+      "change": 7.055,
+      "change_percent": 0.615,
+      "volume": 563.12798552
     },
     {
       "name": "上海国企",
       "code": "sh000865",
-      "price": 1418.0889,
-      "change": 1.912,
-      "change_percent": 0.135,
-      "volume": 257.97701279
+      "price": 1435.045,
+      "change": 16.956,
+      "change_percent": 1.196,
+      "volume": 318.56636023
     },
     {
       "name": "港中小企",
       "code": "sh000867",
-      "price": 2650.563,
-      "change": 19.816,
-      "change_percent": 0.753,
-      "volume": 232.2347383
+      "price": 2696.2914,
+      "change": 46.611,
+      "change_percent": 1.759,
+      "volume": 296.28431077
     },
     {
       "name": "HK银行",
       "code": "sh000869",
-      "price": 4047.6614,
-      "change": 31.675,
-      "change_percent": 0.789,
-      "volume": 68.1068523
+      "price": 4120.5844,
+      "change": 62.627,
+      "change_percent": 1.543,
+      "volume": 73.42615337
     },
     {
       "name": "上证收益",
       "code": "sh000888",
-      "price": 4073.6482,
-      "change": 26.611,
-      "change_percent": 0.658,
-      "volume": 6397.75598457
+      "price": 4112.384,
+      "change": 38.736,
+      "change_percent": 0.951,
+      "volume": 6489.59361492
     },
     {
       "name": "新兴综指",
       "code": "sh000891",
-      "price": 1559.6265,
-      "change": 13.603,
-      "change_percent": 0.88,
-      "volume": 7991.09874284
+      "price": 1568.2518,
+      "change": 8.625,
+      "change_percent": 0.553,
+      "volume": 8260.65802414
     },
     {
       "name": "小康指数",
       "code": "sh000901",
-      "price": 6033.613,
-      "change": 14.75,
-      "change_percent": 0.245,
-      "volume": 773.8531673
+      "price": 6094.6037,
+      "change": 60.991,
+      "change_percent": 1.011,
+      "volume": 814.72920171
     },
     {
       "name": "中证A100",
       "code": "sh000903",
-      "price": 3859.7583,
-      "change": 15.66,
-      "change_percent": 0.407,
-      "volume": 1525.90385965
+      "price": 3881.4413,
+      "change": 21.683,
+      "change_percent": 0.562,
+      "volume": 1490.97418782
     },
     {
       "name": "中证500",
       "code": "sh000905",
-      "price": 6261.7313,
-      "change": 48.53,
-      "change_percent": 0.781,
-      "volume": 2366.49250158
+      "price": 6302.1361,
+      "change": 40.405,
+      "change_percent": 0.645,
+      "volume": 2330.43893513
     },
     {
       "name": "中证800",
       "code": "sh000906",
-      "price": 4435.7934,
-      "change": 21.744,
-      "change_percent": 0.493,
-      "volume": 5326.2607679
+      "price": 4469.0048,
+      "change": 33.211,
+      "change_percent": 0.749,
+      "volume": 5362.56093086
     },
     {
       "name": "300医药",
       "code": "sh000913",
-      "price": 8890.0145,
-      "change": -15.906,
-      "change_percent": -0.179,
-      "volume": 270.71626505
+      "price": 8936.8553,
+      "change": 46.841,
+      "change_percent": 0.527,
+      "volume": 205.610259
     },
     {
       "name": "300金融",
       "code": "sh000914",
-      "price": 6717.2235,
-      "change": 35.729,
-      "change_percent": 0.535,
-      "volume": 544.31736812
+      "price": 6812.2165,
+      "change": 94.993,
+      "change_percent": 1.414,
+      "volume": 624.63071379
     },
     {
       "name": "中证能源",
       "code": "sh000928",
-      "price": 2670.1647,
-      "change": 5.234,
-      "change_percent": 0.196,
-      "volume": 73.51757054
+      "price": 2700.0681,
+      "change": 29.903,
+      "change_percent": 1.12,
+      "volume": 77.33003675
     },
     {
       "name": "中证消费",
       "code": "sh000932",
-      "price": 15727.7528,
-      "change": 37.19,
-      "change_percent": 0.237,
-      "volume": 155.38558537
+      "price": 15877.2196,
+      "change": 149.467,
+      "change_percent": 0.95,
+      "volume": 190.84801805
     },
     {
       "name": "中证医药",
       "code": "sh000933",
-      "price": 8768.6119,
-      "change": 15.729,
-      "change_percent": 0.18,
-      "volume": 536.83690839
+      "price": 8803.3371,
+      "change": 34.725,
+      "change_percent": 0.396,
+      "volume": 425.84404526
     },
     {
       "name": "中证金融",
       "code": "sh000934",
-      "price": 6268.5878,
-      "change": 29.26,
-      "change_percent": 0.469,
-      "volume": 722.88730383
+      "price": 6356.5414,
+      "change": 87.954,
+      "change_percent": 1.403,
+      "volume": 867.43430361
     },
     {
       "name": "中证信息",
       "code": "sh000935",
-      "price": 4939.8,
-      "change": 24.502,
-      "change_percent": 0.498,
-      "volume": 1221.51460956
+      "price": 4963.6998,
+      "change": 23.9,
+      "change_percent": 0.484,
+      "volume": 1252.76490975
     },
     {
       "name": "800金融",
       "code": "sh000974",
-      "price": 7026.6417,
-      "change": 33.874,
-      "change_percent": 0.484,
-      "volume": 671.4005433
+      "price": 7126.2153,
+      "change": 99.574,
+      "change_percent": 1.417,
+      "volume": 781.54159105
     },
     {
       "name": "500等权",
       "code": "sh000982",
-      "price": 7774.4645,
-      "change": 54.523,
-      "change_percent": 0.706,
-      "volume": 2366.49250158
+      "price": 7821.0104,
+      "change": 46.546,
+      "change_percent": 0.599,
+      "volume": 2330.43893513
     },
     {
       "name": "全指能源",
       "code": "sh000986",
-      "price": 2156.3001,
-      "change": 4.573,
-      "change_percent": 0.213,
-      "volume": 97.50382395
+      "price": 2177.868,
+      "change": 21.568,
+      "change_percent": 1.0,
+      "volume": 102.09557254
     },
     {
       "name": "全指材料",
       "code": "sh000987",
-      "price": 3593.6738,
-      "change": 29.677,
-      "change_percent": 0.833,
-      "volume": 830.39185973
+      "price": 3614.8947,
+      "change": 21.221,
+      "change_percent": 0.591,
+      "volume": 754.80204691
     },
     {
       "name": "全指可选",
       "code": "sh000989",
-      "price": 5146.1386,
-      "change": 32.867,
-      "change_percent": 0.643,
-      "volume": 517.58901215
+      "price": 5187.5581,
+      "change": 41.42,
+      "change_percent": 0.805,
+      "volume": 532.30756566
     },
     {
       "name": "全指医药",
       "code": "sh000991",
-      "price": 9522.4112,
-      "change": 15.984,
-      "change_percent": 0.168,
-      "volume": 679.20158524
+      "price": 9560.2371,
+      "change": 37.826,
+      "change_percent": 0.397,
+      "volume": 538.83324752
     },
     {
       "name": "全指金融",
       "code": "sh000992",
-      "price": 5978.3438,
-      "change": 27.591,
-      "change_percent": 0.464,
-      "volume": 785.10880803
+      "price": 6061.4895,
+      "change": 83.146,
+      "change_percent": 1.391,
+      "volume": 941.98179155
     },
     {
       "name": "全指信息",
       "code": "sh000993",
-      "price": 6581.4209,
-      "change": 33.168,
-      "change_percent": 0.507,
-      "volume": 1401.60640799
+      "price": 6611.2647,
+      "change": 29.844,
+      "change_percent": 0.453,
+      "volume": 1427.14373012
     },
     {
       "name": "深证成指",
       "code": "sz399001",
-      "price": 11041.56,
-      "change": 50.239,
-      "change_percent": 0.457,
-      "volume": 8587.7451284
+      "price": 11105.888,
+      "change": 64.328,
+      "change_percent": 0.583,
+      "volume": 9279.88780151
     },
     {
       "name": "深成指R",
       "code": "sz399002",
-      "price": 14756.507,
-      "change": 67.141,
-      "change_percent": 0.457,
-      "volume": 3338.74461256
+      "price": 14842.724,
+      "change": 86.217,
+      "change_percent": 0.584,
+      "volume": 3365.80253914
     },
     {
       "name": "成份Ｂ指",
       "code": "sz399003",
-      "price": 8615.468,
-      "change": 64.743,
-      "change_percent": 0.757,
-      "volume": 0.51822217
+      "price": 8659.709,
+      "change": 44.241,
+      "change_percent": 0.514,
+      "volume": 0.68466042
     },
     {
       "name": "深证100R",
       "code": "sz399004",
-      "price": 6741.896,
-      "change": 10.348,
-      "change_percent": 0.154,
-      "volume": 1135.7661956
+      "price": 6782.495,
+      "change": 40.599,
+      "change_percent": 0.602,
+      "volume": 1195.19586194
     },
     {
       "name": "中小100",
       "code": "sz399005",
-      "price": 6827.639,
-      "change": 9.46,
-      "change_percent": 0.139,
-      "volume": 749.60941958
+      "price": 6872.172,
+      "change": 44.533,
+      "change_percent": 0.652,
+      "volume": 759.14637107
     },
     {
       "name": "创业板指",
       "code": "sz399006",
-      "price": 2334.323,
-      "change": 11.696,
-      "change_percent": 0.504,
-      "volume": 4349.25193452
+      "price": 2342.908,
+      "change": 8.585,
+      "change_percent": 0.368,
+      "volume": 4694.53323955
     },
     {
       "name": "深证300",
       "code": "sz399007",
-      "price": 4621.13,
-      "change": 14.252,
-      "change_percent": 0.309,
-      "volume": 2327.01542317
+      "price": 4649.711,
+      "change": 28.581,
+      "change_percent": 0.618,
+      "volume": 2355.8675612
     },
     {
       "name": "中小300",
       "code": "sz399008",
-      "price": 1390.273,
-      "change": 6.098,
-      "change_percent": 0.441,
-      "volume": 1588.77515176
+      "price": 1399.129,
+      "change": 8.856,
+      "change_percent": 0.637,
+      "volume": 1642.90366104
     },
     {
       "name": "深证200",
       "code": "sz399009",
-      "price": 4218.456,
-      "change": 25.322,
-      "change_percent": 0.604,
-      "volume": 1191.24922757
+      "price": 4245.839,
+      "change": 27.383,
+      "change_percent": 0.649,
+      "volume": 1160.67169925
     },
     {
       "name": "深证700",
       "code": "sz399010",
-      "price": 7828.734,
-      "change": 90.115,
-      "change_percent": 1.164,
-      "volume": 2727.03441662
+      "price": 7875.083,
+      "change": 46.349,
+      "change_percent": 0.592,
+      "volume": 2877.98434254
     },
     {
       "name": "深证1000",
       "code": "sz399011",
-      "price": 5465.969,
-      "change": 31.914,
-      "change_percent": 0.587,
-      "volume": 5054.04983979
+      "price": 5499.303,
+      "change": 33.334,
+      "change_percent": 0.61,
+      "volume": 5233.85190374
     },
     {
       "name": "创业300",
       "code": "sz399012",
-      "price": 3488.177,
-      "change": 25.61,
-      "change_percent": 0.74,
-      "volume": 2119.84792075
+      "price": 3502.253,
+      "change": 14.076,
+      "change_percent": 0.404,
+      "volume": 2141.05145414
     },
     {
       "name": "深市精选",
       "code": "sz399013",
-      "price": 4822.939,
-      "change": 21.877,
-      "change_percent": 0.456,
-      "volume": 2351.7221778
+      "price": 4858.28,
+      "change": 35.341,
+      "change_percent": 0.733,
+      "volume": 2479.43873983
     },
     {
       "name": "中小创新",
       "code": "sz399015",
-      "price": 2709.816,
-      "change": 30.266,
-      "change_percent": 1.13,
-      "volume": 1715.30522724
+      "price": 2729.394,
+      "change": 19.578,
+      "change_percent": 0.722,
+      "volume": 1868.0493646
     },
     {
       "name": "深证创新",
       "code": "sz399016",
-      "price": 4675.417,
-      "change": 37.505,
-      "change_percent": 0.809,
-      "volume": 984.29487222
+      "price": 4685.64,
+      "change": 10.223,
+      "change_percent": 0.219,
+      "volume": 972.64235129
     },
     {
       "name": "SME创新",
       "code": "sz399017",
-      "price": 4081.484,
-      "change": 42.619,
-      "change_percent": 1.055,
-      "volume": 735.9214749
+      "price": 4126.5,
+      "change": 45.016,
+      "change_percent": 1.103,
+      "volume": 767.88265877
     },
     {
       "name": "创业创新",
       "code": "sz399018",
-      "price": 4857.596,
-      "change": 39.784,
-      "change_percent": 0.826,
-      "volume": 734.41859686
+      "price": 4900.18,
+      "change": 42.584,
+      "change_percent": 0.877,
+      "volume": 715.34774923
     },
     {
       "name": "创业200",
       "code": "sz399019",
-      "price": 4116.117,
-      "change": 57.505,
-      "change_percent": 1.417,
-      "volume": 1034.38620838
+      "price": 4135.91,
+      "change": 19.793,
+      "change_percent": 0.481,
+      "volume": 1075.670919
     },
     {
       "name": "创业小盘",
       "code": "sz399020",
-      "price": 1651.725,
-      "change": 26.757,
-      "change_percent": 1.647,
-      "volume": 784.48045746
+      "price": 1666.033,
+      "change": 14.308,
+      "change_percent": 0.866,
+      "volume": 903.794914
     },
     {
       "name": "碳科技30",
       "code": "sz399030",
-      "price": 3064.532,
-      "change": 9.493,
-      "change_percent": 0.311,
-      "volume": 207.01573544
+      "price": 3083.731,
+      "change": 19.199,
+      "change_percent": 0.626,
+      "volume": 216.07639174
     },
     {
       "name": "创新引擎",
       "code": "sz399050",
-      "price": 2588.586,
-      "change": 7.721,
-      "change_percent": 0.299,
-      "volume": 425.67859255
+      "price": 2601.166,
+      "change": 12.58,
+      "change_percent": 0.486,
+      "volume": 387.97179639
     },
     {
       "name": "碳科技60",
       "code": "sz399060",
-      "price": 2653.538,
-      "change": 8.279,
-      "change_percent": 0.313,
-      "volume": 521.78471669
+      "price": 2666.191,
+      "change": 12.653,
+      "change_percent": 0.477,
+      "volume": 504.2255614
     },
     {
       "name": "深创100",
       "code": "sz399088",
-      "price": 3816.14,
-      "change": 20.796,
-      "change_percent": 0.548,
-      "volume": 947.41245046
+      "price": 3836.789,
+      "change": 20.649,
+      "change_percent": 0.541,
+      "volume": 975.70146731
     },
     {
       "name": "新指数",
       "code": "sz399100",
-      "price": 10279.208,
-      "change": 72.807,
-      "change_percent": 0.713,
-      "volume": 8477.30980767
+      "price": 10353.462,
+      "change": 74.254,
+      "change_percent": 0.722,
+      "volume": 9169.86303369
     },
     {
       "name": "中小综指",
       "code": "sz399101",
-      "price": 12563.114,
-      "change": 75.224,
-      "change_percent": 0.602,
-      "volume": 3015.37609677
+      "price": 12662.724,
+      "change": 99.61,
+      "change_percent": 0.793,
+      "volume": 3280.39549729
     },
     {
       "name": "创业板综",
       "code": "sz399102",
-      "price": 3238.493,
-      "change": 34.948,
-      "change_percent": 1.091,
-      "volume": 4349.25193452
+      "price": 3257.721,
+      "change": 19.228,
+      "change_percent": 0.594,
+      "volume": 4694.53323955
     },
     {
       "name": "乐富指数",
       "code": "sz399103",
-      "price": 7922.189,
-      "change": 28.582,
-      "change_percent": 0.362,
-      "volume": 858.76456122
+      "price": 7970.51,
+      "change": 48.321,
+      "change_percent": 0.61,
+      "volume": 1018.03932207
     },
     {
       "name": "深证综指",
       "code": "sz399106",
-      "price": 2192.557,
-      "change": 17.071,
-      "change_percent": 0.785,
-      "volume": 8587.7451284
+      "price": 2209.157,
+      "change": 16.6,
+      "change_percent": 0.757,
+      "volume": 9279.88780151
     },
     {
       "name": "深证Ａ指",
       "code": "sz399107",
-      "price": 2293.587,
-      "change": 17.862,
-      "change_percent": 0.785,
-      "volume": 8587.00502481
+      "price": 2310.956,
+      "change": 17.369,
+      "change_percent": 0.757,
+      "volume": 9278.87396971
     },
     {
       "name": "深证Ｂ指",
       "code": "sz399108",
-      "price": 1292.035,
-      "change": 7.869,
-      "change_percent": 0.613,
-      "volume": 0.74010359
+      "price": 1300.591,
+      "change": 8.556,
+      "change_percent": 0.662,
+      "volume": 1.0138318
     },
     {
       "name": "农林指数",
       "code": "sz399231",
-      "price": 1317.728,
-      "change": 4.838,
-      "change_percent": 0.369,
-      "volume": 38.44478421
+      "price": 1328.439,
+      "change": 10.711,
+      "change_percent": 0.813,
+      "volume": 47.59965647
     },
     {
       "name": "采矿指数",
       "code": "sz399232",
-      "price": 2975.71,
-      "change": 53.47,
-      "change_percent": 1.83,
-      "volume": 80.54091425
+      "price": 2992.628,
+      "change": 16.918,
+      "change_percent": 0.569,
+      "volume": 78.09987634
     },
     {
       "name": "制造指数",
       "code": "sz399233",
-      "price": 2836.089,
-      "change": 24.378,
-      "change_percent": 0.867,
-      "volume": 6056.5678752
+      "price": 2857.858,
+      "change": 21.769,
+      "change_percent": 0.768,
+      "volume": 6742.65445128
     },
     {
       "name": "水电指数",
       "code": "sz399234",
-      "price": 890.128,
-      "change": 4.329,
-      "change_percent": 0.489,
-      "volume": 56.05178102
+      "price": 893.64,
+      "change": 3.512,
+      "change_percent": 0.395,
+      "volume": 61.90916413
     },
     {
       "name": "建筑指数",
       "code": "sz399235",
-      "price": 1014.229,
-      "change": 5.883,
-      "change_percent": 0.583,
-      "volume": 77.43431199
+      "price": 1019.217,
+      "change": 4.988,
+      "change_percent": 0.492,
+      "volume": 67.26884421
     },
     {
       "name": "批零指数",
       "code": "sz399236",
-      "price": 1398.508,
-      "change": 2.418,
-      "change_percent": 0.173,
-      "volume": 175.47058787
+      "price": 1405.965,
+      "change": 7.457,
+      "change_percent": 0.533,
+      "volume": 184.05981099
     },
     {
       "name": "运输指数",
       "code": "sz399237",
-      "price": 1190.502,
-      "change": 9.053,
-      "change_percent": 0.766,
-      "volume": 82.2269641
+      "price": 1196.916,
+      "change": 6.414,
+      "change_percent": 0.539,
+      "volume": 63.08232965
     },
     {
       "name": "餐饮指数",
       "code": "sz399238",
-      "price": 1302.899,
-      "change": -1.523,
-      "change_percent": -0.117,
-      "volume": 1.93166814
+      "price": 1308.751,
+      "change": 5.852,
+      "change_percent": 0.449,
+      "volume": 2.0218266
     },
     {
       "name": "IT指数",
       "code": "sz399239",
-      "price": 2038.685,
-      "change": 20.837,
-      "change_percent": 1.033,
-      "volume": 1085.49876362
+      "price": 2044.551,
+      "change": 5.866,
+      "change_percent": 0.288,
+      "volume": 1108.2310487
     },
     {
       "name": "金融指数",
       "code": "sz399240",
-      "price": 1548.933,
-      "change": 1.639,
-      "change_percent": 0.106,
-      "volume": 218.61067647
+      "price": 1566.269,
+      "change": 17.336,
+      "change_percent": 1.119,
+      "volume": 253.24134638
     },
     {
       "name": "地产指数",
       "code": "sz399241",
-      "price": 1183.13,
-      "change": 1.565,
-      "change_percent": 0.132,
-      "volume": 62.29717587
+      "price": 1194.326,
+      "change": 11.196,
+      "change_percent": 0.946,
+      "volume": 62.57036409
     },
     {
       "name": "商务指数",
       "code": "sz399242",
-      "price": 1271.257,
-      "change": 8.58,
-      "change_percent": 0.68,
-      "volume": 144.48336808
+      "price": 1285.152,
+      "change": 13.895,
+      "change_percent": 1.093,
+      "volume": 138.88146902
     },
     {
       "name": "科研指数",
       "code": "sz399243",
-      "price": 1520.638,
-      "change": 0.531,
-      "change_percent": 0.035,
-      "volume": 158.47432826
+      "price": 1528.077,
+      "change": 7.439,
+      "change_percent": 0.489,
+      "volume": 142.74589801
     },
     {
       "name": "公共指数",
       "code": "sz399244",
-      "price": 567.404,
-      "change": 1.895,
-      "change_percent": 0.335,
-      "volume": 50.79582612
+      "price": 571.275,
+      "change": 3.871,
+      "change_percent": 0.682,
+      "volume": 56.90099357
     },
     {
       "name": "文化指数",
       "code": "sz399248",
-      "price": 976.275,
-      "change": 2.301,
-      "change_percent": 0.236,
-      "volume": 132.84185189
+      "price": 974.655,
+      "change": -1.62,
+      "change_percent": -0.166,
+      "volume": 99.80080815
     },
     {
       "name": "综企指数",
       "code": "sz399249",
-      "price": 2384.068,
-      "change": 11.962,
-      "change_percent": 0.504,
-      "volume": 2.22638426
+      "price": 2399.734,
+      "change": 15.666,
+      "change_percent": 0.657,
+      "volume": 2.14767409
     },
     {
       "name": "绿色低碳",
       "code": "sz399258",
-      "price": 3286.808,
-      "change": 7.018,
-      "change_percent": 0.214,
-      "volume": 388.80647581
+      "price": 3301.309,
+      "change": 14.501,
+      "change_percent": 0.441,
+      "volume": 372.59567002
     },
     {
       "name": "创业低碳",
       "code": "sz399259",
-      "price": 3439.553,
-      "change": 19.147,
-      "change_percent": 0.56,
-      "volume": 233.7665852
+      "price": 3470.537,
+      "change": 30.984,
+      "change_percent": 0.901,
+      "volume": 250.19084491
     },
     {
       "name": "先进制造",
       "code": "sz399260",
-      "price": 2833.597,
-      "change": 1.498,
-      "change_percent": 0.053,
-      "volume": 702.81988898
+      "price": 2848.104,
+      "change": 14.507,
+      "change_percent": 0.512,
+      "volume": 733.55624281
     },
     {
       "name": "创业制造",
       "code": "sz399261",
-      "price": 3926.719,
-      "change": 11.972,
-      "change_percent": 0.306,
-      "volume": 622.8314084
+      "price": 3945.889,
+      "change": 19.17,
+      "change_percent": 0.488,
+      "volume": 637.68947691
     },
     {
       "name": "数字经济",
       "code": "sz399262",
-      "price": 2081.209,
-      "change": 3.741,
-      "change_percent": 0.18,
-      "volume": 773.20275915
+      "price": 2092.358,
+      "change": 11.149,
+      "change_percent": 0.536,
+      "volume": 869.13706971
     },
     {
       "name": "创业数字",
       "code": "sz399263",
-      "price": 2268.337,
-      "change": 11.049,
-      "change_percent": 0.489,
-      "volume": 645.26876182
+      "price": 2277.366,
+      "change": 9.029,
+      "change_percent": 0.398,
+      "volume": 666.62413007
     },
     {
       "name": "创业软件",
       "code": "sz399264",
-      "price": 1471.858,
-      "change": 5.902,
-      "change_percent": 0.403,
-      "volume": 419.68557887
+      "price": 1472.084,
+      "change": 0.226,
+      "change_percent": 0.015,
+      "volume": 418.82712184
     },
     {
       "name": "创新药械",
       "code": "sz399265",
-      "price": 1148.954,
-      "change": 17.68,
-      "change_percent": 1.563,
-      "volume": 321.35393344
+      "price": 1149.684,
+      "change": 0.73,
+      "change_percent": 0.064,
+      "volume": 294.99136402
     },
     {
       "name": "创新能源",
       "code": "sz399266",
-      "price": 2382.708,
-      "change": 15.897,
-      "change_percent": 0.672,
-      "volume": 317.15690253
+      "price": 2394.802,
+      "change": 12.094,
+      "change_percent": 0.508,
+      "volume": 301.25945061
     },
     {
       "name": "专精特新",
       "code": "sz399267",
-      "price": 1903.323,
-      "change": 27.241,
-      "change_percent": 1.452,
-      "volume": 430.74359037
+      "price": 1922.348,
+      "change": 19.025,
+      "change_percent": 1.0,
+      "volume": 516.62705012
     },
     {
       "name": "深小巨人",
       "code": "sz399268",
-      "price": 1755.417,
-      "change": 24.308,
-      "change_percent": 1.404,
-      "volume": 465.18373315
+      "price": 1774.387,
+      "change": 18.97,
+      "change_percent": 1.081,
+      "volume": 548.31725786
     },
     {
       "name": "创质量",
       "code": "sz399269",
-      "price": 5211.433,
-      "change": 30.891,
-      "change_percent": 0.596,
-      "volume": 846.13962166
+      "price": 5248.073,
+      "change": 36.64,
+      "change_percent": 0.703,
+      "volume": 895.98607146
     },
     {
       "name": "深新基建",
       "code": "sz399274",
-      "price": 4323.388,
-      "change": 2.569,
-      "change_percent": 0.059,
-      "volume": 670.23123731
+      "price": 4338.87,
+      "change": 15.482,
+      "change_percent": 0.358,
+      "volume": 755.40731039
     },
     {
       "name": "创医药",
       "code": "sz399275",
-      "price": 2911.865,
-      "change": 40.385,
-      "change_percent": 1.406,
-      "volume": 341.02224587
+      "price": 2913.641,
+      "change": 1.776,
+      "change_percent": 0.061,
+      "volume": 314.482514
     },
     {
       "name": "创科技",
       "code": "sz399276",
-      "price": 5412.521,
-      "change": 0.775,
-      "change_percent": 0.014,
-      "volume": 555.54227688
+      "price": 5443.086,
+      "change": 30.565,
+      "change_percent": 0.565,
+      "volume": 554.71032125
     },
     {
       "name": "公共健康",
       "code": "sz399277",
-      "price": 2851.441,
-      "change": 13.063,
-      "change_percent": 0.46,
-      "volume": 309.73121459
+      "price": 2841.161,
+      "change": -10.28,
+      "change_percent": -0.361,
+      "volume": 254.71657484
     },
     {
       "name": "长江100",
       "code": "sz399278",
-      "price": 1680.501,
-      "change": 0.929,
-      "change_percent": 0.055,
-      "volume": 804.88141852
+      "price": 1692.917,
+      "change": 12.416,
+      "change_percent": 0.739,
+      "volume": 890.12036132
     },
     {
       "name": "云科技50",
       "code": "sz399279",
-      "price": 3533.565,
-      "change": 13.637,
-      "change_percent": 0.387,
-      "volume": 654.39079146
+      "price": 3558.803,
+      "change": 25.238,
+      "change_percent": 0.714,
+      "volume": 760.40424722
     },
     {
       "name": "生物50",
       "code": "sz399280",
-      "price": 2248.5,
-      "change": 20.604,
-      "change_percent": 0.925,
-      "volume": 264.54824069
+      "price": 2250.18,
+      "change": 1.68,
+      "change_percent": 0.075,
+      "volume": 215.75091919
     },
     {
       "name": "电子50",
       "code": "sz399281",
-      "price": 3539.886,
-      "change": -6.138,
-      "change_percent": -0.173,
-      "volume": 387.14022048
+      "price": 3562.568,
+      "change": 22.682,
+      "change_percent": 0.641,
+      "volume": 421.48726783
     },
     {
       "name": "大数据50",
       "code": "sz399282",
-      "price": 4944.211,
-      "change": 24.212,
-      "change_percent": 0.492,
-      "volume": 423.61004928
+      "price": 4954.208,
+      "change": 9.997,
+      "change_percent": 0.202,
+      "volume": 424.62608978
     },
     {
       "name": "机器人50",
       "code": "sz399283",
-      "price": 3652.308,
-      "change": 60.808,
-      "change_percent": 1.693,
-      "volume": 294.47016664
+      "price": 3684.129,
+      "change": 31.821,
+      "change_percent": 0.871,
+      "volume": 327.84855113
     },
     {
       "name": "AI 50",
       "code": "sz399284",
-      "price": 3450.314,
-      "change": 6.884,
-      "change_percent": 0.2,
-      "volume": 389.23584736
+      "price": 3475.433,
+      "change": 25.119,
+      "change_percent": 0.728,
+      "volume": 417.90620909
     },
     {
       "name": "物联网50",
       "code": "sz399285",
-      "price": 4491.837,
-      "change": 21.074,
-      "change_percent": 0.471,
-      "volume": 619.19629602
+      "price": 4511.443,
+      "change": 19.606,
+      "change_percent": 0.436,
+      "volume": 676.62870414
     },
     {
       "name": "区块链50",
       "code": "sz399286",
-      "price": 3902.153,
-      "change": 30.303,
-      "change_percent": 0.783,
-      "volume": 472.01389342
+      "price": 3927.729,
+      "change": 25.576,
+      "change_percent": 0.655,
+      "volume": 490.64722196
     },
     {
       "name": "深转交债",
       "code": "sz399290",
-      "price": 176.717,
-      "change": 1.388,
-      "change_percent": 0.792,
-      "volume": 189.06961724
+      "price": 177.867,
+      "change": 1.15,
+      "change_percent": 0.651,
+      "volume": 148.3328074
     },
     {
       "name": "创精选88",
       "code": "sz399291",
-      "price": 3955.318,
-      "change": 49.965,
-      "change_percent": 1.279,
-      "volume": 475.20540286
+      "price": 3964.689,
+      "change": 9.371,
+      "change_percent": 0.237,
+      "volume": 456.9988392
     },
     {
       "name": "民企发展",
       "code": "sz399292",
-      "price": 1237.846,
-      "change": 20.232,
-      "change_percent": 1.662,
-      "volume": 965.28090411
+      "price": 1247.379,
+      "change": 9.533,
+      "change_percent": 0.77,
+      "volume": 993.33532931
     },
     {
       "name": "创业大盘",
       "code": "sz399293",
-      "price": 4511.309,
-      "change": 9.272,
-      "change_percent": 0.206,
-      "volume": 738.29306476
+      "price": 4530.253,
+      "change": 18.944,
+      "change_percent": 0.42,
+      "volume": 760.23006828
     },
     {
       "name": "中小创Q",
       "code": "sz399294",
-      "price": 2843.444,
-      "change": 5.772,
-      "change_percent": 0.203,
-      "volume": 454.13792088
+      "price": 2860.175,
+      "change": 16.731,
+      "change_percent": 0.588,
+      "volume": 446.51642782
     },
     {
       "name": "创价值",
       "code": "sz399295",
-      "price": 4565.631,
-      "change": 23.82,
-      "change_percent": 0.524,
-      "volume": 492.13653668
+      "price": 4580.782,
+      "change": 15.151,
+      "change_percent": 0.332,
+      "volume": 429.35835277
     },
     {
       "name": "创成长",
       "code": "sz399296",
-      "price": 4677.916,
-      "change": 34.917,
-      "change_percent": 0.752,
-      "volume": 660.82565983
+      "price": 4719.273,
+      "change": 41.357,
+      "change_percent": 0.884,
+      "volume": 720.66888925
     },
     {
       "name": "新浪100",
       "code": "sz399297",
-      "price": 5632.328,
-      "change": 35.158,
-      "change_percent": 0.628,
-      "volume": 171.45148604
+      "price": 5661.647,
+      "change": 29.319,
+      "change_percent": 0.521,
+      "volume": 175.54257411
     },
     {
       "name": "深信中高",
       "code": "sz399298",
-      "price": 212.357,
-      "change": 0.025,
-      "change_percent": 0.012,
-      "volume": 55.21550246
+      "price": 212.378,
+      "change": 0.019,
+      "change_percent": 0.009,
+      "volume": 25.72294542
     },
     {
       "name": "深信中低",
       "code": "sz399299",
-      "price": 244.34,
-      "change": 0.046,
-      "change_percent": 0.019,
-      "volume": 1.4148532
+      "price": 244.378,
+      "change": 0.035,
+      "change_percent": 0.014,
+      "volume": 1.5104945
     },
     {
       "name": "沪深300",
       "code": "sz399300",
-      "price": 4070.702,
-      "change": 15.773,
-      "change_percent": 0.389,
-      "volume": 2959.76826632
+      "price": 4102.699,
+      "change": 31.997,
+      "change_percent": 0.786,
+      "volume": 3032.12199573
     },
     {
       "name": "深信用债",
       "code": "sz399301",
-      "price": 216.189,
-      "change": 0.026,
-      "change_percent": 0.012,
-      "volume": 55.21550246
+      "price": 216.21,
+      "change": 0.02,
+      "change_percent": 0.009,
+      "volume": 25.72294542
     },
     {
       "name": "深公司债",
       "code": "sz399302",
-      "price": 220.259,
-      "change": -0.005,
-      "change_percent": -0.002,
-      "volume": 55.21550246
+      "price": 220.281,
+      "change": 0.019,
+      "change_percent": 0.009,
+      "volume": 25.72294542
     },
     {
       "name": "国证2000",
       "code": "sz399303",
-      "price": 8898.534,
-      "change": 113.147,
-      "change_percent": 1.288,
-      "volume": 5367.95917237
+      "price": 8961.238,
+      "change": 62.704,
+      "change_percent": 0.705,
+      "volume": 5706.69320699
     },
     {
       "name": "深证ETF",
       "code": "sz399306",
-      "price": 1586.209,
-      "change": 6.179,
-      "change_percent": 0.391,
-      "volume": 848.41197389
+      "price": 1596.31,
+      "change": 10.101,
+      "change_percent": 0.637,
+      "volume": 1008.49861047
     },
     {
       "name": "深证转债",
       "code": "sz399307",
-      "price": 332.663,
-      "change": 3.383,
-      "change_percent": 1.027,
-      "volume": 498.19765816
+      "price": 335.04,
+      "change": 2.377,
+      "change_percent": 0.715,
+      "volume": 602.85268098
     },
     {
       "name": "国证A50",
       "code": "sz399310",
-      "price": 6665.909,
-      "change": 23.372,
-      "change_percent": 0.352,
-      "volume": 1001.58253254
+      "price": 6710.832,
+      "change": 44.923,
+      "change_percent": 0.674,
+      "volume": 1023.36748767
     },
     {
       "name": "国证1000",
       "code": "sz399311",
-      "price": 4300.232,
-      "change": 20.92,
-      "change_percent": 0.489,
-      "volume": 6164.24346566
+      "price": 4331.647,
+      "change": 31.415,
+      "change_percent": 0.731,
+      "volume": 6222.67147578
     },
     {
       "name": "国证300",
       "code": "sz399312",
-      "price": 4613.544,
-      "change": 16.443,
-      "change_percent": 0.358,
-      "volume": 3057.68397357
+      "price": 4642.616,
+      "change": 29.072,
+      "change_percent": 0.63,
+      "volume": 3072.12636118
     },
     {
       "name": "巨潮100",
       "code": "sz399313",
-      "price": 4879.442,
-      "change": 20.524,
-      "change_percent": 0.422,
-      "volume": 1480.01058831
+      "price": 4920.257,
+      "change": 40.815,
+      "change_percent": 0.836,
+      "volume": 1535.48415298
     },
     {
       "name": "巨潮大盘",
       "code": "sz399314",
-      "price": 4514.3,
-      "change": 19.067,
-      "change_percent": 0.424,
-      "volume": 2345.32564786
+      "price": 4551.295,
+      "change": 36.995,
+      "change_percent": 0.82,
+      "volume": 2444.74813587
     },
     {
       "name": "巨潮中盘",
       "code": "sz399315",
-      "price": 3987.56,
-      "change": 11.157,
-      "change_percent": 0.281,
-      "volume": 1673.68369426
+      "price": 4012.408,
+      "change": 24.848,
+      "change_percent": 0.623,
+      "volume": 1686.9706062
     },
     {
       "name": "巨潮小盘",
       "code": "sz399316",
-      "price": 5156.072,
-      "change": 47.473,
-      "change_percent": 0.929,
-      "volume": 2145.23412355
+      "price": 5185.736,
+      "change": 29.664,
+      "change_percent": 0.575,
+      "volume": 2090.9527337
     },
     {
       "name": "国证Ａ指",
       "code": "sz399317",
-      "price": 5982.139,
-      "change": 44.045,
-      "change_percent": 0.742,
-      "volume": 14968.84408271
+      "price": 6027.193,
+      "change": 45.054,
+      "change_percent": 0.753,
+      "volume": 15757.38114796
     },
     {
       "name": "国证Ｂ指",
       "code": "sz399318",
-      "price": 5306.405,
-      "change": 31.464,
-      "change_percent": 0.596,
-      "volume": 1.55775074
+      "price": 5332.26,
+      "change": 25.855,
+      "change_percent": 0.487,
+      "volume": 2.27564539
     },
     {
       "name": "资源优势",
       "code": "sz399319",
-      "price": 2492.968,
-      "change": 25.518,
-      "change_percent": 1.034,
-      "volume": 532.3959857
+      "price": 2510.51,
+      "change": 17.542,
+      "change_percent": 0.704,
+      "volume": 506.0988058
     },
     {
       "name": "国证服务",
       "code": "sz399320",
-      "price": 2150.362,
-      "change": 4.338,
-      "change_percent": 0.202,
-      "volume": 288.1507765
+      "price": 2159.863,
+      "change": 9.501,
+      "change_percent": 0.442,
+      "volume": 271.37349063
     },
     {
       "name": "国证红利",
       "code": "sz399321",
-      "price": 7572.082,
-      "change": 35.119,
-      "change_percent": 0.466,
-      "volume": 552.35308287
+      "price": 7648.431,
+      "change": 76.349,
+      "change_percent": 1.008,
+      "volume": 580.1665846
     },
     {
       "name": "国证治理",
       "code": "sz399322",
-      "price": 8929.125,
-      "change": 30.293,
-      "change_percent": 0.34,
-      "volume": 680.33809493
+      "price": 9000.202,
+      "change": 71.077,
+      "change_percent": 0.796,
+      "volume": 685.46994736
     },
     {
       "name": "深证红利",
       "code": "sz399324",
-      "price": 8618.021,
-      "change": 30.605,
-      "change_percent": 0.356,
-      "volume": 232.03321673
+      "price": 8717.725,
+      "change": 99.704,
+      "change_percent": 1.157,
+      "volume": 245.04665497
     },
     {
       "name": "成长40",
       "code": "sz399326",
-      "price": 4469.771,
-      "change": 44.582,
-      "change_percent": 1.007,
-      "volume": 321.35072666
+      "price": 4479.885,
+      "change": 10.114,
+      "change_percent": 0.226,
+      "volume": 333.8647193
     },
     {
       "name": "深证治理",
       "code": "sz399328",
-      "price": 8942.903,
-      "change": 20.924,
-      "change_percent": 0.235,
-      "volume": 357.26362247
+      "price": 9006.132,
+      "change": 63.229,
+      "change_percent": 0.707,
+      "volume": 360.37850867
     },
     {
       "name": "深证100",
       "code": "sz399330",
-      "price": 4770.196,
-      "change": 7.321,
-      "change_percent": 0.154,
-      "volume": 1135.7661956
+      "price": 4798.922,
+      "change": 28.726,
+      "change_percent": 0.602,
+      "volume": 1195.19586194
     },
     {
       "name": "中小100R",
       "code": "sz399333",
-      "price": 8293.693,
-      "change": 11.491,
-      "change_percent": 0.139,
-      "volume": 749.60941958
+      "price": 8347.789,
+      "change": 54.096,
+      "change_percent": 0.652,
+      "volume": 759.14637107
     },
     {
       "name": "深证央企",
       "code": "sz399335",
-      "price": 3880.136,
-      "change": 17.145,
-      "change_percent": 0.444,
-      "volume": 278.44369221
+      "price": 3906.236,
+      "change": 26.1,
+      "change_percent": 0.673,
+      "volume": 276.60839257
     },
     {
       "name": "深证民营",
       "code": "sz399337",
-      "price": 4943.167,
-      "change": 7.687,
-      "change_percent": 0.156,
-      "volume": 1156.96016971
+      "price": 4963.753,
+      "change": 20.586,
+      "change_percent": 0.416,
+      "volume": 1174.69852183
     },
     {
       "name": "深证科技",
       "code": "sz399339",
-      "price": 7148.237,
-      "change": 21.492,
-      "change_percent": 0.302,
-      "volume": 1069.21248329
+      "price": 7176.89,
+      "change": 28.653,
+      "change_percent": 0.401,
+      "volume": 1110.1572974
     },
     {
       "name": "深证责任",
       "code": "sz399341",
-      "price": 1502.27,
-      "change": 0.914,
-      "change_percent": 0.061,
-      "volume": 539.38514394
+      "price": 1515.725,
+      "change": 13.455,
+      "change_percent": 0.896,
+      "volume": 556.48363334
     },
     {
       "name": "深证300R",
       "code": "sz399344",
-      "price": 6069.422,
-      "change": 18.719,
-      "change_percent": 0.309,
-      "volume": 2327.01542317
+      "price": 6106.96,
+      "change": 37.538,
+      "change_percent": 0.618,
+      "volume": 2355.8675612
     },
     {
       "name": "深证成长",
       "code": "sz399346",
-      "price": 3195.232,
-      "change": 10.985,
-      "change_percent": 0.345,
-      "volume": 980.52974546
+      "price": 3203.595,
+      "change": 8.363,
+      "change_percent": 0.262,
+      "volume": 926.95328141
     },
     {
       "name": "深证价值",
       "code": "sz399348",
-      "price": 5999.828,
-      "change": 4.014,
-      "change_percent": 0.067,
-      "volume": 501.87499789
+      "price": 6055.431,
+      "change": 55.603,
+      "change_percent": 0.927,
+      "volume": 514.31039646
     },
     {
       "name": "皖江30",
       "code": "sz399350",
-      "price": 2210.077,
-      "change": 8.23,
-      "change_percent": 0.374,
-      "volume": 158.7114024
+      "price": 2227.333,
+      "change": 17.256,
+      "change_percent": 0.781,
+      "volume": 156.31894717
     },
     {
       "name": "创新示范",
       "code": "sz399351",
-      "price": 9417.752,
-      "change": 45.649,
-      "change_percent": 0.487,
-      "volume": 785.10560071
+      "price": 9491.883,
+      "change": 74.131,
+      "change_percent": 0.787,
+      "volume": 787.80722162
     },
     {
       "name": "深企综指",
       "code": "sz399352",
-      "price": 9675.961,
-      "change": 72.643,
-      "change_percent": 0.756,
-      "volume": 1474.27919484
+      "price": 9763.586,
+      "change": 87.625,
+      "change_percent": 0.906,
+      "volume": 1567.14982218
     },
     {
       "name": "国证物流",
       "code": "sz399353",
-      "price": 2143.115,
-      "change": 1.741,
-      "change_percent": 0.081,
-      "volume": 114.75433428
+      "price": 2151.014,
+      "change": 7.899,
+      "change_percent": 0.369,
+      "volume": 98.43953537
     },
     {
       "name": "分析师指数",
       "code": "sz399354",
-      "price": 7527.778,
-      "change": 32.091,
-      "change_percent": 0.428,
-      "volume": 1304.22578984
+      "price": 7596.37,
+      "change": 68.592,
+      "change_percent": 0.911,
+      "volume": 1365.71960956
     },
     {
       "name": "长三角",
       "code": "sz399355",
-      "price": 3460.954,
-      "change": 10.807,
-      "change_percent": 0.313,
-      "volume": 439.87468466
+      "price": 3504.996,
+      "change": 44.042,
+      "change_percent": 1.273,
+      "volume": 495.02249169
     },
     {
       "name": "珠三角",
       "code": "sz399356",
-      "price": 9630.928,
-      "change": 36.586,
-      "change_percent": 0.381,
-      "volume": 439.61124923
+      "price": 9732.028,
+      "change": 101.1,
+      "change_percent": 1.05,
+      "volume": 490.59131092
     },
     {
       "name": "环渤海",
       "code": "sz399357",
-      "price": 3082.192,
-      "change": 8.39,
-      "change_percent": 0.273,
-      "volume": 500.47591411
+      "price": 3103.899,
+      "change": 21.707,
+      "change_percent": 0.704,
+      "volume": 512.10012577
     },
     {
       "name": "国证环保",
       "code": "sz399358",
-      "price": 4368.947,
-      "change": 3.058,
-      "change_percent": 0.07,
-      "volume": 323.40561485
+      "price": 4381.333,
+      "change": 12.386,
+      "change_percent": 0.284,
+      "volume": 310.25635311
     },
     {
       "name": "国证基建",
       "code": "sz399359",
-      "price": 2741.229,
-      "change": 3.248,
-      "change_percent": 0.119,
-      "volume": 189.12214901
+      "price": 2749.883,
+      "change": 8.654,
+      "change_percent": 0.316,
+      "volume": 197.17955126
     },
     {
       "name": "新硬件",
       "code": "sz399360",
-      "price": 6507.753,
-      "change": 82.984,
-      "change_percent": 1.292,
-      "volume": 726.0693629
+      "price": 6574.605,
+      "change": 66.852,
+      "change_percent": 1.027,
+      "volume": 833.98924956
     },
     {
       "name": "在线消费",
       "code": "sz399361",
-      "price": 3612.813,
-      "change": 37.822,
-      "change_percent": 1.058,
-      "volume": 370.40383007
+      "price": 3630.448,
+      "change": 17.635,
+      "change_percent": 0.488,
+      "volume": 329.73120455
     },
     {
       "name": "民企100",
       "code": "sz399362",
-      "price": 6763.813,
-      "change": 23.11,
-      "change_percent": 0.343,
-      "volume": 1063.5752676
+      "price": 6801.956,
+      "change": 38.143,
+      "change_percent": 0.564,
+      "volume": 1141.38463754
     },
     {
       "name": "国证算力",
       "code": "sz399363",
-      "price": 5947.75,
-      "change": 56.104,
-      "change_percent": 0.952,
-      "volume": 743.19356324
+      "price": 5987.198,
+      "change": 39.448,
+      "change_percent": 0.663,
+      "volume": 796.03421811
     },
     {
       "name": "消费100",
       "code": "sz399364",
-      "price": 8845.386,
-      "change": 11.605,
-      "change_percent": 0.131,
-      "volume": 1344.07940204
+      "price": 8902.195,
+      "change": 56.809,
+      "change_percent": 0.642,
+      "volume": 1394.30363393
     },
     {
       "name": "国证粮食",
       "code": "sz399365",
-      "price": 12034.776,
-      "change": 47.221,
-      "change_percent": 0.394,
-      "volume": 90.98293809
+      "price": 12104.585,
+      "change": 69.809,
+      "change_percent": 0.58,
+      "volume": 92.89630144
     },
     {
       "name": "能源金属",
       "code": "sz399366",
-      "price": 1857.557,
-      "change": 10.656,
-      "change_percent": 0.577,
-      "volume": 330.31091958
+      "price": 1866.772,
+      "change": 9.215,
+      "change_percent": 0.496,
+      "volume": 315.2998888
     },
     {
       "name": "1000地产",
       "code": "sz399367",
-      "price": 2742.049,
-      "change": -9.195,
-      "change_percent": -0.334,
-      "volume": 67.93017941
+      "price": 2767.275,
+      "change": 25.226,
+      "change_percent": 0.92,
+      "volume": 96.58242467
     },
     {
       "name": "国证军工",
       "code": "sz399368",
-      "price": 7946.082,
-      "change": 168.571,
-      "change_percent": 2.167,
-      "volume": 466.4493678
+      "price": 7990.262,
+      "change": 44.18,
+      "change_percent": 0.556,
+      "volume": 548.15095787
     },
     {
       "name": "国证责任",
       "code": "sz399369",
-      "price": 1469.089,
-      "change": 1.171,
-      "change_percent": 0.08,
-      "volume": 597.95984356
+      "price": 1480.843,
+      "change": 11.754,
+      "change_percent": 0.8,
+      "volume": 609.91652498
     },
     {
       "name": "国证成长",
       "code": "sz399370",
-      "price": 4002.544,
-      "change": 24.839,
-      "change_percent": 0.624,
-      "volume": 2298.96778429
+      "price": 4022.009,
+      "change": 19.465,
+      "change_percent": 0.486,
+      "volume": 2138.31153983
     },
     {
       "name": "国证价值",
       "code": "sz399371",
-      "price": 6782.843,
-      "change": 23.826,
-      "change_percent": 0.353,
-      "volume": 1284.71885825
+      "price": 6851.031,
+      "change": 68.188,
+      "change_percent": 1.005,
+      "volume": 1289.97572536
     },
     {
       "name": "大盘成长",
       "code": "sz399372",
-      "price": 4159.555,
-      "change": 22.939,
-      "change_percent": 0.555,
-      "volume": 986.15148189
+      "price": 4179.499,
+      "change": 19.944,
+      "change_percent": 0.479,
+      "volume": 973.69783398
     },
     {
       "name": "大盘价值",
       "code": "sz399373",
-      "price": 8413.617,
-      "change": 34.882,
-      "change_percent": 0.416,
-      "volume": 546.74354202
+      "price": 8507.361,
+      "change": 93.744,
+      "change_percent": 1.114,
+      "volume": 563.51637278
     },
     {
       "name": "中盘成长",
       "code": "sz399374",
-      "price": 3629.409,
-      "change": 17.475,
-      "change_percent": 0.484,
-      "volume": 495.76671261
+      "price": 3646.142,
+      "change": 16.733,
+      "change_percent": 0.461,
+      "volume": 436.09169243
     },
     {
       "name": "中盘价值",
       "code": "sz399375",
-      "price": 5129.707,
-      "change": 2.609,
-      "change_percent": 0.051,
-      "volume": 302.53826687
+      "price": 5173.351,
+      "change": 43.644,
+      "change_percent": 0.851,
+      "volume": 319.6403353
     },
     {
       "name": "小盘成长",
       "code": "sz399376",
-      "price": 5019.016,
-      "change": 51.847,
-      "change_percent": 1.044,
-      "volume": 817.0495898
+      "price": 5046.16,
+      "change": 27.144,
+      "change_percent": 0.541,
+      "volume": 728.52201342
     },
     {
       "name": "小盘价值",
       "code": "sz399377",
-      "price": 6861.463,
-      "change": 30.504,
-      "change_percent": 0.447,
-      "volume": 435.43704936
+      "price": 6912.506,
+      "change": 51.043,
+      "change_percent": 0.744,
+      "volume": 406.81901728
     },
     {
       "name": "ESG 300",
       "code": "sz399378",
-      "price": 2509.518,
-      "change": 8.57,
-      "change_percent": 0.343,
-      "volume": 2297.24604508
+      "price": 2528.21,
+      "change": 18.692,
+      "change_percent": 0.745,
+      "volume": 2334.06089339
     },
     {
       "name": "国证基金",
       "code": "sz399379",
-      "price": 8211.303,
-      "change": 36.829,
-      "change_percent": 0.451,
-      "volume": 3237.17123336
+      "price": 8261.612,
+      "change": 50.309,
+      "change_percent": 0.613,
+      "volume": 3577.04247393
     },
     {
       "name": "国证ETF",
       "code": "sz399380",
-      "price": 1617.08,
-      "change": 7.836,
-      "change_percent": 0.487,
-      "volume": 3218.48413995
+      "price": 1627.505,
+      "change": 10.425,
+      "change_percent": 0.645,
+      "volume": 3560.90117278
     },
     {
       "name": "1000能源",
       "code": "sz399381",
-      "price": 2783.997,
-      "change": 4.978,
-      "change_percent": 0.179,
-      "volume": 76.01447508
+      "price": 2813.939,
+      "change": 29.942,
+      "change_percent": 1.076,
+      "volume": 79.53546343
     },
     {
       "name": "1000材料",
       "code": "sz399382",
-      "price": 2723.304,
-      "change": 21.733,
-      "change_percent": 0.804,
-      "volume": 753.57258145
+      "price": 2739.161,
+      "change": 15.857,
+      "change_percent": 0.582,
+      "volume": 682.51676233
     },
     {
       "name": "1000工业",
       "code": "sz399383",
-      "price": 2444.701,
-      "change": 18.074,
-      "change_percent": 0.745,
-      "volume": 1210.12233592
+      "price": 2455.054,
+      "change": 10.353,
+      "change_percent": 0.423,
+      "volume": 1196.80314972
     },
     {
       "name": "1000可选",
       "code": "sz399384",
-      "price": 3877.54,
-      "change": 16.227,
-      "change_percent": 0.42,
-      "volume": 534.62648785
+      "price": 3909.536,
+      "change": 31.996,
+      "change_percent": 0.825,
+      "volume": 495.87045013
     },
     {
       "name": "1000消费",
       "code": "sz399385",
-      "price": 9572.703,
-      "change": 18.297,
-      "change_percent": 0.192,
-      "volume": 179.65247886
+      "price": 9654.748,
+      "change": 82.045,
+      "change_percent": 0.857,
+      "volume": 213.69190432
     },
     {
       "name": "1000医药",
       "code": "sz399386",
-      "price": 6207.72,
-      "change": 10.755,
-      "change_percent": 0.174,
-      "volume": 609.12598534
+      "price": 6232.465,
+      "change": 24.745,
+      "change_percent": 0.399,
+      "volume": 486.78707514
     },
     {
       "name": "1000金融",
       "code": "sz399387",
-      "price": 5637.817,
-      "change": 27.147,
-      "change_percent": 0.484,
-      "volume": 694.09247219
+      "price": 5716.71,
+      "change": 78.893,
+      "change_percent": 1.399,
+      "volume": 810.15454247
     },
     {
       "name": "1000信息",
       "code": "sz399388",
-      "price": 5020.519,
-      "change": 27.48,
-      "change_percent": 0.55,
-      "volume": 1591.0337499
+      "price": 5043.422,
+      "change": 22.903,
+      "change_percent": 0.456,
+      "volume": 1641.76401557
     },
     {
       "name": "国证通信",
       "code": "sz399389",
-      "price": 5331.611,
-      "change": 18.569,
-      "change_percent": 0.349,
-      "volume": 580.57196054
+      "price": 5397.466,
+      "change": 65.855,
+      "change_percent": 1.235,
+      "volume": 797.65657319
     },
     {
       "name": "1000公用",
       "code": "sz399390",
-      "price": 2567.068,
-      "change": 4.94,
-      "change_percent": 0.193,
-      "volume": 113.20018071
+      "price": 2577.445,
+      "change": 10.377,
+      "change_percent": 0.404,
+      "volume": 102.45010048
     },
     {
       "name": "投资时钟",
       "code": "sz399391",
-      "price": 3194.028,
-      "change": 21.716,
-      "change_percent": 0.685,
-      "volume": 550.2399589
+      "price": 3217.901,
+      "change": 23.873,
+      "change_percent": 0.747,
+      "volume": 579.88023999
     },
     {
       "name": "国证新兴",
       "code": "sz399392",
-      "price": 2537.882,
-      "change": 6.256,
-      "change_percent": 0.247,
-      "volume": 1511.05675749
+      "price": 2550.867,
+      "change": 12.985,
+      "change_percent": 0.512,
+      "volume": 1575.28653427
     },
     {
       "name": "国证地产",
       "code": "sz399393",
-      "price": 3168.47,
-      "change": -4.592,
-      "change_percent": -0.145,
-      "volume": 94.48694052
+      "price": 3199.047,
+      "change": 30.577,
+      "change_percent": 0.965,
+      "volume": 127.84506412
     },
     {
       "name": "国证医药",
       "code": "sz399394",
-      "price": 9215.672,
-      "change": 16.362,
-      "change_percent": 0.178,
-      "volume": 550.27226701
+      "price": 9252.068,
+      "change": 36.396,
+      "change_percent": 0.395,
+      "volume": 431.69260648
     },
     {
       "name": "国证有色",
       "code": "sz399395",
-      "price": 6213.637,
-      "change": 100.028,
-      "change_percent": 1.636,
-      "volume": 462.75386101
+      "price": 6237.753,
+      "change": 24.116,
+      "change_percent": 0.388,
+      "volume": 405.87131269
     },
     {
       "name": "国证食品",
       "code": "sz399396",
-      "price": 18119.705,
-      "change": 35.369,
-      "change_percent": 0.196,
-      "volume": 145.46819235
+      "price": 18284.625,
+      "change": 164.92,
+      "change_percent": 0.91,
+      "volume": 177.90641006
     },
     {
       "name": "国证文化",
       "code": "sz399397",
-      "price": 2124.352,
-      "change": 20.488,
-      "change_percent": 0.974,
-      "volume": 410.81258209
+      "price": 2137.625,
+      "change": 13.273,
+      "change_percent": 0.625,
+      "volume": 382.54133892
     },
     {
       "name": "绩效指数",
       "code": "sz399398",
-      "price": 10216.283,
-      "change": 57.834,
-      "change_percent": 0.569,
-      "volume": 506.60972977
+      "price": 10284.208,
+      "change": 67.925,
+      "change_percent": 0.665,
+      "volume": 514.55300714
     },
     {
       "name": "中经GDP",
       "code": "sz399399",
-      "price": 7271.821,
-      "change": 31.638,
-      "change_percent": 0.437,
-      "volume": 1843.07976998
+      "price": 7326.261,
+      "change": 54.44,
+      "change_percent": 0.749,
+      "volume": 1837.95483536
     },
     {
       "name": "大中盘",
       "code": "sz399400",
-      "price": 3646.614,
-      "change": 14.014,
-      "change_percent": 0.386,
-      "volume": 4019.00934211
+      "price": 3674.587,
+      "change": 27.973,
+      "change_percent": 0.767,
+      "volume": 4131.71874208
     },
     {
       "name": "中小盘",
       "code": "sz399401",
-      "price": 4075.369,
-      "change": 23.64,
-      "change_percent": 0.583,
-      "volume": 3818.9178178
+      "price": 4099.852,
+      "change": 24.483,
+      "change_percent": 0.601,
+      "volume": 3777.92333991
     },
     {
       "name": "周期100",
       "code": "sz399402",
-      "price": 3146.676,
-      "change": 9.008,
-      "change_percent": 0.287,
-      "volume": 1032.726652
+      "price": 3168.522,
+      "change": 21.846,
+      "change_percent": 0.694,
+      "volume": 1042.54120886
     },
     {
       "name": "防御100",
       "code": "sz399403",
-      "price": 7836.865,
-      "change": 14.836,
-      "change_percent": 0.19,
-      "volume": 719.40670486
+      "price": 7887.859,
+      "change": 50.994,
+      "change_percent": 0.651,
+      "volume": 753.11285558
     },
     {
       "name": "大盘高贝",
       "code": "sz399405",
-      "price": 2366.16,
-      "change": 6.292,
-      "change_percent": 0.267,
-      "volume": 826.96331258
+      "price": 2389.266,
+      "change": 23.106,
+      "change_percent": 0.977,
+      "volume": 881.63650466
     },
     {
       "name": "中盘低波",
       "code": "sz399406",
-      "price": 12608.233,
-      "change": 32.646,
-      "change_percent": 0.26,
-      "volume": 285.11631661
+      "price": 12684.353,
+      "change": 76.12,
+      "change_percent": 0.604,
+      "volume": 275.31006623
     },
     {
       "name": "中盘高贝",
       "code": "sz399407",
-      "price": 2485.542,
-      "change": 3.227,
-      "change_percent": 0.13,
-      "volume": 833.55161624
+      "price": 2497.723,
+      "change": 12.181,
+      "change_percent": 0.49,
+      "volume": 834.28502591
     },
     {
       "name": "小盘低波",
       "code": "sz399408",
-      "price": 14461.563,
-      "change": 60.315,
-      "change_percent": 0.419,
-      "volume": 396.24808208
+      "price": 14530.25,
+      "change": 68.687,
+      "change_percent": 0.475,
+      "volume": 345.66595631
     },
     {
       "name": "小盘高贝",
       "code": "sz399409",
-      "price": 5303.322,
-      "change": 64.834,
-      "change_percent": 1.238,
-      "volume": 944.16365823
+      "price": 5324.025,
+      "change": 20.703,
+      "change_percent": 0.39,
+      "volume": 886.43646686
     },
     {
       "name": "苏州率先",
       "code": "sz399410",
-      "price": 2215.194,
-      "change": -7.972,
-      "change_percent": -0.359,
-      "volume": 229.59874021
+      "price": 2218.49,
+      "change": 3.296,
+      "change_percent": 0.149,
+      "volume": 224.15366203
     },
     {
       "name": "红利100",
       "code": "sz399411",
-      "price": 3429.198,
-      "change": 14.986,
-      "change_percent": 0.439,
-      "volume": 370.34657059
+      "price": 3458.469,
+      "change": 29.271,
+      "change_percent": 0.854,
+      "volume": 384.60674109
     },
     {
       "name": "国证新能",
       "code": "sz399412",
-      "price": 2276.365,
-      "change": 0.476,
-      "change_percent": 0.021,
-      "volume": 427.46114772
+      "price": 2288.229,
+      "change": 11.864,
+      "change_percent": 0.521,
+      "volume": 389.7197252
     },
     {
       "name": "国证转债",
       "code": "sz399413",
-      "price": 171.243,
-      "change": 1.533,
-      "change_percent": 0.903,
-      "volume": 801.13510008
+      "price": 172.637,
+      "change": 1.394,
+      "change_percent": 0.814,
+      "volume": 914.55935147
     },
     {
       "name": "I100",
       "code": "sz399415",
-      "price": 6458.814,
-      "change": 50.978,
-      "change_percent": 0.796,
-      "volume": 495.07816585
+      "price": 6517.408,
+      "change": 58.594,
+      "change_percent": 0.907,
+      "volume": 527.87451632
     },
     {
       "name": "I300",
       "code": "sz399416",
-      "price": 4303.528,
-      "change": 51.36,
-      "change_percent": 1.208,
-      "volume": 603.90089337
+      "price": 4337.862,
+      "change": 34.334,
+      "change_percent": 0.798,
+      "volume": 606.33577271
     },
     {
       "name": "新能源车",
       "code": "sz399417",
-      "price": 2839.129,
-      "change": 18.995,
-      "change_percent": 0.674,
-      "volume": 413.57678668
+      "price": 2848.943,
+      "change": 9.814,
+      "change_percent": 0.346,
+      "volume": 395.62093238
     },
     {
       "name": "数据要素",
       "code": "sz399418",
-      "price": 4040.496,
-      "change": 12.394,
-      "change_percent": 0.308,
-      "volume": 455.78215997
+      "price": 4046.549,
+      "change": 6.053,
+      "change_percent": 0.15,
+      "volume": 460.85955063
     },
     {
       "name": "国证高铁",
       "code": "sz399419",
-      "price": 1977.066,
-      "change": 24.966,
-      "change_percent": 1.279,
-      "volume": 154.25487493
+      "price": 1996.226,
+      "change": 19.16,
+      "change_percent": 0.969,
+      "volume": 176.21995465
     },
     {
       "name": "国证保证",
       "code": "sz399420",
-      "price": 1504.076,
-      "change": 2.793,
-      "change_percent": 0.186,
-      "volume": 250.94018493
+      "price": 1522.771,
+      "change": 18.695,
+      "change_percent": 1.243,
+      "volume": 330.78218719
     },
     {
       "name": "中关村A",
       "code": "sz399422",
-      "price": 3214.087,
-      "change": 25.458,
-      "change_percent": 0.798,
-      "volume": 1387.58990707
+      "price": 3219.82,
+      "change": 5.733,
+      "change_percent": 0.178,
+      "volume": 1316.64864361
     },
     {
       "name": "中关村50",
       "code": "sz399423",
-      "price": 2516.962,
-      "change": 19.59,
-      "change_percent": 0.784,
-      "volume": 350.75648295
+      "price": 2520.734,
+      "change": 3.772,
+      "change_percent": 0.15,
+      "volume": 328.15895778
     },
     {
       "name": "国证定增",
       "code": "sz399428",
-      "price": 3765.655,
-      "change": 67.194,
-      "change_percent": 1.817,
-      "volume": 590.40515136
+      "price": 3785.667,
+      "change": 20.012,
+      "change_percent": 0.531,
+      "volume": 546.22172476
     },
     {
       "name": "新丝路",
       "code": "sz399429",
-      "price": 1359.584,
-      "change": 9.918,
-      "change_percent": 0.735,
-      "volume": 324.06009958
+      "price": 1368.286,
+      "change": 8.702,
+      "change_percent": 0.64,
+      "volume": 307.82181519
     },
     {
       "name": "国证银行",
       "code": "sz399431",
-      "price": 8375.401,
-      "change": 63.173,
-      "change_percent": 0.76,
-      "volume": 304.52261207
+      "price": 8508.348,
+      "change": 132.947,
+      "change_percent": 1.587,
+      "volume": 314.57980468
     },
     {
       "name": "智能汽车",
       "code": "sz399432",
-      "price": 4962.131,
-      "change": 37.308,
-      "change_percent": 0.758,
-      "volume": 356.89338497
+      "price": 4985.984,
+      "change": 23.853,
+      "change_percent": 0.481,
+      "volume": 367.46088264
     },
     {
       "name": "国证交运",
       "code": "sz399433",
-      "price": 1681.821,
-      "change": 4.872,
-      "change_percent": 0.291,
-      "volume": 148.42254822
+      "price": 1689.533,
+      "change": 7.712,
+      "change_percent": 0.459,
+      "volume": 131.4274584
     },
     {
       "name": "数字传媒",
       "code": "sz399434",
-      "price": 2104.623,
-      "change": 24.669,
-      "change_percent": 1.186,
-      "volume": 414.86046523
+      "price": 2115.412,
+      "change": 10.789,
+      "change_percent": 0.513,
+      "volume": 351.1507318
     },
     {
       "name": "国证农牧",
       "code": "sz399435",
-      "price": 3915.001,
-      "change": 16.461,
-      "change_percent": 0.422,
-      "volume": 73.97041179
+      "price": 3946.965,
+      "change": 31.964,
+      "change_percent": 0.816,
+      "volume": 82.86872066
     },
     {
       "name": "绿色煤炭",
       "code": "sz399436",
-      "price": 3761.379,
-      "change": 34.352,
-      "change_percent": 0.922,
-      "volume": 48.79032811
+      "price": 3805.945,
+      "change": 44.566,
+      "change_percent": 1.185,
+      "volume": 55.5454389
     },
     {
       "name": "证券龙头",
       "code": "sz399437",
-      "price": 6652.612,
-      "change": 13.831,
-      "change_percent": 0.208,
-      "volume": 220.97748767
+      "price": 6731.033,
+      "change": 78.421,
+      "change_percent": 1.179,
+      "volume": 298.36713279
     },
     {
       "name": "绿色电力",
       "code": "sz399438",
-      "price": 1975.432,
-      "change": 2.905,
-      "change_percent": 0.147,
-      "volume": 110.95808023
+      "price": 1981.558,
+      "change": 6.126,
+      "change_percent": 0.31,
+      "volume": 100.43515195
     },
     {
       "name": "国证油气",
       "code": "sz399439",
-      "price": 1648.676,
-      "change": 0.267,
-      "change_percent": 0.016,
-      "volume": 81.81351303
+      "price": 1663.859,
+      "change": 15.183,
+      "change_percent": 0.921,
+      "volume": 76.93974198
     },
     {
       "name": "国证钢铁",
       "code": "sz399440",
-      "price": 1342.258,
-      "change": 0.139,
-      "change_percent": 0.01,
-      "volume": 101.86598037
+      "price": 1360.646,
+      "change": 18.388,
+      "change_percent": 1.37,
+      "volume": 109.09529058
     },
     {
       "name": "生物医药",
       "code": "sz399441",
-      "price": 2363.438,
-      "change": -9.814,
-      "change_percent": -0.414,
-      "volume": 274.40644308
+      "price": 2380.619,
+      "change": 17.181,
+      "change_percent": 0.727,
+      "volume": 218.2242212
     },
     {
       "name": "企债指数",
       "code": "sz399481",
-      "price": 128.042,
-      "change": -0.003,
-      "change_percent": -0.002,
-      "volume": 78.98995201
+      "price": 128.041,
+      "change": -0.001,
+      "change_percent": -0.001,
+      "volume": 39.50430209
     },
     {
       "name": "央视50",
       "code": "sz399550",
-      "price": 7620.939,
-      "change": 22.073,
-      "change_percent": 0.29,
-      "volume": 475.0263196
+      "price": 7683.45,
+      "change": 62.511,
+      "change_percent": 0.82,
+      "volume": 481.82461449
     },
     {
       "name": "央视创新",
       "code": "sz399551",
-      "price": 8339.465,
-      "change": 30.696,
-      "change_percent": 0.369,
-      "volume": 420.04260505
+      "price": 8391.063,
+      "change": 51.598,
+      "change_percent": 0.619,
+      "volume": 425.49474859
     },
     {
       "name": "央视成长",
       "code": "sz399552",
-      "price": 7961.708,
-      "change": 12.301,
-      "change_percent": 0.155,
-      "volume": 335.84804706
+      "price": 8028.793,
+      "change": 67.085,
+      "change_percent": 0.843,
+      "volume": 369.35468551
     },
     {
       "name": "央视回报",
       "code": "sz399553",
-      "price": 6848.885,
-      "change": 7.844,
-      "change_percent": 0.115,
-      "volume": 243.17820282
+      "price": 6895.692,
+      "change": 46.807,
+      "change_percent": 0.683,
+      "volume": 277.32425884
     },
     {
       "name": "央视治理",
       "code": "sz399554",
-      "price": 7410.042,
-      "change": 17.039,
-      "change_percent": 0.23,
-      "volume": 401.01411618
+      "price": 7478.17,
+      "change": 68.128,
+      "change_percent": 0.919,
+      "volume": 409.09311805
     },
     {
       "name": "央视责任",
       "code": "sz399555",
-      "price": 5272.0,
-      "change": 22.085,
-      "change_percent": 0.421,
-      "volume": 390.15821383
+      "price": 5337.385,
+      "change": 65.385,
+      "change_percent": 1.24,
+      "volume": 402.0525264
     },
     {
       "name": "央视生态",
       "code": "sz399556",
-      "price": 2327.196,
-      "change": 3.099,
-      "change_percent": 0.133,
-      "volume": 395.1802466
+      "price": 2338.367,
+      "change": 11.171,
+      "change_percent": 0.48,
+      "volume": 362.33589233
     },
     {
       "name": "央视文化",
       "code": "sz399557",
-      "price": 1779.446,
-      "change": 18.26,
-      "change_percent": 1.037,
-      "volume": 410.81258209
+      "price": 1794.523,
+      "change": 15.077,
+      "change_percent": 0.847,
+      "volume": 382.54133892
     },
     {
       "name": "中小成长",
       "code": "sz399602",
-      "price": 1024.488,
-      "change": 4.208,
-      "change_percent": 0.412,
-      "volume": 641.65361586
+      "price": 1027.31,
+      "change": 2.822,
+      "change_percent": 0.275,
+      "volume": 602.96661806
     },
     {
       "name": "中小价值",
       "code": "sz399604",
-      "price": 1903.779,
-      "change": 0.226,
-      "change_percent": 0.012,
-      "volume": 333.37878426
+      "price": 1919.664,
+      "change": 15.885,
+      "change_percent": 0.834,
+      "volume": 330.91338111
     },
     {
       "name": "创业板R",
       "code": "sz399606",
-      "price": 2582.214,
-      "change": 12.939,
-      "change_percent": 0.504,
-      "volume": 1084.33416659
+      "price": 2591.71,
+      "change": 9.496,
+      "change_percent": 0.368,
+      "volume": 1068.75544794
     },
     {
       "name": "科技100",
       "code": "sz399608",
-      "price": 3161.238,
-      "change": 15.408,
-      "change_percent": 0.49,
-      "volume": 970.03395711
+      "price": 3172.461,
+      "change": 11.223,
+      "change_percent": 0.355,
+      "volume": 1004.00750935
     },
     {
       "name": "TMT50",
       "code": "sz399610",
-      "price": 6803.405,
-      "change": -11.144,
-      "change_percent": -0.164,
-      "volume": 805.80557707
+      "price": 6846.275,
+      "change": 42.87,
+      "change_percent": 0.63,
+      "volume": 896.80040172
     },
     {
       "name": "中创100R",
       "code": "sz399611",
-      "price": 2467.362,
-      "change": 1.743,
-      "change_percent": 0.071,
-      "volume": 1188.37734693
+      "price": 2478.946,
+      "change": 11.584,
+      "change_percent": 0.469,
+      "volume": 1205.03650152
     },
     {
       "name": "中创100",
       "code": "sz399612",
-      "price": 2096.92,
-      "change": 1.481,
-      "change_percent": 0.071,
-      "volume": 1188.37734693
+      "price": 2106.765,
+      "change": 9.845,
+      "change_percent": 0.469,
+      "volume": 1205.03650152
     },
     {
       "name": "深证能源",
       "code": "sz399613",
-      "price": 3023.275,
-      "change": 22.189,
-      "change_percent": 0.739,
-      "volume": 17.86986585
+      "price": 3051.219,
+      "change": 27.944,
+      "change_percent": 0.924,
+      "volume": 19.41680821
     },
     {
       "name": "深证材料",
       "code": "sz399614",
-      "price": 2735.872,
-      "change": 9.586,
-      "change_percent": 0.352,
-      "volume": 417.90347551
+      "price": 2756.683,
+      "change": 20.811,
+      "change_percent": 0.761,
+      "volume": 430.0754705
     },
     {
       "name": "深证工业",
       "code": "sz399615",
-      "price": 3176.665,
-      "change": 38.315,
-      "change_percent": 1.221,
-      "volume": 918.72538952
+      "price": 3192.166,
+      "change": 15.501,
+      "change_percent": 0.488,
+      "volume": 902.22474988
     },
     {
       "name": "深证可选",
       "code": "sz399616",
-      "price": 6262.975,
-      "change": 25.817,
-      "change_percent": 0.414,
-      "volume": 430.51270738
+      "price": 6298.517,
+      "change": 35.542,
+      "change_percent": 0.567,
+      "volume": 367.79316923
     },
     {
       "name": "深证消费",
       "code": "sz399617",
-      "price": 9579.302,
-      "change": 17.543,
-      "change_percent": 0.183,
-      "volume": 72.85479877
+      "price": 9689.62,
+      "change": 110.318,
+      "change_percent": 1.152,
+      "volume": 91.70352964
     },
     {
       "name": "深证医药",
       "code": "sz399618",
-      "price": 8770.157,
-      "change": 74.446,
-      "change_percent": 0.856,
-      "volume": 390.86236614
+      "price": 8808.139,
+      "change": 37.982,
+      "change_percent": 0.433,
+      "volume": 355.02398822
     },
     {
       "name": "深证金融",
       "code": "sz399619",
-      "price": 7114.059,
-      "change": 1.958,
-      "change_percent": 0.028,
-      "volume": 144.18668804
+      "price": 7189.492,
+      "change": 75.433,
+      "change_percent": 1.06,
+      "volume": 161.95420223
     },
     {
       "name": "深证信息",
       "code": "sz399620",
-      "price": 4599.714,
-      "change": 15.091,
-      "change_percent": 0.329,
-      "volume": 1240.4769031
+      "price": 4620.354,
+      "change": 20.64,
+      "change_percent": 0.449,
+      "volume": 1313.83024607
     },
     {
       "name": "深证电信",
       "code": "sz399621",
-      "price": 6709.664,
-      "change": 8.337,
-      "change_percent": 0.124,
-      "volume": 315.89518328
+      "price": 6784.322,
+      "change": 74.658,
+      "change_percent": 1.113,
+      "volume": 423.35265872
     },
     {
       "name": "深证公用",
       "code": "sz399622",
-      "price": 1646.616,
-      "change": 0.918,
-      "change_percent": 0.056,
-      "volume": 25.17139363
+      "price": 1652.351,
+      "change": 5.735,
+      "change_percent": 0.348,
+      "volume": 23.26311787
     },
     {
       "name": "中小基础",
       "code": "sz399623",
-      "price": 7620.235,
-      "change": 36.067,
-      "change_percent": 0.476,
-      "volume": 1741.7528259
+      "price": 7670.934,
+      "change": 50.699,
+      "change_percent": 0.665,
+      "volume": 1844.35302055
     },
     {
       "name": "中创400",
       "code": "sz399624",
-      "price": 2191.569,
-      "change": 23.217,
-      "change_percent": 1.071,
-      "volume": 2101.61028442
+      "price": 2204.194,
+      "change": 12.625,
+      "change_percent": 0.576,
+      "volume": 2134.02536097
     },
     {
       "name": "中创500",
       "code": "sz399625",
-      "price": 1946.286,
-      "change": 9.952,
-      "change_percent": 0.514,
-      "volume": 3289.98763135
+      "price": 1956.436,
+      "change": 10.15,
+      "change_percent": 0.522,
+      "volume": 3339.06186249
     },
     {
       "name": "中创成长",
       "code": "sz399626",
-      "price": 1495.224,
-      "change": 6.113,
-      "change_percent": 0.411,
-      "volume": 1290.71103999
+      "price": 1498.957,
+      "change": 3.733,
+      "change_percent": 0.25,
+      "volume": 1220.64453302
     },
     {
       "name": "中创价值",
       "code": "sz399627",
-      "price": 2212.38,
-      "change": 6.526,
-      "change_percent": 0.296,
-      "volume": 702.63137704
+      "price": 2228.89,
+      "change": 16.51,
+      "change_percent": 0.746,
+      "volume": 673.40289032
     },
     {
       "name": "700成长",
       "code": "sz399628",
-      "price": 2044.347,
-      "change": 26.61,
-      "change_percent": 1.319,
-      "volume": 918.83389763
+      "price": 2060.226,
+      "change": 15.879,
+      "change_percent": 0.777,
+      "volume": 976.20953413
     },
     {
       "name": "700价值",
       "code": "sz399629",
-      "price": 2708.629,
-      "change": 15.491,
-      "change_percent": 0.575,
-      "volume": 437.50731974
+      "price": 2723.862,
+      "change": 15.233,
+      "change_percent": 0.562,
+      "volume": 432.96969884
     },
     {
       "name": "1000成长",
       "code": "sz399630",
-      "price": 1353.318,
-      "change": 7.23,
-      "change_percent": 0.537,
-      "volume": 2046.91941707
+      "price": 1358.577,
+      "change": 5.259,
+      "change_percent": 0.389,
+      "volume": 2040.6439774
     },
     {
       "name": "1000价值",
       "code": "sz399631",
-      "price": 2093.743,
-      "change": 5.055,
-      "change_percent": 0.242,
-      "volume": 1034.39489424
+      "price": 2111.597,
+      "change": 17.854,
+      "change_percent": 0.853,
+      "volume": 1043.11009283
     },
     {
       "name": "深100EW",
       "code": "sz399632",
-      "price": 4403.326,
-      "change": -0.392,
-      "change_percent": -0.009,
-      "volume": 1135.7661956
+      "price": 4428.766,
+      "change": 25.44,
+      "change_percent": 0.578,
+      "volume": 1195.19586194
     },
     {
       "name": "深300EW",
       "code": "sz399633",
-      "price": 5181.71,
-      "change": 21.17,
-      "change_percent": 0.41,
-      "volume": 2327.01542317
+      "price": 5213.333,
+      "change": 31.623,
+      "change_percent": 0.61,
+      "volume": 2355.8675612
     },
     {
       "name": "中小等权",
       "code": "sz399634",
-      "price": 3557.813,
-      "change": 13.295,
-      "change_percent": 0.375,
-      "volume": 749.60941958
+      "price": 3582.077,
+      "change": 24.264,
+      "change_percent": 0.682,
+      "volume": 759.14637107
     },
     {
       "name": "创业板EW",
       "code": "sz399635",
-      "price": 1705.73,
-      "change": 10.738,
-      "change_percent": 0.634,
-      "volume": 1084.33416659
+      "price": 1712.129,
+      "change": 6.399,
+      "change_percent": 0.375,
+      "volume": 1068.75544794
     },
     {
       "name": "深证装备",
       "code": "sz399636",
-      "price": 5343.436,
-      "change": 37.467,
-      "change_percent": 0.706,
-      "volume": 718.36848825
+      "price": 5367.601,
+      "change": 24.165,
+      "change_percent": 0.452,
+      "volume": 833.30170584
     },
     {
       "name": "深证地产",
       "code": "sz399637",
-      "price": 1652.029,
-      "change": 4.88,
-      "change_percent": 0.296,
-      "volume": 24.33479241
+      "price": 1667.44,
+      "change": 15.411,
+      "change_percent": 0.933,
+      "volume": 29.51282672
     },
     {
       "name": "深证环保",
       "code": "sz399638",
-      "price": 5309.546,
-      "change": 19.36,
-      "change_percent": 0.366,
-      "volume": 315.36441709
+      "price": 5320.288,
+      "change": 10.742,
+      "change_percent": 0.202,
+      "volume": 282.44664338
     },
     {
       "name": "深证大宗",
       "code": "sz399639",
-      "price": 1689.599,
-      "change": 6.458,
-      "change_percent": 0.384,
-      "volume": 180.88810143
+      "price": 1702.474,
+      "change": 12.875,
+      "change_percent": 0.762,
+      "volume": 183.98933145
     },
     {
       "name": "创业基础",
       "code": "sz399640",
-      "price": 2365.992,
-      "change": 22.562,
-      "change_percent": 0.963,
-      "volume": 3109.58581396
+      "price": 2376.767,
+      "change": 10.775,
+      "change_percent": 0.455,
+      "volume": 3271.73785398
     },
     {
       "name": "深证新兴",
       "code": "sz399641",
-      "price": 2212.323,
-      "change": 8.322,
-      "change_percent": 0.378,
-      "volume": 1999.50185328
+      "price": 2223.623,
+      "change": 11.3,
+      "change_percent": 0.511,
+      "volume": 2018.70132225
     },
     {
       "name": "中小新兴",
       "code": "sz399642",
-      "price": 1850.541,
-      "change": 6.218,
-      "change_percent": 0.337,
-      "volume": 904.74748123
+      "price": 1859.794,
+      "change": 9.253,
+      "change_percent": 0.5,
+      "volume": 911.7464841
     },
     {
       "name": "创业新兴",
       "code": "sz399643",
-      "price": 2847.918,
-      "change": 15.735,
-      "change_percent": 0.556,
-      "volume": 1077.71879015
+      "price": 2858.829,
+      "change": 10.911,
+      "change_percent": 0.383,
+      "volume": 1090.22538357
     },
     {
       "name": "深证时钟",
       "code": "sz399644",
-      "price": 3434.811,
-      "change": 14.159,
-      "change_percent": 0.414,
-      "volume": 399.4729616
+      "price": 3465.945,
+      "change": 31.134,
+      "change_percent": 0.906,
+      "volume": 414.32005071
     },
     {
       "name": "100低波",
       "code": "sz399645",
-      "price": 9043.121,
-      "change": 16.463,
-      "change_percent": 0.182,
-      "volume": 358.13845505
+      "price": 9122.49,
+      "change": 79.369,
+      "change_percent": 0.878,
+      "volume": 370.46969231
     },
     {
       "name": "深消费50",
       "code": "sz399646",
-      "price": 7797.354,
-      "change": 28.583,
-      "change_percent": 0.368,
-      "volume": 320.42443884
+      "price": 7866.191,
+      "change": 68.837,
+      "change_percent": 0.883,
+      "volume": 303.31406629
     },
     {
       "name": "深医药50",
       "code": "sz399647",
-      "price": 8577.706,
-      "change": 41.237,
-      "change_percent": 0.483,
-      "volume": 324.84662825
+      "price": 8601.635,
+      "change": 23.929,
+      "change_percent": 0.279,
+      "volume": 261.2156998
     },
     {
       "name": "深证GDP",
       "code": "sz399648",
-      "price": 10680.34,
-      "change": 28.419,
-      "change_percent": 0.267,
-      "volume": 758.67796951
+      "price": 10752.795,
+      "change": 72.455,
+      "change_percent": 0.678,
+      "volume": 808.12782562
     },
     {
       "name": "中小红利",
       "code": "sz399649",
-      "price": 2913.828,
-      "change": 4.835,
-      "change_percent": 0.166,
-      "volume": 209.59790658
+      "price": 2953.12,
+      "change": 39.292,
+      "change_percent": 1.348,
+      "volume": 221.84546268
     },
     {
       "name": "中小治理",
       "code": "sz399650",
-      "price": 2106.145,
-      "change": -3.73,
-      "change_percent": -0.177,
-      "volume": 284.14992893
+      "price": 2124.215,
+      "change": 18.07,
+      "change_percent": 0.858,
+      "volume": 275.42718702
     },
     {
       "name": "中小责任",
       "code": "sz399651",
-      "price": 1516.397,
-      "change": -2.963,
-      "change_percent": -0.195,
-      "volume": 270.76387431
+      "price": 1532.325,
+      "change": 15.928,
+      "change_percent": 1.05,
+      "volume": 269.92533991
     },
     {
       "name": "中创高新",
       "code": "sz399652",
-      "price": 3465.537,
-      "change": 54.269,
-      "change_percent": 1.591,
-      "volume": 372.29777771
+      "price": 3484.775,
+      "change": 19.238,
+      "change_percent": 0.555,
+      "volume": 391.31267283
     },
     {
       "name": "深证龙头",
       "code": "sz399653",
-      "price": 2476.381,
-      "change": 3.441,
-      "change_percent": 0.139,
-      "volume": 556.64490477
+      "price": 2492.854,
+      "change": 16.473,
+      "change_percent": 0.665,
+      "volume": 562.60534056
     },
     {
       "name": "深证文化",
       "code": "sz399654",
-      "price": 2699.679,
-      "change": 19.283,
-      "change_percent": 0.719,
-      "volume": 449.73140616
+      "price": 2715.104,
+      "change": 15.425,
+      "change_percent": 0.571,
+      "volume": 430.97591039
     },
     {
       "name": "深证绩效",
       "code": "sz399655",
-      "price": 10117.479,
-      "change": 47.495,
-      "change_percent": 0.472,
-      "volume": 529.66083162
+      "price": 10169.278,
+      "change": 51.799,
+      "change_percent": 0.512,
+      "volume": 521.60581916
     },
     {
       "name": "100绩效",
       "code": "sz399656",
-      "price": 5578.561,
-      "change": 1.541,
-      "change_percent": 0.028,
-      "volume": 1135.7661956
+      "price": 5616.402,
+      "change": 37.841,
+      "change_percent": 0.678,
+      "volume": 1195.19586194
     },
     {
       "name": "300绩效",
       "code": "sz399657",
-      "price": 6051.492,
-      "change": 19.3,
-      "change_percent": 0.32,
-      "volume": 2327.01542317
+      "price": 6088.032,
+      "change": 36.54,
+      "change_percent": 0.604,
+      "volume": 2355.8675612
     },
     {
       "name": "中小绩效",
       "code": "sz399658",
-      "price": 4060.494,
-      "change": 8.404,
-      "change_percent": 0.207,
-      "volume": 749.60941958
+      "price": 4086.781,
+      "change": 26.287,
+      "change_percent": 0.647,
+      "volume": 759.14637107
     },
     {
       "name": "深成指EW",
       "code": "sz399659",
-      "price": 3990.322,
-      "change": 28.114,
-      "change_percent": 0.71,
-      "volume": 3338.74461256
+      "price": 4012.992,
+      "change": 22.67,
+      "change_percent": 0.568,
+      "volume": 3365.80253914
     },
     {
       "name": "中创EW",
       "code": "sz399660",
-      "price": 2138.747,
-      "change": -0.118,
-      "change_percent": -0.006,
-      "volume": 1188.37734693
+      "price": 2149.054,
+      "change": 10.307,
+      "change_percent": 0.482,
+      "volume": 1205.03650152
     },
     {
       "name": "深证低波",
       "code": "sz399661",
-      "price": 5540.007,
-      "change": 13.751,
-      "change_percent": 0.249,
-      "volume": 433.1783053
+      "price": 5583.78,
+      "change": 43.773,
+      "change_percent": 0.79,
+      "volume": 436.38181128
     },
     {
       "name": "深证高贝",
       "code": "sz399662",
-      "price": 1810.438,
-      "change": 8.881,
-      "change_percent": 0.493,
-      "volume": 1192.33080684
+      "price": 1817.73,
+      "change": 7.292,
+      "change_percent": 0.403,
+      "volume": 1226.81915057
     },
     {
       "name": "中小低波",
       "code": "sz399663",
-      "price": 1839.787,
-      "change": 6.674,
-      "change_percent": 0.364,
-      "volume": 360.51266809
+      "price": 1852.377,
+      "change": 12.59,
+      "change_percent": 0.684,
+      "volume": 337.76999929
     },
     {
       "name": "中小高贝",
       "code": "sz399664",
-      "price": 1218.479,
-      "change": 13.409,
-      "change_percent": 1.113,
-      "volume": 728.25109222
+      "price": 1225.354,
+      "change": 6.875,
+      "change_percent": 0.564,
+      "volume": 757.70241323
     },
     {
       "name": "中创低波",
       "code": "sz399665",
-      "price": 2095.369,
-      "change": 8.566,
-      "change_percent": 0.41,
-      "volume": 875.53340949
+      "price": 2111.506,
+      "change": 16.137,
+      "change_percent": 0.77,
+      "volume": 840.81610242
     },
     {
       "name": "中创高贝",
       "code": "sz399666",
-      "price": 1648.786,
-      "change": 16.988,
-      "change_percent": 1.041,
-      "volume": 1783.43329435
+      "price": 1655.096,
+      "change": 6.31,
+      "change_percent": 0.383,
+      "volume": 1839.12128746
     },
     {
       "name": "创业成长",
       "code": "sz399667",
-      "price": 3754.619,
-      "change": 8.604,
-      "change_percent": 0.23,
-      "volume": 792.24949163
+      "price": 3769.682,
+      "change": 15.063,
+      "change_percent": 0.401,
+      "volume": 765.90103919
     },
     {
       "name": "创业板V",
       "code": "sz399668",
-      "price": 4169.841,
-      "change": 33.082,
-      "change_percent": 0.8,
-      "volume": 581.76827403
+      "price": 4184.719,
+      "change": 14.878,
+      "change_percent": 0.357,
+      "volume": 574.71520281
     },
     {
       "name": "深证农业",
       "code": "sz399669",
-      "price": 8035.708,
-      "change": 32.849,
-      "change_percent": 0.41,
-      "volume": 138.34164243
+      "price": 8117.417,
+      "change": 81.709,
+      "change_percent": 1.017,
+      "volume": 156.63961901
     },
     {
       "name": "深周期50",
       "code": "sz399670",
-      "price": 3346.358,
-      "change": -3.027,
-      "change_percent": -0.09,
-      "volume": 598.02679869
+      "price": 3359.655,
+      "change": 13.297,
+      "change_percent": 0.397,
+      "volume": 592.87475509
     },
     {
       "name": "深防御50",
       "code": "sz399671",
-      "price": 7810.962,
-      "change": 9.249,
-      "change_percent": 0.119,
-      "volume": 487.39660057
+      "price": 7873.714,
+      "change": 62.752,
+      "change_percent": 0.803,
+      "volume": 517.48558504
     },
     {
       "name": "深红利50",
       "code": "sz399672",
-      "price": 3945.635,
-      "change": 19.345,
-      "change_percent": 0.493,
-      "volume": 104.40460337
+      "price": 3973.051,
+      "change": 27.416,
+      "change_percent": 0.695,
+      "volume": 96.04641675
     },
     {
       "name": "创业板50",
       "code": "sz399673",
-      "price": 2341.14,
-      "change": 11.301,
-      "change_percent": 0.485,
-      "volume": 829.37713811
+      "price": 2350.011,
+      "change": 8.871,
+      "change_percent": 0.379,
+      "volume": 843.01326227
     },
     {
       "name": "深A医药",
       "code": "sz399674",
-      "price": 2108.839,
-      "change": 20.51,
-      "change_percent": 0.982,
-      "volume": 994.21614543
+      "price": 2107.114,
+      "change": -1.725,
+      "change_percent": -0.082,
+      "volume": 884.05567544
     },
     {
       "name": "深互联网",
       "code": "sz399675",
-      "price": 3375.214,
-      "change": 32.386,
-      "change_percent": 0.969,
-      "volume": 853.11855111
+      "price": 3383.042,
+      "change": 7.828,
+      "change_percent": 0.232,
+      "volume": 874.28126954
     },
     {
       "name": "深医药EW",
       "code": "sz399676",
-      "price": 4050.352,
-      "change": 62.675,
-      "change_percent": 1.572,
-      "volume": 994.21614543
+      "price": 4021.081,
+      "change": -29.271,
+      "change_percent": -0.723,
+      "volume": 884.05567544
     },
     {
       "name": "深互联EW",
       "code": "sz399677",
-      "price": 5694.694,
-      "change": 69.872,
-      "change_percent": 1.242,
-      "volume": 853.11855111
+      "price": 5713.235,
+      "change": 18.541,
+      "change_percent": 0.326,
+      "volume": 874.28126954
     },
     {
       "name": "深次新股",
       "code": "sz399678",
-      "price": 545.756,
-      "change": 11.218,
-      "change_percent": 2.099,
-      "volume": 171.73948852
+      "price": 550.885,
+      "change": 5.129,
+      "change_percent": 0.94,
+      "volume": 192.40327771
     },
     {
       "name": "深证200R",
       "code": "sz399679",
-      "price": 5087.33,
-      "change": 30.537,
-      "change_percent": 0.604,
-      "volume": 1191.24922757
+      "price": 5120.354,
+      "change": 33.024,
+      "change_percent": 0.649,
+      "volume": 1160.67169925
     },
     {
       "name": "深成能源",
       "code": "sz399680",
-      "price": 639.102,
-      "change": 5.566,
-      "change_percent": 0.879,
-      "volume": 11.09843731
+      "price": 648.08,
+      "change": 8.978,
+      "change_percent": 1.405,
+      "volume": 12.70150101
     },
     {
       "name": "深成材料",
       "code": "sz399681",
-      "price": 943.412,
-      "change": 2.344,
-      "change_percent": 0.249,
-      "volume": 321.67863745
+      "price": 950.454,
+      "change": 7.042,
+      "change_percent": 0.746,
+      "volume": 317.04179855
     },
     {
       "name": "深成工业",
       "code": "sz399682",
-      "price": 1421.774,
-      "change": 15.462,
-      "change_percent": 1.099,
-      "volume": 722.89460355
+      "price": 1425.918,
+      "change": 4.144,
+      "change_percent": 0.291,
+      "volume": 661.27597087
     },
     {
       "name": "深成可选",
       "code": "sz399683",
-      "price": 1822.137,
-      "change": 6.565,
-      "change_percent": 0.362,
-      "volume": 337.16764717
+      "price": 1832.986,
+      "change": 10.849,
+      "change_percent": 0.595,
+      "volume": 284.46236479
     },
     {
       "name": "深成消费",
       "code": "sz399684",
-      "price": 1874.942,
-      "change": 3.13,
-      "change_percent": 0.167,
-      "volume": 83.05984623
+      "price": 1895.074,
+      "change": 20.132,
+      "change_percent": 1.074,
+      "volume": 105.00909742
     },
     {
       "name": "深成医药",
       "code": "sz399685",
-      "price": 1781.578,
-      "change": 9.244,
-      "change_percent": 0.522,
-      "volume": 341.44958543
+      "price": 1786.952,
+      "change": 5.374,
+      "change_percent": 0.302,
+      "volume": 280.72278626
     },
     {
       "name": "深成金融",
       "code": "sz399686",
-      "price": 2143.407,
-      "change": 4.484,
-      "change_percent": 0.21,
-      "volume": 172.25770951
+      "price": 2166.5,
+      "change": 23.093,
+      "change_percent": 1.077,
+      "volume": 192.79476927
     },
     {
       "name": "深成信息",
       "code": "sz399687",
-      "price": 3078.404,
-      "change": 8.606,
-      "change_percent": 0.28,
-      "volume": 1037.66207138
+      "price": 3094.131,
+      "change": 15.727,
+      "change_percent": 0.511,
+      "volume": 1127.44759504
     },
     {
       "name": "深成电信",
       "code": "sz399688",
-      "price": 3360.289,
-      "change": 2.618,
-      "change_percent": 0.078,
-      "volume": 278.65058574
+      "price": 3385.74,
+      "change": 25.451,
+      "change_percent": 0.757,
+      "volume": 350.04151699
     },
     {
       "name": "深成公用",
       "code": "sz399689",
-      "price": 826.101,
-      "change": 0.655,
-      "change_percent": 0.079,
-      "volume": 21.66394083
+      "price": 829.037,
+      "change": 2.936,
+      "change_percent": 0.355,
+      "volume": 20.49543868
     },
     {
       "name": "创业低波",
       "code": "sz399692",
-      "price": 3696.681,
-      "change": 27.406,
-      "change_percent": 0.747,
-      "volume": 469.48154508
+      "price": 3716.856,
+      "change": 20.175,
+      "change_percent": 0.546,
+      "volume": 425.61859427
     },
     {
       "name": "安防产业",
       "code": "sz399693",
-      "price": 4811.647,
-      "change": 51.983,
-      "change_percent": 1.092,
-      "volume": 338.31867595
+      "price": 4845.17,
+      "change": 33.523,
+      "change_percent": 0.697,
+      "volume": 353.40569322
     },
     {
       "name": "创业高贝",
       "code": "sz399694",
-      "price": 3500.485,
-      "change": 33.86,
-      "change_percent": 0.977,
-      "volume": 979.98563189
+      "price": 3510.069,
+      "change": 9.584,
+      "change_percent": 0.274,
+      "volume": 950.50541286
     },
     {
       "name": "深证节能",
       "code": "sz399695",
-      "price": 2215.602,
-      "change": 10.538,
-      "change_percent": 0.478,
-      "volume": 481.10381786
+      "price": 2229.252,
+      "change": 13.65,
+      "change_percent": 0.616,
+      "volume": 458.81247454
     },
     {
       "name": "深证创投",
       "code": "sz399696",
-      "price": 3068.276,
-      "change": 23.651,
-      "change_percent": 0.777,
-      "volume": 709.38713726
+      "price": 3082.173,
+      "change": 13.897,
+      "change_percent": 0.453,
+      "volume": 791.33407365
     },
     {
       "name": "中关村60",
       "code": "sz399697",
-      "price": 3373.117,
-      "change": 21.975,
-      "change_percent": 0.656,
-      "volume": 399.39796001
+      "price": 3377.813,
+      "change": 4.696,
+      "change_percent": 0.139,
+      "volume": 370.46855771
     },
     {
       "name": "优势成长",
       "code": "sz399698",
-      "price": 50505.074,
-      "change": 1203.875,
-      "change_percent": 2.442,
-      "volume": 105.07552585
+      "price": 51256.742,
+      "change": 751.668,
+      "change_percent": 1.488,
+      "volume": 117.01911327
     },
     {
       "name": "金融科技",
       "code": "sz399699",
-      "price": 4344.305,
-      "change": 3.833,
-      "change_percent": 0.088,
-      "volume": 480.63969052
+      "price": 4373.576,
+      "change": 29.271,
+      "change_percent": 0.674,
+      "volume": 570.36423026
     },
     {
       "name": "深证F60",
       "code": "sz399701",
-      "price": 7487.029,
-      "change": 8.916,
-      "change_percent": 0.119,
-      "volume": 527.15487087
+      "price": 7556.621,
+      "change": 69.592,
+      "change_percent": 0.93,
+      "volume": 569.84494664
     },
     {
       "name": "深证F120",
       "code": "sz399702",
-      "price": 6854.224,
-      "change": 6.525,
-      "change_percent": 0.095,
-      "volume": 864.49336596
+      "price": 6914.941,
+      "change": 60.717,
+      "change_percent": 0.886,
+      "volume": 906.62149534
     },
     {
       "name": "深证F200",
       "code": "sz399703",
-      "price": 6712.851,
-      "change": 8.388,
-      "change_percent": 0.125,
-      "volume": 1261.52472434
+      "price": 6768.224,
+      "change": 55.373,
+      "change_percent": 0.825,
+      "volume": 1315.86210594
     },
     {
       "name": "深证上游",
       "code": "sz399704",
-      "price": 4597.142,
-      "change": 20.437,
-      "change_percent": 0.447,
-      "volume": 264.78171298
+      "price": 4620.697,
+      "change": 23.555,
+      "change_percent": 0.512,
+      "volume": 264.34609946
     },
     {
       "name": "深证中游",
       "code": "sz399705",
-      "price": 3063.794,
-      "change": 8.754,
-      "change_percent": 0.287,
-      "volume": 1362.12027307
+      "price": 3077.078,
+      "change": 13.284,
+      "change_percent": 0.434,
+      "volume": 1421.58679271
     },
     {
       "name": "深证下游",
       "code": "sz399706",
-      "price": 5633.543,
-      "change": 23.483,
-      "change_percent": 0.419,
-      "volume": 760.8792246
+      "price": 5672.835,
+      "change": 39.292,
+      "change_percent": 0.697,
+      "volume": 726.93488222
     },
     {
       "name": "CSSW证券",
       "code": "sz399707",
-      "price": 6465.103,
-      "change": 15.152,
-      "change_percent": 0.235,
-      "volume": 291.71558768
+      "price": 6534.728,
+      "change": 69.625,
+      "change_percent": 1.077,
+      "volume": 388.61491464
     },
     {
       "name": "深主板50",
       "code": "sz399750",
-      "price": 8333.403,
-      "change": -8.765,
-      "change_percent": -0.105,
-      "volume": 463.27888077
+      "price": 8407.69,
+      "change": 74.287,
+      "change_percent": 0.891,
+      "volume": 493.47732453
     },
     {
       "name": "500深市",
       "code": "sz399802",
-      "price": 5665.042,
-      "change": 40.645,
-      "change_percent": 0.723,
-      "volume": 1336.08557031
+      "price": 5695.115,
+      "change": 30.073,
+      "change_percent": 0.531,
+      "volume": 1275.26725325
     },
     {
       "name": "工业4.0",
       "code": "sz399803",
-      "price": 4135.762,
-      "change": 44.387,
-      "change_percent": 1.085,
-      "volume": 553.65960156
+      "price": 4183.451,
+      "change": 47.689,
+      "change_percent": 1.153,
+      "volume": 592.64010595
     },
     {
       "name": "中证体育",
       "code": "sz399804",
-      "price": 1795.577,
-      "change": 27.703,
-      "change_percent": 1.567,
-      "volume": 152.16592077
+      "price": 1820.459,
+      "change": 24.882,
+      "change_percent": 1.386,
+      "volume": 156.56785857
     },
     {
       "name": "互联金融",
       "code": "sz399805",
-      "price": 3813.226,
-      "change": -3.151,
-      "change_percent": -0.083,
-      "volume": 423.28892555
+      "price": 3837.213,
+      "change": 23.987,
+      "change_percent": 0.629,
+      "volume": 507.90225113
     },
     {
       "name": "环境治理",
       "code": "sz399806",
-      "price": 1294.82,
-      "change": 10.34,
-      "change_percent": 0.805,
-      "volume": 89.7100724
+      "price": 1307.031,
+      "change": 12.211,
+      "change_percent": 0.943,
+      "volume": 96.23669154
     },
     {
       "name": "高铁产业",
       "code": "sz399807",
-      "price": 1321.098,
-      "change": 7.733,
-      "change_percent": 0.589,
-      "volume": 103.87034291
+      "price": 1329.461,
+      "change": 8.363,
+      "change_percent": 0.633,
+      "volume": 110.84142228
     },
     {
       "name": "中证新能",
       "code": "sz399808",
-      "price": 1970.797,
-      "change": -3.059,
-      "change_percent": -0.155,
-      "volume": 447.48890537
+      "price": 1982.214,
+      "change": 11.417,
+      "change_percent": 0.579,
+      "volume": 402.1667799
     },
     {
       "name": "保险主题",
       "code": "sz399809",
-      "price": 2405.847,
-      "change": 5.433,
-      "change_percent": 0.226,
-      "volume": 222.80341959
+      "price": 2443.395,
+      "change": 37.548,
+      "change_percent": 1.561,
+      "volume": 217.07992106
     },
     {
       "name": "CSSW传媒",
       "code": "sz399810",
-      "price": 2937.362,
-      "change": 29.748,
-      "change_percent": 1.023,
-      "volume": 473.87031782
+      "price": 2961.896,
+      "change": 24.534,
+      "change_percent": 0.835,
+      "volume": 443.50086953
     },
     {
       "name": "CSSW电子",
       "code": "sz399811",
-      "price": 4049.998,
-      "change": 15.883,
-      "change_percent": 0.394,
-      "volume": 699.96477948
+      "price": 4065.344,
+      "change": 15.346,
+      "change_percent": 0.379,
+      "volume": 674.43446889
     },
     {
       "name": "养老产业",
       "code": "sz399812",
-      "price": 6436.628,
-      "change": 17.816,
-      "change_percent": 0.278,
-      "volume": 343.75481869
+      "price": 6471.406,
+      "change": 34.778,
+      "change_percent": 0.54,
+      "volume": 306.24263267
     },
     {
       "name": "中证国安",
       "code": "sz399813",
-      "price": 7264.65,
-      "change": 173.311,
-      "change_percent": 2.444,
-      "volume": 1137.38814495
+      "price": 7319.207,
+      "change": 54.557,
+      "change_percent": 0.751,
+      "volume": 1294.57842212
     },
     {
       "name": "大农业",
       "code": "sz399814",
-      "price": 1079.534,
-      "change": 5.31,
-      "change_percent": 0.494,
-      "volume": 131.09033502
+      "price": 1087.613,
+      "change": 8.079,
+      "change_percent": 0.748,
+      "volume": 139.23949581
     },
     {
       "name": "深证50",
       "code": "sz399850",
-      "price": 7470.705,
-      "change": 10.093,
-      "change_percent": 0.135,
-      "volume": 736.93026036
+      "price": 7522.866,
+      "change": 52.161,
+      "change_percent": 0.698,
+      "volume": 828.39532776
     },
     {
       "name": "中证1000",
       "code": "sz399852",
-      "price": 6739.693,
-      "change": 69.221,
-      "change_percent": 1.038,
-      "volume": 3295.54815219
+      "price": 6786.105,
+      "change": 46.412,
+      "change_percent": 0.689,
+      "volume": 3446.47108481
     },
     {
       "name": "小康指数",
       "code": "sz399901",
-      "price": 6033.613,
-      "change": 14.75,
-      "change_percent": 0.245,
-      "volume": 773.8531673
+      "price": 6094.604,
+      "change": 60.991,
+      "change_percent": 1.011,
+      "volume": 814.72920171
     },
     {
       "name": "中证100",
       "code": "sz399903",
-      "price": 3859.758,
-      "change": 15.66,
-      "change_percent": 0.407,
-      "volume": 1525.90385965
+      "price": 3881.441,
+      "change": 21.683,
+      "change_percent": 0.562,
+      "volume": 1490.97418782
     },
     {
       "name": "中证 500",
       "code": "sz399905",
-      "price": 6261.731,
-      "change": 48.53,
-      "change_percent": 0.781,
-      "volume": 2366.49250158
+      "price": 6302.136,
+      "change": 40.405,
+      "change_percent": 0.645,
+      "volume": 2330.43893513
     },
     {
       "name": "300 医药",
       "code": "sz399913",
-      "price": 8890.015,
-      "change": -15.905,
-      "change_percent": -0.179,
-      "volume": 270.71626505
+      "price": 8936.855,
+      "change": 46.84,
+      "change_percent": 0.527,
+      "volume": 205.610259
     },
     {
       "name": "300 金融",
       "code": "sz399914",
-      "price": 6717.224,
-      "change": 35.729,
-      "change_percent": 0.535,
-      "volume": 544.31736812
+      "price": 6812.216,
+      "change": 94.992,
+      "change_percent": 1.414,
+      "volume": 624.63071379
     },
     {
       "name": "中证能源",
       "code": "sz399928",
-      "price": 2670.165,
-      "change": 5.234,
-      "change_percent": 0.196,
-      "volume": 73.51757054
+      "price": 2700.068,
+      "change": 29.903,
+      "change_percent": 1.12,
+      "volume": 77.33003675
     },
     {
       "name": "中证消费",
       "code": "sz399932",
-      "price": 15727.753,
-      "change": 37.19,
-      "change_percent": 0.237,
-      "volume": 155.38558537
+      "price": 15877.22,
+      "change": 149.467,
+      "change_percent": 0.95,
+      "volume": 190.84801805
     },
     {
       "name": "中证医药",
       "code": "sz399933",
-      "price": 8768.612,
-      "change": 15.729,
-      "change_percent": 0.18,
-      "volume": 536.83690839
+      "price": 8803.337,
+      "change": 34.725,
+      "change_percent": 0.396,
+      "volume": 425.84404526
     },
     {
       "name": "中证金融",
       "code": "sz399934",
-      "price": 6268.588,
-      "change": 29.26,
-      "change_percent": 0.469,
-      "volume": 722.88730383
+      "price": 6356.542,
+      "change": 87.954,
+      "change_percent": 1.403,
+      "volume": 867.43430361
     },
     {
       "name": "中证信息",
       "code": "sz399935",
-      "price": 4939.8,
-      "change": 24.502,
-      "change_percent": 0.498,
-      "volume": 1221.51460956
+      "price": 4963.7,
+      "change": 23.9,
+      "change_percent": 0.484,
+      "volume": 1252.76490975
     },
     {
       "name": "军工指数",
       "code": "sz399959",
-      "price": 1647.964,
-      "change": 46.546,
-      "change_percent": 2.907,
-      "volume": 245.350745
+      "price": 1660.426,
+      "change": 12.462,
+      "change_percent": 0.756,
+      "volume": 308.72422072
     },
     {
       "name": "800地产",
       "code": "sz399965",
-      "price": 2683.808,
-      "change": 1.021,
-      "change_percent": 0.038,
-      "volume": 51.48676045
+      "price": 2714.761,
+      "change": 30.953,
+      "change_percent": 1.153,
+      "volume": 85.89271247
     },
     {
       "name": "800非银",
       "code": "sz399966",
-      "price": 6319.958,
-      "change": 12.65,
-      "change_percent": 0.201,
-      "volume": 330.62974342
+      "price": 6396.886,
+      "change": 76.928,
+      "change_percent": 1.217,
+      "volume": 433.80490562
     },
     {
       "name": "中证军工",
       "code": "sz399967",
-      "price": 12224.138,
-      "change": 311.131,
-      "change_percent": 2.612,
-      "volume": 651.82268815
+      "price": 12309.144,
+      "change": 85.006,
+      "change_percent": 0.695,
+      "volume": 745.98700878
     },
     {
       "name": "移动互联",
       "code": "sz399970",
-      "price": 3514.612,
-      "change": 10.231,
-      "change_percent": 0.292,
-      "volume": 1166.83256963
+      "price": 3542.678,
+      "change": 28.066,
+      "change_percent": 0.799,
+      "volume": 1238.22902525
     },
     {
       "name": "中证传媒",
       "code": "sz399971",
-      "price": 1334.724,
-      "change": 16.762,
-      "change_percent": 1.272,
-      "volume": 379.38692126
+      "price": 1345.484,
+      "change": 10.76,
+      "change_percent": 0.806,
+      "volume": 320.67853851
     },
     {
       "name": "300深市",
       "code": "sz399972",
-      "price": 4609.883,
-      "change": 8.11,
-      "change_percent": 0.176,
-      "volume": 1177.47488618
+      "price": 4638.146,
+      "change": 28.263,
+      "change_percent": 0.613,
+      "volume": 1244.71216688
     },
     {
       "name": "中证国防",
       "code": "sz399973",
-      "price": 1709.122,
-      "change": 47.285,
-      "change_percent": 2.845,
-      "volume": 394.413488
+      "price": 1713.361,
+      "change": 4.239,
+      "change_percent": 0.248,
+      "volume": 408.79459654
     },
     {
       "name": "国企改革",
       "code": "sz399974",
-      "price": 1742.614,
-      "change": 8.804,
-      "change_percent": 0.508,
-      "volume": 898.81041857
+      "price": 1752.419,
+      "change": 9.805,
+      "change_percent": 0.563,
+      "volume": 935.99377034
     },
     {
       "name": "证券公司",
       "code": "sz399975",
-      "price": 842.577,
-      "change": 1.954,
-      "change_percent": 0.232,
-      "volume": 291.57774436
+      "price": 851.625,
+      "change": 9.048,
+      "change_percent": 1.074,
+      "volume": 386.37870999
     },
     {
       "name": "CS新能车",
       "code": "sz399976",
-      "price": 3090.759,
-      "change": 15.695,
-      "change_percent": 0.51,
-      "volume": 333.52223383
+      "price": 3100.729,
+      "change": 9.97,
+      "change_percent": 0.323,
+      "volume": 322.8599792
     },
     {
       "name": "500等权",
       "code": "sz399982",
-      "price": 7774.464,
-      "change": 54.523,
-      "change_percent": 0.706,
-      "volume": 2366.49250158
+      "price": 7821.01,
+      "change": 46.546,
+      "change_percent": 0.599,
+      "volume": 2330.43893513
     },
     {
       "name": "地产等权",
       "code": "sz399983",
-      "price": 2122.75,
-      "change": 8.922,
-      "change_percent": 0.422,
-      "volume": 17.15578268
+      "price": 2134.255,
+      "change": 11.505,
+      "change_percent": 0.542,
+      "volume": 19.77509577
     },
     {
       "name": "中证银行",
       "code": "sz399986",
-      "price": 7959.974,
-      "change": 60.34,
-      "change_percent": 0.764,
-      "volume": 324.57105906
+      "price": 8086.685,
+      "change": 126.711,
+      "change_percent": 1.592,
+      "volume": 338.41479327
     },
     {
       "name": "中证酒",
       "code": "sz399987",
-      "price": 5331.628,
-      "change": 6.763,
-      "change_percent": 0.127,
-      "volume": 85.83928133
+      "price": 5392.749,
+      "change": 61.121,
+      "change_percent": 1.146,
+      "volume": 115.78422641
     },
     {
       "name": "中证医疗",
       "code": "sz399989",
-      "price": 7352.786,
-      "change": 6.173,
-      "change_percent": 0.084,
-      "volume": 291.25484523
+      "price": 7352.252,
+      "change": -0.534,
+      "change_percent": -0.007,
+      "volume": 233.20206058
     },
     {
       "name": "煤炭等权",
       "code": "sz399990",
-      "price": 2853.576,
-      "change": 21.114,
-      "change_percent": 0.745,
-      "volume": 47.88516033
+      "price": 2892.054,
+      "change": 38.478,
+      "change_percent": 1.348,
+      "volume": 54.56903054
     },
     {
       "name": "一带一路",
       "code": "sz399991",
-      "price": 2213.102,
-      "change": 3.237,
-      "change_percent": 0.146,
-      "volume": 659.88773855
+      "price": 2227.164,
+      "change": 14.062,
+      "change_percent": 0.635,
+      "volume": 750.38559996
     },
     {
       "name": "CSWD并购",
       "code": "sz399992",
-      "price": 1809.264,
-      "change": 17.041,
-      "change_percent": 0.951,
-      "volume": 274.15976842
+      "price": 1820.08,
+      "change": 10.816,
+      "change_percent": 0.598,
+      "volume": 309.5715559
     },
     {
       "name": "CSWD生科",
       "code": "sz399993",
-      "price": 2971.709,
-      "change": 20.701,
-      "change_percent": 0.701,
-      "volume": 495.55544486
+      "price": 2985.404,
+      "change": 13.695,
+      "change_percent": 0.461,
+      "volume": 442.99562916
     },
     {
       "name": "信息安全",
       "code": "sz399994",
-      "price": 1742.034,
-      "change": 8.18,
-      "change_percent": 0.472,
-      "volume": 396.89698441
+      "price": 1745.394,
+      "change": 3.36,
+      "change_percent": 0.193,
+      "volume": 420.00021209
     },
     {
       "name": "基建工程",
       "code": "sz399995",
-      "price": 3787.413,
-      "change": 0.337,
-      "change_percent": 0.009,
-      "volume": 147.89907217
+      "price": 3801.161,
+      "change": 13.748,
+      "change_percent": 0.363,
+      "volume": 139.651614
     },
     {
       "name": "智能家居",
       "code": "sz399996",
-      "price": 3730.926,
-      "change": 32.901,
-      "change_percent": 0.89,
-      "volume": 813.37262438
+      "price": 3754.708,
+      "change": 23.782,
+      "change_percent": 0.637,
+      "volume": 855.16107838
     },
     {
       "name": "中证白酒",
       "code": "sz399997",
-      "price": 9308.15,
-      "change": 1.553,
-      "change_percent": 0.017,
-      "volume": 73.39201751
+      "price": 9423.711,
+      "change": 115.561,
+      "change_percent": 1.242,
+      "volume": 99.64709504
     },
     {
       "name": "中证煤炭",
       "code": "sz399998",
-      "price": 1971.773,
-      "change": 15.912,
-      "change_percent": 0.814,
-      "volume": 47.88516033
+      "price": 1998.061,
+      "change": 26.288,
+      "change_percent": 1.333,
+      "volume": 54.56903054
     },
     {
       "name": "CNTAI50",
       "code": "sz970070",
-      "price": 3722.114,
-      "change": 9.866,
-      "change_percent": 0.266,
-      "volume": 602.22065487
+      "price": 3726.475,
+      "change": 4.361,
+      "change_percent": 0.117,
+      "volume": 650.08569372
     },
     {
       "name": "疫苗生科",
       "code": "sz980015",
-      "price": 6938.977,
-      "change": -11.256,
-      "change_percent": -0.162,
-      "volume": 412.7441864
+      "price": 6982.026,
+      "change": 43.049,
+      "change_percent": 0.62,
+      "volume": 319.60650896
     },
     {
       "name": "医疗健康",
       "code": "sz980016",
-      "price": 6595.652,
-      "change": -6.862,
-      "change_percent": -0.104,
-      "volume": 396.52388178
+      "price": 6628.376,
+      "change": 32.724,
+      "change_percent": 0.496,
+      "volume": 304.19469887
     },
     {
       "name": "卫星通信",
       "code": "sz980018",
-      "price": 3327.233,
-      "change": 104.943,
-      "change_percent": 3.257,
-      "volume": 275.98573215
+      "price": 3376.631,
+      "change": 49.398,
+      "change_percent": 1.485,
+      "volume": 376.79459833
     },
     {
       "name": "CNIROBOT",
       "code": "sz980022",
-      "price": 2313.722,
-      "change": 73.651,
-      "change_percent": 3.288,
-      "volume": 242.7902814
+      "price": 2349.301,
+      "change": 35.579,
+      "change_percent": 1.538,
+      "volume": 265.69146635
     },
     {
       "name": "CNINEB",
       "code": "sz980027",
-      "price": 2264.095,
-      "change": 20.498,
-      "change_percent": 0.914,
-      "volume": 281.46978557
+      "price": 2285.638,
+      "change": 21.543,
+      "change_percent": 0.952,
+      "volume": 289.91171424
     },
     {
       "name": "龙头家电",
       "code": "sz980028",
-      "price": 11278.761,
-      "change": 89.169,
-      "change_percent": 0.797,
-      "volume": 84.53625848
+      "price": 11395.298,
+      "change": 116.537,
+      "change_percent": 1.033,
+      "volume": 93.44401893
     },
     {
       "name": "消费电子",
       "code": "sz980030",
-      "price": 5646.196,
-      "change": -0.052,
-      "change_percent": -0.001,
-      "volume": 435.12055033
+      "price": 5675.476,
+      "change": 29.28,
+      "change_percent": 0.519,
+      "volume": 455.88144692
     },
     {
       "name": "新能电池",
       "code": "sz980032",
-      "price": 10581.007,
-      "change": 45.453,
-      "change_percent": 0.431,
-      "volume": 256.11994758
+      "price": 10597.586,
+      "change": 16.579,
+      "change_percent": 0.157,
+      "volume": 241.89110758
     },
     {
       "name": "化肥农药",
       "code": "sz980035",
-      "price": 1831.995,
-      "change": 13.211,
-      "change_percent": 0.726,
-      "volume": 175.9197661
+      "price": 1841.433,
+      "change": 9.438,
+      "change_percent": 0.515,
+      "volume": 153.75624913
     },
     {
       "name": "通用航空",
       "code": "sz980076",
-      "price": 3307.771,
-      "change": 103.054,
-      "change_percent": 3.216,
-      "volume": 326.91528698
+      "price": 3332.802,
+      "change": 25.031,
+      "change_percent": 0.757,
+      "volume": 367.28520211
     },
     {
       "name": "CNIFCF",
       "code": "sz980092",
-      "price": 4729.783,
-      "change": 29.567,
-      "change_percent": 0.629,
-      "volume": 280.262741
+      "price": 4774.826,
+      "change": 45.043,
+      "change_percent": 0.952,
+      "volume": 284.21059321
     }
   ],
-  "fetch_time": "2025-08-04 15:07:58",
-  "cache_date": "2025-08-04",
-  "cache_time": "15:07:58",
+  "fetch_time": "2025-08-05 14:59:25",
+  "cache_date": "2025-08-05",
+  "cache_time": "14:59:25",
   "count": 564
 }
