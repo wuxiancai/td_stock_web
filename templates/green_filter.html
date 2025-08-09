@@ -671,7 +671,7 @@
             // 查找当前股票的数据
             const stockData = filterData.find(stock => stock.ts_code === tsCode);
             if (!stockData) {
-                alert('无法找到股票数据');
+                console.log('无法找到股票数据');
                 return;
             }
             
@@ -713,7 +713,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(`股票 ${tsCode} 已成功加入自选股！`);
+                    console.log(`股票 ${tsCode} 已成功加入自选股！`);
                     // 重新获取自选股数据并更新状态
                     fetch('/api/watchlist')
                         .then(response => response.json())
@@ -725,11 +725,11 @@
                         })
                         .catch(error => console.error('更新自选股状态失败:', error));
                 } else {
-                    alert(`加入自选股失败: ${data.message}`);
+                    console.log(`加入自选股失败: ${data.message}`);
                 }
             })
             .catch(error => {
-                alert(`加入自选股失败: ${error.message}`);
+                console.log(`加入自选股失败: ${error.message}`);
             });
         }
         

@@ -1991,14 +1991,14 @@
                  const changeSymbol = index.change_pct >= 0 ? '+' : '';
                  
                  // 格式化成交额（后端已统一转换为亿元）
-                 let volumeText = '0';
-                 if (index.volume > 0) {
-                     if (index.volume >= 1) {
-                         volumeText = index.volume.toFixed(2) + '亿';
-                     } else {
-                         volumeText = (index.volume * 10000).toFixed(0) + '万';
-                     }
+             let volumeText = '0';
+             if (index.volume > 0) {
+                 if (index.volume >= 1) {
+                     volumeText = Math.round(index.volume) + '亿';
+                 } else {
+                     volumeText = (index.volume * 10000).toFixed(0) + '万';
                  }
+             }
                  
                  const indexCard = document.createElement('div');
                  indexCard.style.cssText = `
@@ -2105,7 +2105,7 @@
              let volumeText = '0';
              if (index.volume > 0) {
                  if (index.volume >= 1) {
-                     volumeText = index.volume.toFixed(2) + '亿';
+                     volumeText = Math.round(index.volume) + '亿';
                  } else {
                      volumeText = (index.volume * 10000).toFixed(0) + '万';
                  }

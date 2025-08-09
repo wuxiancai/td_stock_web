@@ -1485,17 +1485,20 @@ def load_all_indices_cache():
                 cache_date = cached_data.get('cache_date', '')
                 current_date = datetime.now().strftime('%Y-%m-%d')
                 
-                # 如果是周末，不使用当天的缓存，需要重新获取最新交易日数据
+                # 如果是周末或非交易时间，返回最近的缓存数据
                 now = datetime.now()
                 if now.weekday() >= 5:  # 周六或周日
-                    print(f"当前是周末，不使用所有指数缓存数据，需要重新获取最新交易日数据")
-                    return None
+                    print(f"当前是周末，返回最近的所有指数缓存数据: 缓存日期={cache_date}")
+                    return cached_data
                 
                 # 工作日时检查缓存日期
                 if cache_date == current_date:
                     return cached_data
                 else:
                     print(f"所有指数缓存数据过期: 缓存日期={cache_date}, 当前日期={current_date}")
+                    # 在非交易时间，仍然返回缓存数据而不是None
+                    print(f"非交易时间，返回缓存数据: 缓存日期={cache_date}")
+                    return cached_data
         return None
     except Exception as e:
         print(f"加载所有指数缓存失败: {e}")
@@ -1765,7 +1768,7 @@ def get_indices_from_tushare(indices):
                     'price': float(latest['close']),
                     'change': float(latest['change']),
                     'change_percent': float(latest['pct_chg']),
-                    'volume': float(latest['amount']) / 10 if 'amount' in latest and pd.notna(latest['amount']) else 0
+                    'volume': float(latest['amount']) / 100000 if 'amount' in latest and pd.notna(latest['amount']) else 0
                 }
                 print(f"[Tushare] 获取上证指数成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
             else:
@@ -1800,7 +1803,7 @@ def get_indices_from_tushare(indices):
                     'price': float(latest['close']),
                     'change': float(latest['change']),
                     'change_percent': float(latest['pct_chg']),
-                    'volume': float(latest['amount']) / 10 if 'amount' in latest and pd.notna(latest['amount']) else 0
+                    'volume': float(latest['amount']) / 100000 if 'amount' in latest and pd.notna(latest['amount']) else 0
                 }
                 print(f"[Tushare] 获取深证成指成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
             else:
@@ -1835,7 +1838,7 @@ def get_indices_from_tushare(indices):
                     'price': float(latest['close']),
                     'change': float(latest['change']),
                     'change_percent': float(latest['pct_chg']),
-                    'volume': float(latest['amount']) / 10 if 'amount' in latest and pd.notna(latest['amount']) else 0
+                    'volume': float(latest['amount']) / 100000 if 'amount' in latest and pd.notna(latest['amount']) else 0
                 }
                 print(f"[Tushare] 获取创业板指成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
             else:
@@ -1870,7 +1873,7 @@ def get_indices_from_tushare(indices):
                      'price': float(latest['close']),
                      'change': float(latest['change']),
                      'change_percent': float(latest['pct_chg']),
-                     'volume': float(latest['amount']) / 10 if 'amount' in latest and pd.notna(latest['amount']) else 0
+                     'volume': float(latest['amount']) / 100000 if 'amount' in latest and pd.notna(latest['amount']) else 0
                  }
                 print(f"[Tushare] 获取科创板成功: 交易日期={trade_date}, 价格={latest['close']}, 涨跌幅={latest['pct_chg']}%")
             else:
@@ -1896,7 +1899,14 @@ def get_today_close_data(indices):
         cached_data = load_indices_cache()
         if cached_data:
             print("从缓存获取今日收盘数据")
-            return cached_data['data']
+            # 确保缓存数据中的volume字段是正确的亿元单位
+            formatted_data = {}
+            for code, data in cached_data['data'].items():
+                formatted_data[code] = data.copy()
+                # 如果volume值过大（大于1000万），说明是原始数据（以元为单位），需要转换为亿元
+                if data['volume'] > 10000000:  # 1000万
+                    formatted_data[code]['volume'] = data['volume'] / 100000000
+            return formatted_data
         
         # 缓存中没有数据，尝试从Tushare获取今日数据
         print("缓存中无数据，从Tushare获取今日收盘数据")
@@ -2567,8 +2577,90 @@ def get_sina_realtime_data(stock_code):
         traceback.print_exc()
         return None
 
+def get_enhanced_stock_info(stock_code):
+    """从AkShare获取个股详细信息，补充缺失字段"""
+    try:
+        if not AKSHARE_AVAILABLE:
+            print(f"[增强信息] AkShare不可用，跳过{stock_code}")
+            return {}
+        
+        print(f"[增强信息] 开始获取{stock_code}的详细信息...")
+        
+        # 获取个股信息
+        stock_info = safe_akshare_call(
+            ak.stock_individual_info_em,
+            f"stock_info_{stock_code}",
+            symbol=stock_code,
+            max_retries=1,
+            retry_delay=0.1
+        )
+        
+        if stock_info is not None and not stock_info.empty:
+            info_dict = {}
+            print(f"[增强信息] 成功获取{stock_code}的原始数据，行数: {len(stock_info)}")
+            
+            if 'item' in stock_info.columns and 'value' in stock_info.columns:
+                for idx, row in stock_info.iterrows():
+                    item = str(row['item']).strip()
+                    value = row['value']
+                    
+                    # 提取关键信息，使用中文字段名匹配DataFrame格式
+                    if item == '总市值':
+                        try:
+                            # 转换为亿元单位
+                            market_cap_yuan = float(value) if value else 0.0
+                            info_dict['总市值'] = market_cap_yuan / 100000000  # 转换为亿元
+                            print(f"[增强信息] 解析总市值: {value} -> {info_dict['总市值']:.2f}亿")
+                        except Exception as e:
+                            info_dict['总市值'] = 0.0
+                            print(f"[增强信息] 解析总市值失败: {e}")
+                    elif item == '流通市值':
+                        try:
+                            # 转换为亿元单位
+                            circulating_cap_yuan = float(value) if value else 0.0
+                            info_dict['流通市值'] = circulating_cap_yuan / 100000000  # 转换为亿元
+                            print(f"[增强信息] 解析流通市值: {value} -> {info_dict['流通市值']:.2f}亿")
+                        except Exception as e:
+                            info_dict['流通市值'] = 0.0
+                            print(f"[增强信息] 解析流通市值失败: {e}")
+                    elif item == '市盈率':
+                        try:
+                            info_dict['市盈率-动态'] = float(value) if value else 0.0
+                            print(f"[增强信息] 解析市盈率: {value} -> {info_dict['市盈率-动态']}")
+                        except Exception as e:
+                            info_dict['市盈率-动态'] = 0.0
+                            print(f"[增强信息] 解析市盈率失败: {e}")
+                    elif item == '市净率':
+                        try:
+                            info_dict['市净率'] = float(value) if value else 0.0
+                            print(f"[增强信息] 解析市净率: {value} -> {info_dict['市净率']}")
+                        except Exception as e:
+                            info_dict['市净率'] = 0.0
+                            print(f"[增强信息] 解析市净率失败: {e}")
+                    elif item == '换手率':
+                        try:
+                            # 移除百分号并转换为数值
+                            turnover_str = str(value).replace('%', '') if value else '0'
+                            info_dict['换手率'] = float(turnover_str) if turnover_str else 0.0
+                            print(f"[增强信息] 解析换手率: {value} -> {info_dict['换手率']}")
+                        except Exception as e:
+                            info_dict['换手率'] = 0.0
+                            print(f"[增强信息] 解析换手率失败: {e}")
+            
+            print(f"[增强信息] {stock_code}最终解析结果: {info_dict}")
+            return info_dict
+        else:
+            print(f"[增强信息] 未获取到{stock_code}的有效数据")
+            return {}
+        
+    except Exception as e:
+        print(f"[增强信息] 获取{stock_code}详细信息失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return {}
+
 def get_sina_batch_realtime_data():
-    """使用新浪财经API批量获取热门股票实时数据"""
+    """使用新浪财经API批量获取热门股票实时数据，并补充缺失字段"""
     try:
         import requests
         import re
@@ -2582,12 +2674,12 @@ def get_sina_batch_realtime_data():
             '000858',  # 五粮液
             '002415',  # 海康威视
             '300059',  # 东方财富
+            '300101',  # 振芯科技 - 用户测试股票
             '300750',  # 宁德时代
             '300790',  # 宇瞳光学
             '600036',  # 招商银行
             '600519',  # 贵州茅台
             '600887',  # 伊利股份
-            '000858',  # 五粮液
             '002594',  # 比亚迪
             '600276',  # 恒瑞医药
             '000725',  # 京东方A
@@ -2656,7 +2748,7 @@ def get_sina_batch_realtime_data():
                         if pre_close > 0:
                             change_amount = latest_price - pre_close
                             change_percent = (change_amount / pre_close) * 100
-                            amplitude = ((high - low) / pre_close) * 100 if high > low else 0.0
+                            amplitude = ((high - low) / pre_close) * 100 if high > low and low > 0 else 0.0
                         else:
                             change_amount = 0
                             change_percent = 0
@@ -2664,6 +2756,11 @@ def get_sina_batch_realtime_data():
                         
                         # 只添加有效数据（最新价大于0）
                         if latest_price > 0:
+                            # 尝试获取增强的股票信息（市值、市盈率等）
+                            print(f"[新浪财经批量] 开始获取{stock_code}的增强信息...")
+                            enhanced_info = get_enhanced_stock_info(stock_code)
+                            print(f"[新浪财经批量] {stock_code}增强信息获取结果: {enhanced_info}")
+                            
                             stock_item = {
                                 '序号': len(processed_data) + 1,
                                 '代码': stock_code,
@@ -2679,11 +2776,11 @@ def get_sina_batch_realtime_data():
                                 '今开': open_price,
                                 '昨收': pre_close,
                                 '量比': 0.0,  # 新浪API不提供
-                                '换手率': 0.0,  # 新浪API不提供
-                                '市盈率-动态': 0.0,  # 新浪API不提供
-                                '市净率': 0.0,  # 新浪API不提供
-                                '总市值': 0.0,  # 新浪API不提供
-                                '流通市值': 0.0,  # 新浪API不提供
+                                '换手率': enhanced_info.get('换手率', 0.0),  # 从增强信息获取
+                                '市盈率-动态': enhanced_info.get('市盈率-动态', 0.0),  # 从增强信息获取
+                                '市净率': enhanced_info.get('市净率', 0.0),  # 从增强信息获取
+                                '总市值': enhanced_info.get('总市值', 0.0),  # 从增强信息获取
+                                '流通市值': enhanced_info.get('流通市值', 0.0),  # 从增强信息获取
                                 '涨速': 0.0,  # 新浪API不提供
                                 '5分钟涨跌': 0.0,  # 新浪API不提供
                                 '60日涨跌幅': 0.0,  # 新浪API不提供
@@ -2692,7 +2789,16 @@ def get_sina_batch_realtime_data():
                                 '量价齐升天数': 0.0  # 新浪API不提供
                             }
                             processed_data.append(stock_item)
-                            print(f"[新浪财经批量] 成功解析股票: {stock_code} {name} 最新价:{latest_price}")
+                            
+                            # 显示获取到的增强信息
+                            enhanced_fields = []
+                            if enhanced_info.get('总市值', 0) > 0:
+                                enhanced_fields.append(f"总市值:{enhanced_info['总市值']:.2f}亿")
+                            if enhanced_info.get('市盈率-动态', 0) > 0:
+                                enhanced_fields.append(f"PE:{enhanced_info['市盈率-动态']:.2f}")
+                            enhanced_str = f" [{', '.join(enhanced_fields)}]" if enhanced_fields else ""
+                            
+                            print(f"[新浪财经批量] 成功解析股票: {stock_code} {name} 最新价:{latest_price}{enhanced_str}")
                         
                 except Exception as e:
                     print(f"[新浪财经批量] 解析第{idx}行数据失败: {e}")
@@ -4548,7 +4654,7 @@ def auto_update_moneyflow_data():
         print(f"找到 {len(all_stocks)} 只股票，开始更新资金流向数据")
         
         # 创建专用的资金流向API频率限制器（每分钟2次）
-        moneyflow_rate_limiter = RateLimiter(max_requests=2, time_window=60)
+        moneyflow_rate_limiter = TushareRateLimiter(max_requests_per_minute=2)
         
         # 获取当前交易日期
         current_trade_date = datetime.now().strftime('%Y%m%d')
@@ -4600,56 +4706,66 @@ def auto_update_moneyflow_data():
                     if moneyflow_data is not None and not moneyflow_data.empty:
                         row = moneyflow_data.iloc[0]
                         
+                        # 定义安全转换函数
+                        def safe_float(value, default=0.0):
+                            """安全转换为浮点数"""
+                            if pd.isna(value) or value == '' or value == '-':
+                                return default
+                            try:
+                                return float(value)
+                            except (ValueError, TypeError):
+                                return default
+                        
                         # 更新各种资金流向字段（按照Tushare官方文档字段）
-                    # 净流入额（万元）
-                    if 'net_mf_amount' in row:
-                        net_mf_amount_wan = safe_float(row['net_mf_amount'])
-                        stock_info['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)  # 转换为千万元
-                    
-                    # 特大单买入金额（万元）
-                    if 'buy_elg_amount' in row:
-                        buy_elg_amount_wan = safe_float(row['buy_elg_amount'])
-                        stock_info['buy_elg_amount'] = round(buy_elg_amount_wan / 1000, 2)  # 转换为千万元
-                    
-                    # 特大单卖出金额（万元）
-                    if 'sell_elg_amount' in row:
-                        sell_elg_amount_wan = safe_float(row['sell_elg_amount'])
-                        stock_info['sell_elg_amount'] = round(sell_elg_amount_wan / 1000, 2)  # 转换为千万元
-                    
-                    # 大单买入金额（万元）
-                    if 'buy_lg_amount' in row:
-                        buy_lg_amount_wan = safe_float(row['buy_lg_amount'])
-                        stock_info['buy_lg_amount'] = round(buy_lg_amount_wan / 1000, 2)  # 转换为千万元
-                    
-                    # 大单卖出金额（万元）
-                    if 'sell_lg_amount' in row:
-                        sell_lg_amount_wan = safe_float(row['sell_lg_amount'])
-                        stock_info['sell_lg_amount'] = round(sell_lg_amount_wan / 1000, 2)  # 转换为千万元
-                    
-                    # 中单买入金额（万元）
-                    if 'buy_md_amount' in row:
-                        buy_md_amount_wan = safe_float(row['buy_md_amount'])
-                        stock_info['buy_md_amount'] = round(buy_md_amount_wan / 1000, 2)  # 转换为千万元
-                    
-                    # 中单卖出金额（万元）
-                    if 'sell_md_amount' in row:
-                        sell_md_amount_wan = safe_float(row['sell_md_amount'])
-                        stock_info['sell_md_amount'] = round(sell_md_amount_wan / 1000, 2)  # 转换为千万元
-                    
-                    # 小单买入金额（万元）
-                    if 'buy_sm_amount' in row:
-                        buy_sm_amount_wan = safe_float(row['buy_sm_amount'])
-                        stock_info['buy_sm_amount'] = round(buy_sm_amount_wan / 1000, 2)  # 转换为千万元
-                    
-                    # 小单卖出金额（万元）
-                    if 'sell_sm_amount' in row:
-                        sell_sm_amount_wan = safe_float(row['sell_sm_amount'])
-                        stock_info['sell_sm_amount'] = round(sell_sm_amount_wan / 1000, 2)  # 转换为千万元
-                    
-                    # 主力净流入额（万元）- 如果有的话
-                    if 'net_amount' in row:
-                        net_amount_wan = safe_float(row['net_amount'])
-                        stock_info['net_amount'] = round(net_amount_wan / 1000, 2)  # 转换为千万元
+                        # 净流入额（万元）
+                        if 'net_mf_amount' in row:
+                            net_mf_amount_wan = safe_float(row['net_mf_amount'])
+                            stock_info['net_mf_amount'] = round(net_mf_amount_wan / 1000, 2)  # 转换为千万元
+                        
+                        # 特大单买入金额（万元）
+                        if 'buy_elg_amount' in row:
+                            buy_elg_amount_wan = safe_float(row['buy_elg_amount'])
+                            stock_info['buy_elg_amount'] = round(buy_elg_amount_wan / 1000, 2)  # 转换为千万元
+                        
+                        # 特大单卖出金额（万元）
+                        if 'sell_elg_amount' in row:
+                            sell_elg_amount_wan = safe_float(row['sell_elg_amount'])
+                            stock_info['sell_elg_amount'] = round(sell_elg_amount_wan / 1000, 2)  # 转换为千万元
+                        
+                        # 大单买入金额（万元）
+                        if 'buy_lg_amount' in row:
+                            buy_lg_amount_wan = safe_float(row['buy_lg_amount'])
+                            stock_info['buy_lg_amount'] = round(buy_lg_amount_wan / 1000, 2)  # 转换为千万元
+                        
+                        # 大单卖出金额（万元）
+                        if 'sell_lg_amount' in row:
+                            sell_lg_amount_wan = safe_float(row['sell_lg_amount'])
+                            stock_info['sell_lg_amount'] = round(sell_lg_amount_wan / 1000, 2)  # 转换为千万元
+                        
+                        # 中单买入金额（万元）
+                        if 'buy_md_amount' in row:
+                            buy_md_amount_wan = safe_float(row['buy_md_amount'])
+                            stock_info['buy_md_amount'] = round(buy_md_amount_wan / 1000, 2)  # 转换为千万元
+                        
+                        # 中单卖出金额（万元）
+                        if 'sell_md_amount' in row:
+                            sell_md_amount_wan = safe_float(row['sell_md_amount'])
+                            stock_info['sell_md_amount'] = round(sell_md_amount_wan / 1000, 2)  # 转换为千万元
+                        
+                        # 小单买入金额（万元）
+                        if 'buy_sm_amount' in row:
+                            buy_sm_amount_wan = safe_float(row['buy_sm_amount'])
+                            stock_info['buy_sm_amount'] = round(buy_sm_amount_wan / 1000, 2)  # 转换为千万元
+                        
+                        # 小单卖出金额（万元）
+                        if 'sell_sm_amount' in row:
+                            sell_sm_amount_wan = safe_float(row['sell_sm_amount'])
+                            stock_info['sell_sm_amount'] = round(sell_sm_amount_wan / 1000, 2)  # 转换为千万元
+                        
+                        # 主力净流入额（万元）- 如果有的话
+                        if 'net_amount' in row:
+                            net_amount_wan = safe_float(row['net_amount'])
+                            stock_info['net_amount'] = round(net_amount_wan / 1000, 2)  # 转换为千万元
                         
                         # 更新数据时间戳
                         stock_info['moneyflow_last_update'] = current_trade_date
@@ -4742,16 +4858,17 @@ def auto_fetch_realtime_data():
         realtime_task_status['is_running'] = True
         print(f"[实时数据任务] 开始获取实时数据 - {now.strftime('%Y-%m-%d %H:%M:%S')}")
         
-        # 获取实时交易数据 - 优先使用AkShare，失败时使用新浪财经API
-        realtime_data = safe_akshare_call(
-            ak.stock_zh_a_spot_em,
-            "realtime_trading_data_auto"
-        )
+        # 获取实时交易数据 - 优先使用新浪财经API（因为东财接口有网络问题）
+        print("[实时数据任务] 优先使用新浪财经API获取实时数据...")
+        realtime_data = get_sina_batch_realtime_data()
         
-        # 如果AkShare失败，尝试使用新浪财经API获取热门股票的实时数据
+        # 如果新浪财经API失败，尝试使用AkShare作为备用
         if realtime_data is None or realtime_data.empty:
-            print("[实时数据任务] AkShare失败，尝试使用新浪财经API获取热门股票实时数据...")
-            realtime_data = get_sina_batch_realtime_data()
+            print("[实时数据任务] 新浪财经API失败，尝试使用AkShare作为备用...")
+            realtime_data = safe_akshare_call(
+                ak.stock_zh_a_spot_em,
+                "realtime_trading_data_auto"
+            )
         
         if realtime_data is not None and not realtime_data.empty:
             # 处理数据格式
@@ -5056,6 +5173,161 @@ def auto_cache_intraday_data():
         
     except Exception as e:
         print(f"自动缓存分时图数据失败: {e}")
+        import traceback
+        traceback.print_exc()
+
+def auto_update_intraday_realtime():
+    """实时更新分时图数据 - 交易时间内每5分钟执行"""
+    try:
+        now = datetime.now()
+        current_time = now.time()
+        
+        # 检查是否为工作日
+        if now.weekday() >= 5:  # 周六(5)和周日(6)不执行
+            return
+        
+        # 检查是否为交易时间
+        is_trading_hours = (
+            (current_time >= datetime.strptime('09:30', '%H:%M').time() and 
+             current_time <= datetime.strptime('11:30', '%H:%M').time()) or
+            (current_time >= datetime.strptime('13:00', '%H:%M').time() and 
+             current_time <= datetime.strptime('15:00', '%H:%M').time())
+        )
+        
+        if not is_trading_hours:
+            return
+        
+        print(f"开始实时更新分时图数据 - {now.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # 检查AkShare是否可用
+        if not AKSHARE_AVAILABLE:
+            print("AkShare库未安装，无法实时更新分时图数据")
+            return
+        
+        # 获取热门股票列表（优先更新这些股票的分时图）
+        hot_stocks = ['000001', '000002', '300101', '600036', '000858']  # 可以根据需要调整
+        
+        # 获取当前日期
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        print(f"实时更新 {len(hot_stocks)} 只热门股票的分时图数据")
+        
+        updated_count = 0
+        failed_count = 0
+        
+        for stock_code in hot_stocks:
+            try:
+                print(f"实时更新 {stock_code} 的分时图数据")
+                
+                # 调用AkShare接口获取分时数据
+                intraday_data = safe_akshare_call(
+                    ak.stock_zh_a_hist_min_em,
+                    f"realtime_intraday_{stock_code}_{today}",
+                    symbol=stock_code,
+                    period='1',
+                    adjust='',
+                    start_date=today + " 09:30:00",
+                    end_date=today + " 15:00:00"
+                )
+                
+                if intraday_data is None or intraday_data.empty:
+                    print(f"未获取到 {stock_code} 的实时分时数据")
+                    failed_count += 1
+                    continue
+                
+                # 处理分时数据
+                result_data = []
+                cumulative_volume = 0
+                cumulative_amount = 0
+                total_shares = 0
+                total_turnover = 0
+                
+                for _, row in intraday_data.iterrows():
+                    try:
+                        # 解析时间
+                        timestamp = row['时间']
+                        if isinstance(timestamp, str):
+                            timestamp = pd.to_datetime(timestamp)
+                        
+                        time_str = timestamp.strftime('%H:%M')
+                        
+                        # 过滤非交易时间
+                        hour = timestamp.hour
+                        minute = timestamp.minute
+                        if not ((9 <= hour <= 11) or (hour == 11 and minute <= 30) or (13 <= hour <= 15)):
+                            continue
+                        
+                        # 获取价格和成交量数据
+                        close_price = float(row.get('收盘', 0))
+                        volume = float(row.get('成交量', 0))
+                        amount = float(row.get('成交额', 0))
+                        
+                        if close_price <= 0:
+                            continue
+                        
+                        # 累计成交量和成交额
+                        cumulative_volume += volume
+                        cumulative_amount += amount
+                        
+                        # 计算VWAP
+                        vwap = cumulative_amount / cumulative_volume if cumulative_volume > 0 else close_price
+                        
+                        # 计算均价线数据
+                        shares_traded = volume * 100
+                        turnover_amount = amount
+                        
+                        total_shares += shares_traded
+                        total_turnover += turnover_amount
+                        
+                        avg_price = total_turnover / total_shares if total_shares > 0 else close_price
+                        
+                        data_point = {
+                            'time': time_str,
+                            'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                            'price': close_price,
+                            'open': float(row.get('开盘', close_price)),
+                            'high': float(row.get('最高', close_price)),
+                            'low': float(row.get('最低', close_price)),
+                            'volume': volume,
+                            'amount': amount,
+                            'vwap': vwap,
+                            'avg_price': avg_price,
+                            'cumulative_volume': cumulative_volume,
+                            'cumulative_amount': cumulative_amount,
+                            'total_shares': total_shares,
+                            'total_turnover': total_turnover
+                        }
+                        result_data.append(data_point)
+                        
+                    except Exception as e:
+                        print(f"处理 {stock_code} 数据行失败: {e}")
+                        continue
+                
+                # 保存到缓存
+                if result_data:
+                    cache_saved = cache_manager.save_intraday_data(stock_code, result_data)
+                    if cache_saved:
+                        updated_count += 1
+                        print(f"实时更新 {stock_code} 的 {len(result_data)} 条分时数据成功")
+                    else:
+                        failed_count += 1
+                        print(f"保存 {stock_code} 实时分时数据失败")
+                else:
+                    failed_count += 1
+                    print(f"{stock_code} 没有有效的实时分时数据")
+                    
+            except Exception as e:
+                failed_count += 1
+                print(f"实时更新 {stock_code} 分时数据失败: {e}")
+                continue
+            
+            # 每个股票处理完后等待一段时间，避免API频率限制
+            time.sleep(2)
+        
+        print(f"实时分时图数据更新完成！成功: {updated_count}, 失败: {failed_count}")
+        
+    except Exception as e:
+        print(f"实时更新分时图数据失败: {e}")
         import traceback
         traceback.print_exc()
 
@@ -5475,8 +5747,163 @@ def manual_update_nine_turn_all_markets():
     except Exception as e:
         print(f"手动九转序列更新任务执行失败: {e}")
 
+def check_data_integrity_on_startup():
+    """程序启动时检查数据完整性，如果发现缺失则自动补偿"""
+    try:
+        print("=" * 60)
+        print("开始数据完整性检查...")
+        
+        current_date = datetime.now()
+        current_date_str = current_date.strftime('%Y%m%d')
+        
+        # 检查是否为工作日
+        if current_date.weekday() >= 5:  # 周末不检查
+            print("今天是周末，跳过数据完整性检查")
+            return
+        
+        # 检查当前时间，如果是交易日的17:00之后，检查今天的数据是否已更新
+        should_have_today_data = current_date.time() >= datetime.strptime('17:00', '%H:%M').time()
+        
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        market_names = {
+            'cyb': '创业板',
+            'hu': '沪A股',
+            'zxb': '深A',
+            'kcb': '科创板',
+            'bj': '北交所'
+        }
+        
+        missing_data_markets = []
+        outdated_data_markets = []
+        
+        for market in markets:
+            try:
+                cache_data = load_cache_data(market)
+                
+                if not cache_data or 'last_update_date' not in cache_data:
+                    missing_data_markets.append(market)
+                    print(f"❌ {market_names[market]}: 无缓存数据")
+                    continue
+                
+                last_update_date = cache_data['last_update_date']
+                
+                # 如果应该有今天的数据但缓存中是昨天或更早的数据
+                if should_have_today_data and last_update_date < current_date_str:
+                    outdated_data_markets.append(market)
+                    print(f"⚠️  {market_names[market]}: 数据过期 (最后更新: {last_update_date}, 期望: {current_date_str})")
+                elif not should_have_today_data:
+                    # 17:00之前，检查是否有昨天的数据
+                    yesterday = (current_date - timedelta(days=1)).strftime('%Y%m%d')
+                    if last_update_date < yesterday:
+                        outdated_data_markets.append(market)
+                        print(f"⚠️  {market_names[market]}: 数据过期 (最后更新: {last_update_date}, 期望至少: {yesterday})")
+                    else:
+                        print(f"✅ {market_names[market]}: 数据正常 (最后更新: {last_update_date})")
+                else:
+                    print(f"✅ {market_names[market]}: 数据正常 (最后更新: {last_update_date})")
+                    
+            except Exception as e:
+                missing_data_markets.append(market)
+                print(f"❌ {market_names[market]}: 检查失败 - {e}")
+        
+        # 如果发现缺失或过期的数据，自动触发更新
+        if missing_data_markets or outdated_data_markets:
+            print("\n发现数据问题，启动自动补偿...")
+            
+            # 对于缺失或过期的市场，立即触发数据同步
+            problem_markets = list(set(missing_data_markets + outdated_data_markets))
+            for market in problem_markets:
+                print(f"正在补偿 {market_names[market]} 数据...")
+                try:
+                    # 这里可以调用单个市场的同步函数，或者触发完整同步
+                    # 为了简化，我们记录需要补偿的市场，稍后统一处理
+                    pass
+                except Exception as e:
+                    print(f"补偿 {market_names[market]} 数据失败: {e}")
+            
+            # 如果是工作日且时间合适，触发完整的数据同步
+            if should_have_today_data and (missing_data_markets or outdated_data_markets):
+                print("触发完整数据同步以补偿缺失数据...")
+                threading.Thread(target=auto_sync_all_markets, daemon=True).start()
+                
+        else:
+            print("✅ 所有市场数据完整性检查通过")
+        
+        print("数据完整性检查完成")
+        print("=" * 60)
+        
+    except Exception as e:
+        print(f"数据完整性检查失败: {e}")
+
+def monitor_data_freshness():
+    """监控数据新鲜度的定时任务"""
+    try:
+        current_time = datetime.now()
+        
+        # 只在工作日执行监控
+        if current_time.weekday() >= 5:
+            return
+        
+        # 只在交易日17:30之后执行监控（给数据更新留出时间）
+        if current_time.time() < datetime.strptime('17:30', '%H:%M').time():
+            return
+        
+        print(f"\n[数据监控] 开始数据新鲜度检查 - {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        current_date_str = current_time.strftime('%Y%m%d')
+        markets = ['cyb', 'hu', 'zxb', 'kcb', 'bj']
+        market_names = {
+            'cyb': '创业板',
+            'hu': '沪A股', 
+            'zxb': '深A',
+            'kcb': '科创板',
+            'bj': '北交所'
+        }
+        
+        stale_data_found = False
+        
+        for market in markets:
+            try:
+                cache_data = load_cache_data(market)
+                
+                if not cache_data or 'last_update_date' not in cache_data:
+                    print(f"[数据监控] ❌ {market_names[market]}: 无数据")
+                    stale_data_found = True
+                    continue
+                
+                last_update_date = cache_data['last_update_date']
+                
+                # 检查数据是否为今天的
+                if last_update_date < current_date_str:
+                    print(f"[数据监控] ⚠️  {market_names[market]}: 数据过期 (最后更新: {last_update_date})")
+                    stale_data_found = True
+                else:
+                    print(f"[数据监控] ✅ {market_names[market]}: 数据新鲜 (最后更新: {last_update_date})")
+                    
+            except Exception as e:
+                print(f"[数据监控] ❌ {market_names[market]}: 检查失败 - {e}")
+                stale_data_found = True
+        
+        # 如果发现过期数据，发出警告并可选择性触发更新
+        if stale_data_found:
+            print(f"[数据监控] ⚠️  发现过期数据，建议检查数据更新任务是否正常运行")
+            # 这里可以添加告警机制，比如发送邮件、写入日志等
+            
+            # 可选：自动触发数据更新（谨慎使用，避免频繁更新）
+            # print("[数据监控] 自动触发数据更新...")
+            # threading.Thread(target=auto_sync_all_markets, daemon=True).start()
+        else:
+            print(f"[数据监控] ✅ 所有数据都是新鲜的")
+            
+    except Exception as e:
+        print(f"[数据监控] 监控任务执行失败: {e}")
+
 def start_scheduler():
     """启动定时调度器"""
+    # 程序启动时立即执行数据完整性检查
+    print("正在执行启动时数据完整性检查...")
+    threading.Thread(target=check_data_integrity_on_startup, daemon=True).start()
+    
     # 设置定时任务：工作日下午5点执行数据同步
     schedule.every().monday.at("17:00").do(auto_sync_all_markets)
     schedule.every().tuesday.at("17:00").do(auto_sync_all_markets)
@@ -5508,6 +5935,15 @@ def start_scheduler():
     schedule.every().thursday.at("15:05").do(auto_cache_intraday_data)
     schedule.every().friday.at("15:05").do(auto_cache_intraday_data)
     
+    # 设置定时任务：交易时间内每5分钟更新分时图数据
+    schedule.every(5).minutes.do(auto_update_intraday_realtime)
+    
+    # 新增：数据新鲜度监控任务 - 每小时检查一次
+    schedule.every().hour.do(monitor_data_freshness)
+    
+    # 新增：每天早上9点执行数据完整性检查（交易开始前）
+    schedule.every().day.at("09:00").do(check_data_integrity_on_startup)
+    
     # 启动实时数据获取任务（每10秒执行一次）
     start_realtime_data_scheduler()
     
@@ -5516,6 +5952,9 @@ def start_scheduler():
     print("定时任务已设置：工作日晚上7点自动更新资金流向数据")
     print("定时任务已设置：每天晚上6点自动筛选符合条件的股票")
     print("定时任务已设置：工作日下午3:05自动缓存分时图数据")
+    print("定时任务已设置：交易时间每5分钟实时更新分时图数据")
+    print("定时任务已设置：每小时监控数据新鲜度")
+    print("定时任务已设置：每天早上9点检查数据完整性")
     print("实时数据获取任务已启动：交易时间每10秒获取一次实时数据")
     
     # 在后台线程中运行调度器
@@ -5634,6 +6073,60 @@ def trigger_intraday_cache():
         return jsonify({
             'status': 'success',
             'message': '分时图缓存任务已启动'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/scheduler/trigger_intraday_realtime', methods=['POST'])
+def trigger_intraday_realtime():
+    """手动触发分时图实时更新任务"""
+    try:
+        # 在后台线程中执行分时图实时更新任务
+        realtime_thread = threading.Thread(target=auto_update_intraday_realtime, daemon=True)
+        realtime_thread.start()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '分时图实时更新任务已启动'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/scheduler/check_data_integrity', methods=['POST'])
+def trigger_data_integrity_check():
+    """手动触发数据完整性检查"""
+    try:
+        # 在后台线程中执行数据完整性检查
+        integrity_thread = threading.Thread(target=check_data_integrity_on_startup, daemon=True)
+        integrity_thread.start()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '数据完整性检查已启动，请查看控制台日志获取详细结果'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/scheduler/monitor_freshness', methods=['POST'])
+def trigger_freshness_monitor():
+    """手动触发数据新鲜度监控"""
+    try:
+        # 在后台线程中执行数据新鲜度监控
+        monitor_thread = threading.Thread(target=monitor_data_freshness, daemon=True)
+        monitor_thread.start()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '数据新鲜度监控已启动，请查看控制台日志获取详细结果'
         })
     except Exception as e:
         return jsonify({

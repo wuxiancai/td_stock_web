@@ -1160,9 +1160,9 @@
                     <div id="intradayError" class="realtime-error" style="display: none;"></div>
                     <div id="intradayChartContainer" style="display: none;">
                         <!-- 分时图 -->
-                        <div id="intradayChart" style="width: 100%; height: 400px; padding: 10px;"></div>
+                        <div id="intradayChart" style="width: 100%; height: 400px; padding: 10px; margin-bottom: -20px;"></div>
                         <!-- 分时成交量图 -->
-                        <div id="intradayVolumeChart" style="width: 100%; height: 150px; padding: 10px;"></div>
+                        <div id="intradayVolumeChart" style="width: 100%; height: 180px; padding: 10px; margin-top: -10px;"></div>
                     </div>
                 </div>
             </div>
@@ -1349,7 +1349,7 @@
         }
 
         // 加载实时交易数据
-        async function loadRealtimeData(showLoading = true) {
+        async function loadRealtimeData(showLoading = true, isAutoRefresh = false) {
             try {
                 // 只在首次加载或手动刷新时显示加载状态
                 if (showLoading) {
@@ -1371,11 +1371,14 @@
                     throw new Error(errorMsg + detailMsg);
                 }
                 
+                // 添加自动刷新标识
+                result.is_auto_refresh = isAutoRefresh;
+                
                 // 检查是否是缓存数据，如果是缓存数据，尝试使用个股实时数据API作为备用
                 if (result.is_cached_data) {
                     console.log('检测到缓存数据，尝试使用个股实时数据API获取最新数据...');
                     try {
-                        await loadFallbackRealtimeData(result);
+                        await loadFallbackRealtimeData(result, isAutoRefresh);
                         return;
                     } catch (fallbackError) {
                         console.warn('个股实时数据API也失败，使用缓存数据:', fallbackError);
@@ -1391,7 +1394,7 @@
                 // 尝试使用个股实时数据API作为备用
                 try {
                     console.log('尝试使用个股实时数据API作为备用...');
-                    await loadFallbackRealtimeData();
+                    await loadFallbackRealtimeData(null, isAutoRefresh);
                     return;
                 } catch (fallbackError) {
                     console.error('个股实时数据API也失败:', fallbackError);
@@ -1415,7 +1418,8 @@
                 }
                 
                 // 只在显示加载状态时才显示错误，避免自动刷新时覆盖现有数据
-                if (showLoading) {
+                // 如果是自动刷新且有上一次成功的数据，则不显示错误
+                if (showLoading && (!isAutoRefresh || !lastSuccessfulRealtimeData)) {
                     showRealtimeError(errorMessage);
                 }
             } finally {
@@ -1426,7 +1430,7 @@
         }
 
         // 使用个股实时数据API作为备用数据源
-        async function loadFallbackRealtimeData(originalResult = null) {
+        async function loadFallbackRealtimeData(originalResult = null, isAutoRefresh = false) {
             const realtimeResponse = await fetch(`/api/stock/${currentStockCode}/realtime`);
             
             if (!realtimeResponse.ok) {
@@ -1480,7 +1484,8 @@
                 fetch_time: new Date().toLocaleString('zh-CN'),
                 data_source: '个股实时数据API (备用)',
                 message: originalResult ? '全市场数据使用缓存，个股数据已更新' : '使用个股实时数据API',
-                is_cached_data: false
+                is_cached_data: false,
+                is_auto_refresh: isAutoRefresh
             };
             
             console.log('成功使用个股实时数据API获取最新数据');
@@ -1501,10 +1506,16 @@
             }
         }
 
+        // 保存上一次成功获取的实时数据
+        let lastSuccessfulRealtimeData = null;
+        
         // 显示实时交易数据
         function displayRealtimeData(data, result = null) {
             if (!data || data.length === 0) {
-                showRealtimeError('暂无实时交易数据');
+                // 如果是自动刷新且有上一次的数据，则保持显示上一次的数据
+                if (!result || !result.is_auto_refresh || !lastSuccessfulRealtimeData) {
+                    showRealtimeError('暂无实时交易数据');
+                }
                 return;
             }
 
@@ -1515,9 +1526,15 @@
             });
 
             if (!stockData) {
-                showRealtimeError('未找到当前股票的实时交易数据');
+                // 如果是自动刷新且有上一次的数据，则保持显示上一次的数据
+                if (!result || !result.is_auto_refresh || !lastSuccessfulRealtimeData) {
+                    showRealtimeError('未找到当前股票的实时交易数据');
+                }
                 return;
             }
+            
+            // 保存成功获取的数据，用于下次自动刷新失败时显示
+            lastSuccessfulRealtimeData = stockData;
 
             // 显示数据
             const fieldMapping = {
@@ -1549,7 +1566,13 @@
             };
 
             Object.entries(fieldMapping).forEach(([field, key]) => {
-                const element = document.getElementById(`rt_${field}`);
+                // 处理特殊字段ID映射
+                let elementId = `rt_${field}`;
+                if (field === '市盈率-动态') {
+                    elementId = 'rt_市盈率_动态';
+                }
+                
+                const element = document.getElementById(elementId);
                 if (element && stockData[key] !== undefined) {
                     let value = stockData[key];
                     
@@ -1602,7 +1625,7 @@
             
             // 更新最新价格
             const stockPriceElement = document.getElementById('stockPrice');
-            if (stockData['最新价'] && stockPriceElement) {
+            if (stockData['最新价'] !== undefined && stockData['最新价'] !== null && stockPriceElement) {
                 const latestPrice = stockData['最新价'];
                 stockPriceElement.textContent = formatValue(latestPrice, 'currency');
                 console.log(`[红框价格] 更新最新价格: ${latestPrice}`);
@@ -1612,14 +1635,14 @@
             const changeAmountElement = document.getElementById('changeAmount');
             const changePctElement = document.getElementById('changePercent');
             
-            if (stockData['涨跌额'] && changeAmountElement) {
+            if (stockData['涨跌额'] !== undefined && stockData['涨跌额'] !== null && changeAmountElement) {
                 const changeAmount = stockData['涨跌额'];
                 changeAmountElement.textContent = (changeAmount >= 0 ? '+' : '') + formatValue(changeAmount);
                 setValueColor(changeAmountElement, changeAmount);
                 console.log(`[红框价格] 更新涨跌额: ${changeAmount}`);
             }
             
-            if (stockData['涨跌幅'] && changePctElement) {
+            if (stockData['涨跌幅'] !== undefined && stockData['涨跌幅'] !== null && changePctElement) {
                 const changePct = stockData['涨跌幅'];
                 changePctElement.textContent = (changePct >= 0 ? '+' : '') + formatValue(changePct, 'percentage');
                 setValueColor(changePctElement, changePct);
@@ -1628,13 +1651,13 @@
             
             // 更新今开价格
             const openElement = document.getElementById('open');
-            if (stockData['今开'] && openElement) {
+            if (stockData['今开'] !== undefined && stockData['今开'] !== null && openElement) {
                 openElement.textContent = formatValue(stockData['今开'], 'currency');
             }
             
             // 更新涨跌幅显示（页面右侧的涨跌幅）
             const pctChgElement = document.getElementById('pctChg');
-            if (stockData['涨跌幅'] && pctChgElement) {
+            if (stockData['涨跌幅'] !== undefined && stockData['涨跌幅'] !== null && pctChgElement) {
                 const changePct = stockData['涨跌幅'];
                 pctChgElement.textContent = formatValue(changePct, 'percentage');
                 setValueColor(pctChgElement, changePct);
@@ -2719,47 +2742,47 @@
             const circMvElement = document.getElementById('circMv');
             
             // 更新收盘价（从实时数据获取）
-            if (stockData['现价'] && closeElement) {
+            if (stockData['现价'] !== undefined && stockData['现价'] !== null && closeElement) {
                 closeElement.textContent = formatValue(stockData['现价'], 'currency');
             }
             
             // 更新开盘价（从实时数据获取）
-            if (stockData['今开'] && openElement) {
+            if (stockData['今开'] !== undefined && stockData['今开'] !== null && openElement) {
                 openElement.textContent = formatValue(stockData['今开'], 'currency');
             }
             
             // 更新换手率（从实时数据获取）
-            if (stockData['换手率'] && turnoverRateElement) {
+            if (stockData['换手率'] !== undefined && stockData['换手率'] !== null && turnoverRateElement) {
                 turnoverRateElement.textContent = formatValue(stockData['换手率'], 'percentage');
             }
             
             // 更新量比（从实时数据获取）
-            if (stockData['量比'] && volumeRatioElement) {
+            if (stockData['量比'] !== undefined && stockData['量比'] !== null && volumeRatioElement) {
                 volumeRatioElement.textContent = formatValue(stockData['量比'], 'ratio');
             }
             
             // 更新成交额（从实时数据获取）
-            if (stockData['成交额'] && amountElement) {
+            if (stockData['成交额'] !== undefined && stockData['成交额'] !== null && amountElement) {
                 amountElement.textContent = formatValue(stockData['成交额'], 'large_number');
             }
             
             // 更新市盈率（从实时数据获取）
-            if (stockData['市盈率-动态'] && peTtmElement) {
+            if (stockData['市盈率-动态'] !== undefined && stockData['市盈率-动态'] !== null && peTtmElement) {
                 peTtmElement.textContent = formatValue(stockData['市盈率-动态'], 'ratio');
             }
             
             // 更新市净率（从实时数据获取）
-            if (stockData['市净率'] && pbElement) {
+            if (stockData['市净率'] !== undefined && stockData['市净率'] !== null && pbElement) {
                 pbElement.textContent = formatValue(stockData['市净率'], 'ratio');
             }
             
             // 更新总市值（从实时数据获取）
-            if (stockData['总市值'] && totalMvElement) {
+            if (stockData['总市值'] !== undefined && stockData['总市值'] !== null && totalMvElement) {
                 totalMvElement.textContent = formatValue(stockData['总市值'], 'large_number');
             }
             
             // 更新流通市值（从实时数据获取）
-            if (stockData['流通市值'] && circMvElement) {
+            if (stockData['流通市值'] !== undefined && stockData['流通市值'] !== null && circMvElement) {
                 circMvElement.textContent = formatValue(stockData['流通市值'], 'large_number');
             }
             
@@ -3254,7 +3277,7 @@
                     showIntradaySimulatedNotice(result.message);
                 }
                 
-                displayIntradayChart(result.data, result.is_simulated);
+                await displayIntradayChart(result.data, result.is_simulated);
                 
             } catch (error) {
                 console.error('分时图数据加载失败:', error);
@@ -3288,7 +3311,7 @@
         }
 
         // 显示分时图
-        function displayIntradayChart(data, isSimulated = false) {
+        async function displayIntradayChart(data, isSimulated = false) {
             if (!data || data.length === 0) {
                 showIntradayError('暂无分时图数据');
                 return;
@@ -3385,12 +3408,45 @@
                 }
             }
 
-            // 计算价格范围（±5%）
+            // 计算价格范围（基于昨收价格的涨跌停价格）
             const validPrices = allPrices.filter(p => p !== null);
             const firstPrice = validPrices[0];
-            const priceRange = firstPrice * 0.05;
-            const yMin = firstPrice - priceRange;
-            const yMax = firstPrice + priceRange;
+            
+            // 获取昨收价格用于计算涨跌停价格
+            let prevClosePrice = firstPrice; // 默认使用第一个价格
+            
+            // 尝试从实时交易数据获取昨收价格
+            try {
+                const response = await fetch('/api/stock/realtime_trading_data');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const stockData = result.data.find(item => {
+                        const code = item['代码'];
+                        return code && (code === currentStockCode || code === currentStockCode.substring(0, 6));
+                    });
+                    
+                    if (stockData && stockData['昨收'] && stockData['昨收'] > 0) {
+                        prevClosePrice = stockData['昨收'];
+                        console.log(`[分时图] 使用昨收价格: ${prevClosePrice}`);
+                    }
+                }
+            } catch (error) {
+                console.log('[分时图] 无法获取昨收价格，使用第一个价格作为基准');
+            }
+            
+            // 计算涨跌停价格（A股一般为±10%，创业板和科创板为±20%）
+            let limitPercent = 0.10; // 默认10%
+            
+            // 判断是否为创业板（300开头）或科创板（688开头）
+            if (currentStockCode.startsWith('300') || currentStockCode.startsWith('688')) {
+                limitPercent = 0.20; // 20%
+            }
+            
+            const yMin = prevClosePrice * (1 - limitPercent); // 跌停价
+            const yMax = prevClosePrice * (1 + limitPercent); // 涨停价
+            
+            console.log(`[分时图] 价格范围设置: 昨收=${prevClosePrice}, 跌停=${yMin.toFixed(2)}, 涨停=${yMax.toFixed(2)}, 涨跌幅限制=${(limitPercent*100)}%`);
 
             // 动态计算Y轴刻度间隔
             let tickInterval;
@@ -3501,7 +3557,7 @@
                 plot_bgcolor: 'white',
                 paper_bgcolor: 'white',
                 font: { family: 'Arial, sans-serif', size: 12 },
-                margin: { l: 60, r: 20, t: 50, b: 80 },
+                margin: { l: 60, r: 20, t: 50, b: 20 },
                 showlegend: true,
                 legend: {
                     x: 0,
@@ -3539,8 +3595,15 @@
                         return currentPrice >= prevPrice ? '#ff4444' : '#00aa00';
                     })
                 },
-                hovertemplate: '<b>成交额</b><br>时间: %{text}<br>成交额: %{y:.2f}万元<extra></extra>',
-                text: timeLabels
+                hovertemplate: '<b>📊 成交额详情</b><br>' +
+                              '⏰ 时间: %{text}<br>' +
+                              '💰 成交额: %{y:.2f}万元<br>' +
+                              '📈 占比: %{customdata}%<extra></extra>',
+                text: timeLabels,
+                customdata: allVolumes.map(vol => {
+                    const totalVolume = allVolumes.reduce((sum, v) => sum + v, 0);
+                    return totalVolume > 0 ? ((vol / totalVolume) * 100).toFixed(2) : '0.00';
+                })
             };
 
             const volumeLayout = {
@@ -3557,12 +3620,14 @@
                     title: '成交额 (万元)',
                     showgrid: true,
                     gridcolor: '#f0f0f0',
-                    range: [0, volumeYMax] // 设置Y轴范围，让柱状图显示得更高
+                    range: [0, volumeYMax], // 设置Y轴范围，让柱状图显示得更高
+                    tickformat: '.1f', // 显示一位小数
+                    dtick: volumeYMax / 5 // 设置Y轴刻度间隔，显示5个刻度
                 },
                 plot_bgcolor: 'white',
                 paper_bgcolor: 'white',
                 font: { family: 'Arial, sans-serif', size: 12 },
-                margin: { l: 60, r: 20, t: 20, b: 40 }, // 减少上下边距，让柱状图占用更多空间
+                margin: { l: 60, r: 20, t: 5, b: 40 }, // 进一步减少顶部边距
                 showlegend: false
             };
 
@@ -3928,7 +3993,7 @@
                             // 并行刷新实时交易数据和分时图
                             // 自动刷新时不显示加载状态，避免数据消失
                             await Promise.all([
-                                loadRealtimeData(false),
+                                loadRealtimeData(false, true), // 第二个参数表示是自动刷新
                                 loadIntradayChart(false)
                             ]);
                             
@@ -4251,7 +4316,7 @@
         async function addToWatchlist() {
             const stockCode = getStockCodeFromUrl();
             if (!stockCode) {
-                alert('无法获取股票代码');
+                console.log('无法获取股票代码');
                 return;
             }
             
@@ -4323,15 +4388,15 @@
                     updateWatchlistSelectStatus();
                     
                     // 显示成功提示
-                    showNotification('已添加到自选股票', 'success');
+                    console.log('已添加到自选股票');
                     console.log('股票已添加到自选:', stockCode);
                 } else {
-                    showNotification(data.message || '添加失败', 'error');
+                    console.log(data.message || '添加失败');
                 }
             })
             .catch(error => {
                 console.error('添加自选股失败:', error);
-                showNotification('添加失败，请稍后重试', 'error');
+                console.log('添加失败，请稍后重试');
             });
         }
         
@@ -4341,7 +4406,7 @@
             
             const stockCode = getStockCodeFromUrl();
             if (!stockCode) {
-                alert('无法获取股票代码');
+                console.log('无法获取股票代码');
                 return;
             }
             
@@ -4420,10 +4485,10 @@
                         'holding': '持仓中',
                         'sold': '已卖出'
                     };
-                    showNotification(`已添加到自选股票（${priorityNames[priority]}）`, 'success');
+                    console.log(`已添加到自选股票（${priorityNames[priority]}）`);
                     console.log('股票已添加到自选:', stockCode, '优先级:', priority);
                 } else {
-                    showNotification(data.message || '添加失败', 'error');
+                    console.log(data.message || '添加失败');
                     // 重置下拉菜单选择
                     const selectElement = document.getElementById('watchlistSelect');
                     if (selectElement) {
@@ -4433,7 +4498,7 @@
             })
             .catch(error => {
                 console.error('添加自选股失败:', error);
-                showNotification('添加失败，请稍后重试', 'error');
+                console.log('添加失败，请稍后重试');
                 // 重置下拉菜单选择
                 const selectElement = document.getElementById('watchlistSelect');
                 if (selectElement) {
@@ -4446,7 +4511,7 @@
         function removeFromWatchlist() {
             const stockCode = getStockCodeFromUrl();
             if (!stockCode) {
-                alert('无法获取股票代码');
+                console.log('无法获取股票代码');
                 return;
             }
             
@@ -4483,15 +4548,15 @@
                     checkWatchlistStatus();
                     
                     // 显示成功提示
-                    showNotification('已从自选股票中删除', 'success');
+                    console.log('已从自选股票中删除');
                     console.log('股票已从自选中删除:', stockCode);
                 } else {
-                    showNotification(data.message || '删除失败', 'error');
+                    console.log(data.message || '删除失败');
                 }
             })
             .catch(error => {
                 console.error('删除自选股失败:', error);
-                showNotification('删除失败，请稍后重试', 'error');
+                console.log('删除失败，请稍后重试');
             });
         }
         

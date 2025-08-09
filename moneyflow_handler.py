@@ -310,28 +310,68 @@ class MoneyflowHandler:
     
     def _get_latest_trading_day(self) -> str:
         """
-        获取最近交易日
+        获取最近有数据的交易日
         
         Returns:
             str: 交易日期 YYYYMMDD
         """
         try:
-            # 获取交易日历
+            # 使用tushare获取交易日历
             today = datetime.now()
+            
+            # 先尝试使用tushare获取交易日历
+            try:
+                # 获取最近30天的交易日历
+                start_date = (today - timedelta(days=30)).strftime('%Y%m%d')
+                end_date = today.strftime('%Y%m%d')
+                
+                cal_df = self.pro.trade_cal(exchange='SSE', start_date=start_date, end_date=end_date)
+                
+                if not cal_df.empty:
+                    # 筛选出交易日，按日期倒序排列
+                    trading_days = cal_df[cal_df['is_open'] == 1]['cal_date'].tolist()
+                    trading_days.sort(reverse=True)  # 从最新日期开始
+                    
+                    # 验证每个交易日是否有数据（使用一个常见股票作为测试）
+                    test_stock = '000001.SZ'  # 使用平安银行作为测试股票
+                    for trading_day in trading_days:
+                        try:
+                            # 快速检查该日期是否有资金流向数据
+                            df = self.pro.moneyflow(ts_code=test_stock, trade_date=trading_day)
+                            if not df.empty:
+                                logger.info(f"通过交易日历和数据验证获取到最新交易日: {trading_day}")
+                                return trading_day
+                        except Exception:
+                            continue
+                        
+            except Exception as e:
+                logger.warning(f"使用tushare获取交易日历失败: {e}")
+            
+            # 如果tushare失败，使用简单逻辑并验证数据
+            test_stock = '000001.SZ'
             for i in range(10):  # 最多往前查10天
                 check_date = today - timedelta(days=i)
                 date_str = check_date.strftime('%Y%m%d')
                 
                 # 简单判断：周一到周五且不是节假日
                 if check_date.weekday() < 5:  # 0-4表示周一到周五
-                    return date_str
+                    try:
+                        # 验证该日期是否有数据
+                        df = self.pro.moneyflow(ts_code=test_stock, trade_date=date_str)
+                        if not df.empty:
+                            logger.info(f"使用简单逻辑和数据验证获取到交易日: {date_str}")
+                            return date_str
+                    except Exception:
+                        continue
             
-            # 如果都不是交易日，返回今天
-            return today.strftime('%Y%m%d')
+            # 如果都没有数据，返回昨天
+            yesterday = (today - timedelta(days=1)).strftime('%Y%m%d')
+            logger.warning(f"未找到有数据的交易日，返回昨天: {yesterday}")
+            return yesterday
             
         except Exception as e:
             logger.error(f"获取最近交易日失败: {e}")
-            return datetime.now().strftime('%Y%m%d')
+            return (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
 
 
 # 使用示例

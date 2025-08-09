@@ -2,38 +2,38 @@
   "data": {
     "sh000001": {
       "name": "上证指数",
-      "current_price": 3617.5976,
-      "change_pct": 0.957,
-      "change_amount": 34.289,
-      "volume": 6563.82505102,
-      "update_time": "15:01:22"
-    },
-    "sh000688": {
-      "name": "科创板",
-      "current_price": 1053.6462,
-      "change_pct": 0.404,
-      "change_amount": 4.24,
-      "volume": 268.01640177,
-      "update_time": "15:01:22"
+      "current_price": 3635.1281,
+      "change_pct": -0.1247,
+      "change_amount": -4.5385,
+      "volume": 7135.697311,
+      "update_time": "01:01:33"
     },
     "sz399001": {
       "name": "深证成指",
-      "current_price": 11106.957,
-      "change_pct": 0.592,
-      "change_amount": 65.397,
-      "volume": 9396.98369625,
-      "update_time": "15:01:22"
+      "current_price": 11128.6725,
+      "change_pct": -0.2623,
+      "change_amount": -29.2683,
+      "volume": 9966.569171000001,
+      "update_time": "01:01:33"
     },
     "sz399006": {
       "name": "创业板指",
-      "current_price": 2343.376,
-      "change_pct": 0.388,
-      "change_amount": 9.053,
-      "volume": 4756.2816207,
-      "update_time": "15:01:22"
+      "current_price": 2333.959,
+      "change_pct": -0.38,
+      "change_amount": -8.9019,
+      "volume": 5002.902776,
+      "update_time": "01:01:33"
+    },
+    "sh000688": {
+      "name": "科创板",
+      "current_price": 1043.5366,
+      "change_pct": -1.3862,
+      "change_amount": -14.6685,
+      "volume": 333.81498692,
+      "update_time": "01:01:33"
     }
   },
-  "fetch_time": "2025-08-05 15:01:28",
-  "cache_date": "2025-08-05",
-  "cache_time": "15:01:28"
+  "fetch_time": "2025-08-09 01:01:33",
+  "cache_date": "2025-08-09",
+  "cache_time": "01:01:33"
 }
